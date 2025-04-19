@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "fitness-dashboard"
+version = "0.1.0"
+description = "Barb's project to build a Fitness Dashboard with an end-to-end workflow (combined with DataPipe) with interactive dashboard to generate insights on presonal health AND practice executing SQL queries. Goals: SQL practice, data visualization, insight generation, and more."
+authors = ["Barbara Hidalgo <barbs@balex.com>"]
+package-mode = false
+readme = "README.md"
+
+#[tool.poetry.dev-dependencies]
+#IF DEPLOYING ON PROD, THIS IS HOW TO INSTALL: > poetry install --no-dev
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.4"
+pytest-cov = "^6.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+toml = "^0.10.2"
+pymysql = "^1.1.0"
+pandas = "^2.2.3"
+numpy = "^2.1.2"
+streamlit = "^1.35.0"
+plotly = "^5.24.0"
+cryptography = "^44.0.2"
+streamlit-calendar = "^1.2.1"
+
+[tool.project]
+input_filename = "user2632022_workout_history.csv"
+debug = true

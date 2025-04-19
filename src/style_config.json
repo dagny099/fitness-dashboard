@@ -1,0 +1,22 @@
+{
+    "colors": {
+        "distance": "#5DADE2",
+        "duration": "#28B463",
+        "calories": "#E74C3C",
+        "speed": "#F39C12"
+    },
+    "font": {
+        "heading": "Arial",
+        "data_label": "Roboto"
+    },
+    "layout": {
+        "background": "#FFFFFF",
+        "padding": "10px",
+        "margin": "5px"
+    },
+    "metric_container": {
+        "background": "#FFFFFF",
+        "padding": "10px",
+        "margin": "5px"
+    }
+}
