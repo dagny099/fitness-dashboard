@@ -206,3 +206,57 @@ def extract_workout_id(url):
         return match.group(1)
     else:
         return 'unsure'  # or you could return a specific value to indicate no match was found
+
+
+def calculate_workout_statistics(df_sub):
+    """
+    Calculate key statistics for workout data.
+    
+    Parameters:
+    -----------
+    df_sub : pandas.DataFrame
+        DataFrame containing workout data with at least the following columns:
+        distance_mi, duration_sec, kcal_burned, max_pace, steps
+    
+    Returns:
+    --------
+    dict
+        Dictionary containing statistics for each column:
+        - count: Number of non-null values
+        - avg: Mean value
+        - median: Median value
+        - std: Standard deviation
+    
+    Notes:
+    ------
+    NaN values are handled automatically by pandas functions.
+    """
+    # Define columns to analyze
+    columns_to_analyze = ['distance_mi', 'duration_sec', 'kcal_burned', 'max_pace', 'steps']
+    
+    # Initialize results dictionary
+    stats = {}
+    
+    # Calculate statistics for each column
+    for col in columns_to_analyze:
+        if col in df_sub.columns:
+            # Filter out missing values
+            valid_data = df_sub[col].dropna()
+            
+            # Calculate statistics
+            stats[col] = {
+                'count': len(valid_data),
+                'avg': valid_data.mean() if len(valid_data) > 0 else np.nan,
+                'median': valid_data.median() if len(valid_data) > 0 else np.nan,
+                'std': valid_data.std() if len(valid_data) > 0 else np.nan
+            }
+        else:
+            # Handle missing columns
+            stats[col] = {
+                'count': 0,
+                'avg': np.nan,
+                'median': np.nan,
+                'std': np.nan
+            }
+    
+    return stats

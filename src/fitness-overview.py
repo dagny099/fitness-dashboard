@@ -8,7 +8,7 @@ import json
 import os
 from datetime import datetime
 
-# Initialize SessionManager
+# Initialize SessionManager chrisedit
 session_mgr = SessionManager()
 
 GET_HELP = f"""
