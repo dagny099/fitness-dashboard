@@ -16,6 +16,8 @@ st.markdown(hide_sidebar_style, unsafe_allow_html=True)
 
 # Display Bacgkround:
 backimage = 'https://raw.githubusercontent.com/dagny099/dagny099.github.io/ff96cc0d1cbc65fbe5a0789eb00d73aff65c4059/assets/images/midjourney/the-mycelium-web/hr-beautiful-forrest-electric-blue-mycelium-yellow-dots-03.png'
+backimage = 'https://raw.githubusercontent.com/dagny099/dagny099.github.io/ff96cc0d1cbc65fbe5a0789eb00d73aff65c4059/assets/images/portfolio/login_page_image_v1.png'
+
 css = f"""
 <style>
     .stApp {{
@@ -48,4 +50,9 @@ branding_html = f"""
     <img class="branding-image" src="{image_url}" alt="branding logo">
 </div>
 """
+
+st.header('Fitness Dashboard Login')
+if st.button("Log in"):
+    st.session_state.logged_in = True
+    st.rerun()
 st.markdown(branding_html, unsafe_allow_html=True)

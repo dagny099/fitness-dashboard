@@ -3,6 +3,7 @@ from utilities import calculate_workout_statistics, get_db_connection
 import streamlit as st
 from streamlit_calendar import calendar
 from streamlit_plotly_events import plotly_events
+import plotly.graph_objects as go
 import plotly.express as px
 import pandas as pd
 import numpy as np
@@ -11,6 +12,9 @@ import json
 import os
 from datetime import datetime, timedelta, date
 import calendar as cl
+import base64
+from io import BytesIO
+
 
 # Initialize SessionManager chrisedit
 session_mgr = SessionManager()
@@ -27,16 +31,16 @@ ______ Selector for which week, activity type
 """
 
 # Setup session
-st.set_page_config(
-    page_title="Fitness Dashboard",
-    page_icon=":material/dashboard:",
-    layout="wide",
-    # initial_sidebar_state="collapsed",
-    menu_items={
-        "Get help": "https://www.streamlit.io/", 
-        "Report a bug": "mailto:dagny099@gmail.com", 
-        "About": GET_HELP},
-)
+# st.set_page_config(
+#     page_title="Fitness Dashboard",
+#     page_icon=":material/dashboard:",
+#     layout="wide",
+#     # initial_sidebar_state="collapsed",
+#     menu_items={
+#         "Get help": "https://www.streamlit.io/", 
+#         "Report a bug": "mailto:dagny099@gmail.com", 
+#         "About": GET_HELP},
+# )
 
 # ------ SIDEBAR ------ #
 st.sidebar.subheader("Connect to Database 🛢️")
@@ -211,6 +215,22 @@ def create_calendar_events(df):
             continue
     return events
 
+def get_week_dates(year, month, week_num):
+    # Get the calendar for the given month and year
+    month_calendar = cl.monthcalendar(year, month)
+
+    # Get the start date of the week
+    if week_num == 1 and month_calendar[0][0] == 0: # Week starts from the previous month
+        start_date = datetime(year, month, 1)
+    else:
+        start_date = datetime(year, month, month_calendar[week_num-1][0])
+
+    # Get the end date of the week
+    end_date = start_date + timedelta(days=6)
+
+    return start_date.date(), end_date.date()
+
+
 # ============================================= #
 # Initialize the app state
 if 'full_data' not in st.session_state:
@@ -271,11 +291,10 @@ with c2:
 month_start = selected_date.replace(day=1)
 _, last_day = cl.monthrange(month_start.year, month_start.month)
 month_end = month_start.replace(day=last_day)
-selected_month_name = month_start.strftime("%B")   # e.g., "April"
-selected_year = month_start.year                   # e.g., 2025
-
+selected_month_top = month_start.strftime("%B")   # e.g., "April"
+selected_year_top = month_start.year                   # e.g., 2025
 with c1:
-    st.markdown(f"### 📅 Showing calendar for **{selected_month_name} {selected_year}**")
+    st.markdown(f"### 📅 Showing calendar for **{selected_month_top} {selected_year_top}**")
 
 # ---------------------
 # STEP 3: Filter by selected month
@@ -305,9 +324,7 @@ calendar_options = {
     },
 }
 
-# st.write(f"Number of workouts in {month_start.strftime('%B %Y')}: {len(events)}")
-with st.expander(f"METRICS for **{selected_month_name} {selected_year}**", expanded=True, icon=':material/insights:'):
-    # st.subheader(f"**{selected_month_name} {selected_year}** Statistics")
+with st.expander(f"METRICS for **{selected_month_top} {selected_year_top}**", expanded=True, icon=':material/insights:'):
     display_workout_statistics(st.session_state.filtered_data)
 
 stats = calculate_workout_statistics(st.session_state.filtered_data)
@@ -336,9 +353,6 @@ with dashboard_tab:
         key=f"calendar_{month_start.isoformat()}"  # 👈 dynamic key triggers re-render
     )
 
-import plotly.graph_objects as go
-import base64
-from io import BytesIO
 
 # Tab 2: DETAILED STATS
 with details_tab:
@@ -350,78 +364,116 @@ with details_tab:
     df = st.session_state.full_data
     # 1. Year Selector
     years = sorted(df["workout_date"].dt.year.unique())
-    default_year_index = years.index(month_start.year)
+    years = [str(year) for year in years]
+    try:
+        default_year_index = years.index(str(month_start.year))
+    except ValueError:
+        default_year_index = len(years)
     detail_selected_year = col1.selectbox("Select Year", options=years, index=default_year_index)
+    # Convert to datetime object for filtering
+    datetime_object = datetime.strptime(detail_selected_year, "%Y")
+    detail_selected_year = datetime_object.year
 
     # 2. Month Selector
     months = sorted(df[df["workout_date"].dt.year == detail_selected_year]["workout_date"].dt.month.unique())
-    month_labels = [cl.month_name[m] for m in months]
-    default_year_month = months.index(month_start.month)
-    selected_month_idx = col2.selectbox("Select Month", options=list(range(len(months))), format_func=lambda i: month_labels[i], index=default_year_month)
-    selected_month = months[selected_month_idx]
-
+    months = [str(month) for month in months]
+    try:
+        default_month_index = months.index(str(month_start.month))
+    except ValueError:
+        default_month_index = len(months)
+    selected_month_idx = col2.selectbox("Select Month", options=months, index=default_month_index)
+    detail_selected_month = months.index(selected_month_idx) 
+    
     # 3. Filter by year & month
     month_df = df[
         (df["workout_date"].dt.year == detail_selected_year) &
-        (df["workout_date"].dt.month == selected_month)
+        (df["workout_date"].dt.month == detail_selected_month + 1)
     ].copy()
+    month_df["week_number"] = (month_df["workout_date"].dt.day - 1) // 7 + 1
 
-    month_df["week_number"] = month_df["workout_date"].dt.isocalendar().week
 
     # 4. Week Selector with "All"
     week_options = ["All"] + sorted(month_df["week_number"].unique().tolist())
     selected_week = col3.selectbox("Select Week", week_options)
 
+    if selected_week != "All":
+        start_date, end_date = get_week_dates(detail_selected_year, detail_selected_month + 1, selected_week)    
+        st.write(f"The dates for Week {selected_week} of {cl.month_name[detail_selected_month+1]} {detail_selected_year} are from {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
+    else:
+        start_date, _ =  get_week_dates(detail_selected_year, detail_selected_month + 1, 1)    
+        _, end_date =  get_week_dates(detail_selected_year, detail_selected_month + 1, week_options[-1])    
+        st.write(f"The dates for ALL of {cl.month_name[detail_selected_month+1]} {detail_selected_year} go from {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}")
+
+
     # 5. Activity Type Selector
-    activity_types = ["All - Jogs, Races, Dog walks"] #df["activity_type"].unique().tolist()
+    activity_types = ["All - Jogs, Races, Dog walks"] # df["activity_type"].unique().tolist()
     selected_activities = st.multiselect("Select Activity Type(s)", activity_types, default=activity_types)
 
-    # 6. Apply Filtering
-    # filtered_df = month_df[month_df["activity_type"].isin(selected_activities)]
-    filtered_df = month_df   
-    if selected_week != "All":
-        filtered_df = filtered_df[filtered_df["week_number"] == selected_week]
 
-    # 7. Add day of week info
-    filtered_df["day_of_week"] = pd.Categorical(
+    # ---------------------
+    # *** Apply Filtering by selected period ***
+    # ---------------------
+    # if st.session_state.get("filtered_data_detail") is None:
+    #     st.session_state.filtered_data_detail = month_df.copy()
+    
+    # Filter by selected week
+    if selected_week != "All":
+        filtered_df = month_df[month_df["week_number"] == selected_week].copy()
+    else:
+        filtered_df = month_df.copy()
+
+    # Add Activity Type Filter back later, when activity_types are real
+    # filtered_df = filtered_df[filtered_df["activity_type"].isin(selected_activities)]  
+
+    # 6. Add day of week info
+    day_names = pd.Categorical(
         filtered_df["workout_date"].dt.day_name(),
         categories=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
         ordered=True
     )
+    week_starts = filtered_df["workout_date"] - pd.to_timedelta(filtered_df["workout_date"].dt.weekday, unit="d")
+    dur_min = filtered_df['duration_sec']/60
+
+    filtered_df["day_of_week"] = day_names
+    filtered_df["week_start"] = week_starts   
+    filtered_df["duration_min"] = dur_min
+
+    st.session_state.filtered_data_detail = filtered_df
 
     # ---------------------------
-    with st.expander(f"METRICS for **{selected_month_name} {selected_year}**", expanded=True, icon=':material/insights:'):
-        # st.subheader(f"**{selected_month_name} {selected_year}** Statistics")
-        display_workout_statistics(filtered_df)
+    # Display the calendar with the selected month and year
+    with st.expander(f"METRICS for **{cl.month_name[detail_selected_month+1]} {detail_selected_year}**", expanded=True, icon=':material/insights:'):
+        display_workout_statistics(st.session_state.filtered_data_detail)
 
 
     # (Optional) Display Data
     with st.expander("Filtered Data:", expanded=False, icon="📊"):
         if selected_week == "All":
-            st.markdown(f"#### Aggregated for **All Weeks in {cl.month_name[selected_month]} {selected_year}**")
+            st.markdown(f"#### Aggregated for **All Weeks in {cl.month_name[detail_selected_month+1]} {detail_selected_year}**")
         else:
-            st.markdown(f"#### Week {selected_week} of {cl.month_name[selected_month]} {selected_year}")
-        st.dataframe(filtered_df)
+            st.markdown(f"#### Week {selected_week} of {cl.month_name[detail_selected_month+1]} {detail_selected_year}, from {start_date} to {end_date}")
+        st.dataframe(st.session_state.filtered_data_detail)
     
 
-    # ---------------------------
-    spark = go.Figure(go.Scatter(
-        y=filtered_df["distance_mi"],
-        mode="lines+markers",
-        line=dict(color="#1f77b4", width=2),
-        marker=dict(size=3)
-    ))
-    spark.update_layout(
-        margin=dict(l=0, r=0, t=0, b=0),
-        height=60,
-        width=250,
-        xaxis=dict(visible=False),
-        yaxis=dict(visible=False)
-    )
-    st.plotly_chart(spark)
+
+#     # ---------------------------
+#     spark = go.Figure(go.Scatter(
+#         y=filtered_df["distance_mi"],
+#         mode="lines+markers",
+#         line=dict(color="#1f77b4", width=2),
+#         marker=dict(size=3)
+#     ))
+#     spark.update_layout(
+#         margin=dict(l=0, r=0, t=0, b=0),
+#         height=60,
+#         width=250,
+#         xaxis=dict(visible=False),
+#         yaxis=dict(visible=False)
+#     )
+#     st.plotly_chart(spark)
 
 
-    # ---------------------------
+#     # ---------------------------
 
 
     # ==========================
@@ -572,8 +624,8 @@ with details_tab:
     # ==========================
 
     # ---- STEP 1: Ensure datetime format and derive week start ----
-    filtered_df["workout_date"] = pd.to_datetime(filtered_df["workout_date"])
-    filtered_df["week_start"] = filtered_df["workout_date"] - pd.to_timedelta(filtered_df["workout_date"].dt.weekday, unit="d")
+    # filtered_df["workout_date"] = pd.to_datetime(filtered_df["workout_date"])
+    # filtered_df["week_start"] = filtered_df["workout_date"] - pd.to_timedelta(filtered_df["workout_date"].dt.weekday, unit="d")
 
     # ---- STEP 2: Aggregate weekly distance ----
     weekly_distance = filtered_df.groupby("week_start")["distance_mi"].sum().reset_index()
@@ -656,16 +708,16 @@ with details_tab:
 
     #............... BAR CHART VERSION ...............
     # STEP 1: Ensure datetime and calculate week start
-    filtered_df["workout_date"] = pd.to_datetime(df["workout_date"])
-    filtered_df["week_start"] = filtered_df["workout_date"] - pd.to_timedelta(filtered_df["workout_date"].dt.weekday, unit="d")
+    # filtered_df["workout_date"] = pd.to_datetime(df["workout_date"])
+    # filtered_df["week_start"] = filtered_df["workout_date"] - pd.to_timedelta(filtered_df["workout_date"].dt.weekday, unit="d")
 
-    filtered_df["duration_min"] = filtered_df['duration_sec']/60
+    # filtered_df["duration_min"] = filtered_df['duration_sec']/60
 
-    filtered_df["day_of_week"] = pd.Categorical(
-        filtered_df["workout_date"].dt.day_name(),
-        categories=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-        ordered=True
-    )
+    # filtered_df["day_of_week"] = pd.Categorical(
+    #     filtered_df["workout_date"].dt.day_name(),
+    #     categories=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    #     ordered=True
+    # )
 
     # STEP 2: Aggregate total duration per week
     weekly_duration = filtered_df.groupby("week_start")["duration_min"].sum().reset_index()
