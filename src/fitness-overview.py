@@ -7,6 +7,7 @@ import toml
 import json
 import os
 from datetime import datetime
+import platform
 
 # Initialize SessionManager chrisedit
 session_mgr = SessionManager()
