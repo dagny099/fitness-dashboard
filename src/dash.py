@@ -46,7 +46,7 @@ ______ Selector for which week, activity type
 st.sidebar.subheader("Connect to Database 🛢️")
 
 # Select connection type 
-connection_type = st.sidebar.selectbox("Select Connection Type", ["Local", "Remote"], index=0)
+connection_type = st.sidebar.selectbox("Select Connection Type", ["Local", "Remote"], index=1)
 
 # Load db config from .streamlit/secrets.toml
 if connection_type == "Local":
