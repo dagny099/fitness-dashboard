@@ -23,6 +23,7 @@ Pre-requisites:
 import os
 import toml
 import pymysql
+import platform
 
 # ----------------------------------------------
 # with open("pyproject.toml", "r") as f:
@@ -45,35 +46,11 @@ tbl_schema = f"""
     )
     """
 
-# 0. REMOVED FOR DEPLOYMENT -- Create the .streamlit directory & secrets.toml file if it doesn't exist
-# if not(os.path.exists(".streamlit")):
-#     os.makedirs(".streamlit")
-
-#     # Set dummy variables for db credentials IF NOT FOUND IN THE ENVIRONMENT (for local testing)
-#     DB_USER = os.getenv('MYSQL_USER', 'db_user')
-#     DB_PASSWORD = os.getenv('MYSQL_PWD', 'db_password')
-
-#     content = f"""[connections.mysql]\ndialect = "mysql"\nhost = "localhost"\nport = 3306\ndatabase = "sweat"\nusername = "{DB_USER}"\npassword = "{DB_PASSWORD}"\n
-#     """
-#     # Create the secrets.toml file for database configuration (BE SURE TO EDIT)
-#     with open(".streamlit/secrets.toml", "w") as f:
-#         f.write(content)
-#         print("Created .streamlit/secrets.toml file with this info:")
-#         print(content)
-#         print("****EDIT IF NECESSARY OTHERWISE CONNECTION WILL FAIL!****")
-# # 1. Load database configuration (.streamlit/secrets.toml)
-# with open(".streamlit/secrets.toml", "r") as f:
-#     dbconfig = toml.load(f)
-#     dbconfig = dbconfig['connections']['mysql']
-#     print(f"\n-------\nUsing this Databse configuration:")    
-#     print(dbconfig)    
-# # 2. Establish a connection to the mysql server
-# connection = pymysql.connect(
-#         host=dbconfig["host"], port=dbconfig["port"],
-#         user=dbconfig["username"], password=dbconfig["password"] )
-
 # 1. Determine environment
-ENV = os.environ.get("APP_ENV", "")  # Default to development if not set
+if platform.system() == "Darwin":
+    ENV = "development"
+else:
+    ENV = "production"
 
 # 2. Load database credentials
 if ENV == "development":
@@ -95,8 +72,8 @@ else:
 dbconfig['database'] = "sweat"  # Database name
 
 # 3. Debug (optional — careful in real prod logs!)
-print(f"Using this Database configuration (no password shown):")
-print({k: v for k, v in dbconfig.items() if k != "password"})
+# print(f"Using this Database configuration (no password shown):")
+# print({k: v for k, v in dbconfig.items() if k != "password"})
 
 # 4. Establish a connection
 connection = pymysql.connect(

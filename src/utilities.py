@@ -7,12 +7,6 @@ import toml
 
 # Function to setup connectivity
 def get_db_connection(dbconfig=None):
-    if dbconfig is None:
-        with open("../.streamlit/secrets.toml", "r") as f:
-            dbconfig = toml.load(f)
-            dbconfig = dbconfig['connections']['mysql']
-            print(dbconfig)
-
     connection = pymysql.connect(
             host=dbconfig["host"],
             port=dbconfig["port"],

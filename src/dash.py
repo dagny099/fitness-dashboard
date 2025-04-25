@@ -14,7 +14,7 @@ from datetime import datetime, timedelta, date
 import calendar as cl
 import base64
 from io import BytesIO
-
+import platform
 
 # Initialize SessionManager chrisedit
 session_mgr = SessionManager()
@@ -46,7 +46,13 @@ ______ Selector for which week, activity type
 st.sidebar.subheader("Connect to Database 🛢️")
 
 # Select connection type 
-connection_type = st.sidebar.selectbox("Select Connection Type", ["Local", "Remote"], index=1)
+# 1. Determine environment
+if platform.system() == "Darwin":
+    ENV = "development"
+    connection_type = st.sidebar.selectbox("Select Connection Type", ["Local", "Remote"], index=0)
+else:
+    ENV = "production"
+    connection_type = st.sidebar.selectbox("Select Connection Type", ["Local", "Remote"], index=1)
 
 # Load db config from .streamlit/secrets.toml
 if connection_type == "Local":
@@ -54,20 +60,17 @@ if connection_type == "Local":
         "host": "localhost",  # or your local DB host
         "port": 3306,         # default MySQL port
         "username": os.environ.get("MYSQL_USER"),
-        "password": os.environ.get("MYSQL_PWD"),
-        "database": 'sweat',
+        "password": os.environ.get("MYSQL_PWD")
 }
-    # with open(".streamlit/secrets.toml", "r") as f:
-    #     dbconfig = toml.load(f)
-    #     dbconfig = dbconfig['connections']['mysql']
 else:
     dbconfig = {
         "host": os.getenv("RDS_ENDPOINT"),
         "port": 3306,
         "username": os.getenv("RDS_USER"),
-        "password": os.getenv("RDS_PASSWORD"),
-        "database": 'sweat',
+        "password": os.getenv("RDS_PASSWORD")
     }
+dbconfig['database'] = "sweat"  # Database name
+
 # ----------- DATA ----- #
 # Load data once at the beginning of the session
 @st.cache_data
