@@ -67,20 +67,32 @@ colors, font = style_config['colors'], style_config['font']
 # ------ Dashboard Layout: Sidebar ------ #
 st.sidebar.subheader("Connect to Database 🛢️")
 
-# Select connection type & Load database configuration (.streamlit/secrets.toml)
-connection_type = st.sidebar.selectbox("Select Connection Type", ["Local", "Remote"], index=0)
+# Select connection type 
+# 1. Determine environment
+if platform.system() == "Darwin":
+    ENV = "development"
+    connection_type = st.sidebar.selectbox("Select Connection Type", ["Local", "Remote"], index=0)
+else:
+    ENV = "production"
+    connection_type = st.sidebar.selectbox("Select Connection Type", ["Local", "Remote"], index=1)
+
+# Load db config from .streamlit/secrets.toml
 if connection_type == "Local":
-    with open(".streamlit/secrets.toml", "r") as f:
-        dbconfig = toml.load(f)
-        dbconfig = dbconfig['connections']['mysql']
+    dbconfig = {
+        "host": "localhost",  # or your local DB host
+        "port": 3306,         # default MySQL port
+        "username": os.environ.get("MYSQL_USER"),
+        "password": os.environ.get("MYSQL_PWD")
+}
 else:
     dbconfig = {
         "host": os.getenv("RDS_ENDPOINT"),
         "port": 3306,
         "username": os.getenv("RDS_USER"),
-        "password": os.getenv("RDS_PASSWORD"),
-        "database": 'sweat',
+        "password": os.getenv("RDS_PASSWORD")
     }
+dbconfig['database'] = "sweat"  # Database name
+
 tmpMsg = st.sidebar.empty()
 tmpMsg.write("Connecting to MySQL database...")
 conn = get_db_connection(dbconfig=dbconfig)  # Connect to the database

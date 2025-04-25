@@ -116,8 +116,19 @@ Run "dashboard.py" from main project directory to SHOW DASHBOARD:
 streamlit run streamlit_app.py
 ```
 
-## Deployment Instructions 
-Coming soon April 2025!
+## Deployment  
+
+Run `deploy.sh` to redeploy the latest changes. My presently app is deployed on a remote server. 
+
+1. You can use my version to do something similar for your own configuration
+2. Be sure to make the deploy script executable:    
+   <code>chmod +x deploy.sh </code>
+3. Run the deployment script:   
+   <code>./deploy.sh</code>
+
+Incoming requests to `workouts.barbhs.com` are handled by Nginx, which forwards the traffic to the Streamlit dashboard running locally on the server. The dashboard is managed by a systemd service for automatic startup, crash recovery, and easy deployment.
+
+You can access the current live version at <a href="http://workouts.barbhs.com" target="_blank">workouts.barbhs.com</a>
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
