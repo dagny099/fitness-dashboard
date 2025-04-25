@@ -25,8 +25,8 @@ import toml
 import pymysql
 
 # ----------------------------------------------
-with open("pyproject.toml", "r") as f:
-    config = toml.load(f)
+# with open("pyproject.toml", "r") as f:
+#     config = toml.load(f)
 
 tablename = "workout_summary"
 
@@ -45,35 +45,66 @@ tbl_schema = f"""
     )
     """
 
-# 0. Create the .streamlit directory & secrets.toml file if it doesn't exist
-if not(os.path.exists(".streamlit")):
-    os.makedirs(".streamlit")
+# 0. REMOVED FOR DEPLOYMENT -- Create the .streamlit directory & secrets.toml file if it doesn't exist
+# if not(os.path.exists(".streamlit")):
+#     os.makedirs(".streamlit")
 
-    # Set dummy variables for db credentials IF NOT FOUND IN THE ENVIRONMENT (for local testing)
-    DB_USER = os.getenv('MYSQL_USER', 'db_user')
-    DB_PASSWORD = os.getenv('MYSQL_PWD', 'db_password')
+#     # Set dummy variables for db credentials IF NOT FOUND IN THE ENVIRONMENT (for local testing)
+#     DB_USER = os.getenv('MYSQL_USER', 'db_user')
+#     DB_PASSWORD = os.getenv('MYSQL_PWD', 'db_password')
 
-    content = f"""[connections.mysql]\ndialect = "mysql"\nhost = "localhost"\nport = 3306\ndatabase = "sweat"\nusername = "{DB_USER}"\npassword = "{DB_PASSWORD}"\n
-    """
-    # Create the secrets.toml file for database configuration (BE SURE TO EDIT)
-    with open(".streamlit/secrets.toml", "w") as f:
-        f.write(content)
-        print("Created .streamlit/secrets.toml file with this info:")
-        print(content)
-        print("****EDIT IF NECESSARY OTHERWISE CONNECTION WILL FAIL!****")
+#     content = f"""[connections.mysql]\ndialect = "mysql"\nhost = "localhost"\nport = 3306\ndatabase = "sweat"\nusername = "{DB_USER}"\npassword = "{DB_PASSWORD}"\n
+#     """
+#     # Create the secrets.toml file for database configuration (BE SURE TO EDIT)
+#     with open(".streamlit/secrets.toml", "w") as f:
+#         f.write(content)
+#         print("Created .streamlit/secrets.toml file with this info:")
+#         print(content)
+#         print("****EDIT IF NECESSARY OTHERWISE CONNECTION WILL FAIL!****")
+# # 1. Load database configuration (.streamlit/secrets.toml)
+# with open(".streamlit/secrets.toml", "r") as f:
+#     dbconfig = toml.load(f)
+#     dbconfig = dbconfig['connections']['mysql']
+#     print(f"\n-------\nUsing this Databse configuration:")    
+#     print(dbconfig)    
+# # 2. Establish a connection to the mysql server
+# connection = pymysql.connect(
+#         host=dbconfig["host"], port=dbconfig["port"],
+#         user=dbconfig["username"], password=dbconfig["password"] )
 
+# 1. Determine environment
+ENV = os.environ.get("APP_ENV", "")  # Default to development if not set
 
-# 1. Load database configuration (.streamlit/secrets.toml)
-with open(".streamlit/secrets.toml", "r") as f:
-    dbconfig = toml.load(f)
-    dbconfig = dbconfig['connections']['mysql']
-    print(f"\n-------\nUsing this Databse configuration:")    
-    print(dbconfig)    
+# 2. Load database credentials
+if ENV == "development":
+    print("\n-------\nRunning in DEVELOPMENT mode")
+    dbconfig = {
+        "host": "localhost",  # or your local DB host
+        "port": 3306,         # default MySQL port
+        "username": os.environ.get("MYSQL_USER"),
+        "password": os.environ.get("MYSQL_PWD")
+    }
+else:
+    print("\n-------\nRunning in PRODUCTION mode")
+    dbconfig = {
+        "host": os.environ.get("RDS_ENDPOINT"),
+        "port": 3306,  # Usually RDS is also on 3306 unless customized
+        "username": os.environ.get("RDS_USER"),
+        "password": os.environ.get("RDS_PASSWORD")
+    }
+dbconfig['database'] = "sweat"  # Database name
 
-# 2. Establish a connection to the mysql server
+# 3. Debug (optional — careful in real prod logs!)
+print(f"Using this Database configuration (no password shown):")
+print({k: v for k, v in dbconfig.items() if k != "password"})
+
+# 4. Establish a connection
 connection = pymysql.connect(
-        host=dbconfig["host"], port=dbconfig["port"],
-        user=dbconfig["username"], password=dbconfig["password"] )
+    host=dbconfig["host"],
+    port=dbconfig["port"],
+    user=dbconfig["username"],
+    password=dbconfig["password"]
+)
 
 # 3. Check if 'sweat' database exists and create if not
 with connection.cursor() as cursor:
@@ -94,7 +125,9 @@ with connection.cursor() as cursor:
     cursor.execute(tbl_schema)  #CREATE TABLE IF NOT EXISTS
     cursor.execute(f"SELECT COUNT(*) FROM {tablename};")
     total_rows = cursor.fetchone()[0]
-    print(f"Table {dbconfig['database']}.{tablename} has {total_rows} rows")    
+    cursor.execute(f"SELECT workout_date FROM {tablename} ORDER BY workout_date DESC LIMIT 1;")
+    last_workout = cursor.fetchone()[0]
+    print(f"Table {dbconfig['database']}.{tablename} has {total_rows} rows, last workout date: {last_workout}")    
 
 
 # 5. Close the connection

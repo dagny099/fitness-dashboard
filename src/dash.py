@@ -50,9 +50,16 @@ connection_type = st.sidebar.selectbox("Select Connection Type", ["Local", "Remo
 
 # Load db config from .streamlit/secrets.toml
 if connection_type == "Local":
-    with open(".streamlit/secrets.toml", "r") as f:
-        dbconfig = toml.load(f)
-        dbconfig = dbconfig['connections']['mysql']
+    dbconfig = {
+        "host": "localhost",  # or your local DB host
+        "port": 3306,         # default MySQL port
+        "username": os.environ.get("MYSQL_USER"),
+        "password": os.environ.get("MYSQL_PWD"),
+        "database": 'sweat',
+}
+    # with open(".streamlit/secrets.toml", "r") as f:
+    #     dbconfig = toml.load(f)
+    #     dbconfig = dbconfig['connections']['mysql']
 else:
     dbconfig = {
         "host": os.getenv("RDS_ENDPOINT"),
