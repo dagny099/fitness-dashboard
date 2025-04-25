@@ -81,31 +81,43 @@ direnv allow
 
 🎉 Now: Environment is **fully auto-activated, clean, and predictable.** 
 
-**If local, run this script to setup a local db for testing**  
-6. Run "init.py" from main project directory to CREATE DATABASE & TABLES
-    ```bash
-    poetry run python init.py
-    ```
-    - Loads "pyproject.toml" and looks for .streamlit folder; if none found, creates it and the .streamlit/secrets.toml file with db credentials...
-    - Loads MYSQL_USER and MYSQL_PWD env vars, and sets them to "db_user" and "db_password" in "secrets.toml" file if none found
-    - BE SURE TO EDIT THESE VALUES OTHERWISE DB CONNECTION WILL FAIL
-    - Checks for an existing database, `sweat`, and creates it if now
-    - Create table, `workout_summary` if doensn't exist. tbl_schema is hard-coded but could easily be read in.
-    - Displays the number of rows in the table & Exit
+## Usage
+This usage will work seamlessly if you, like me, have a MapMyRun account that you want to sync. If so, replace the CSV export in the `src` directory and edit the default file in `pyproject.toml`. The overall logic is largely platform agnostic and I'm working on a version of this app that lets you flexibly map the columns of your own, custom-sourced CSV file to the database schema in this app, which is industry-standard and fairly platform-agnostic. 
 
-**Run Dashboard and visit at `http://localhost:8501`** 
-8. Run "dashboard.py" from main project directory to SHOW DASHBOARD:
-    ```bash
-    poetry run python dash.py
-    ```
+To follow along:
+=> **After cloning the repo, the next milestones are:**  
+
+
+### 1. SETUP LOCAL DB FOR TESTING  
+Run "init.py" from main project directory to CREATE DATABASE & TABLES
+```bash
+python init.py
+```
+**What this script does:**  
+- Loads `pyproject.toml` and looks for `.streamlit folder`; if none found, creates it and the `.streamlit/secrets.toml` file with db credentials...  
+- Loads `MYSQL_USER` and `MYSQL_PWD` env vars, and sets them to *"db_user"* and *"db_password"* in `secrets.toml` file if none found  
+- Checks for an existing database, `sweat`, if none create   
+- Create table, `workout_summary` if doensn't exist. tbl_schema is hard-coded but could easily be read in via file upload.  
+- Print the number of rows in the table & Exit   
+
+**Verify database connection after updating credentials file** 
+*Remember to edit credentials in `.streamlit/config.toml`*  
+You may want to check the local database to ensure you have the login, database, and tables setup as expected. 
+
+### 2. UPDATE DB 
+Run "update_db.py" from main project directory to UPDATE DATABASE:
+```bash
+python update_db.py
+```
+
+### 3. RUN DASHBOARD AND VISIT AT`http://localhost:8501`** 
+Run "dashboard.py" from main project directory to SHOW DASHBOARD:
+```bash
+streamlit run streamlit_app.py
+```
 
 ## Deployment Instructions 
 Coming soon April 2025!
-
-## Usage
-1. 
-2. Create an account or log in if you already have one.
-3. Start logging your workouts and track your progress!
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

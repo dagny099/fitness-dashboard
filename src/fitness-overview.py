@@ -19,16 +19,16 @@ Here's a quick guide to help you get started:
 
 # ============================================= #
 # Setup session
-st.set_page_config(
-    page_title="Fitness Dashboard",
-    page_icon="🐇",
-    layout="wide",
-    initial_sidebar_state="auto",
-    menu_items={
-        "Get help": "https://www.streamlit.io/", 
-        "Report a bug": "mailto:dagny099@gmail.com", 
-        "About": GET_HELP},
-)
+# st.set_page_config(
+#     page_title="Fitness Dashboard",
+#     page_icon="🐇",
+#     layout="wide",
+#     initial_sidebar_state="auto",
+#     menu_items={
+#         "Get help": "https://www.streamlit.io/", 
+#         "Report a bug": "mailto:dagny099@gmail.com", 
+#         "About": GET_HELP},
+# )
 
 # 0. Load dashboard style configuration from a JSON file
 with open("src/style_config.json") as config_file:
