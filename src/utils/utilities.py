@@ -4,9 +4,12 @@ from datetime import datetime
 import pymysql
 import re
 import toml
+from typing import Dict, List, Any, Optional, Union, Tuple
+
+from ..config.logging_config import logger
 
 # Function to setup connectivity
-def get_db_connection(dbconfig=None):
+def get_db_connection(dbconfig: Optional[Dict[str, Any]] = None) -> pymysql.Connection:
     connection = pymysql.connect(
             host=dbconfig["host"],
             port=dbconfig["port"],
@@ -18,7 +21,7 @@ def get_db_connection(dbconfig=None):
     return connection
 
 
-def insert_data(df, dbconfig=None):
+def insert_data(df: pd.DataFrame, dbconfig: Optional[Dict[str, Any]] = None) -> int:
     """
     Insert dataframe rows into cursor's database table
     """
@@ -40,12 +43,12 @@ def insert_data(df, dbconfig=None):
             connection.commit()
             return cursor.rowcount
         except Exception as e:
-            print(f"Error inserting data: {e}")
+            logger.error(f"Error inserting data: {e}")
             return 0
 
 
 # Function to enrich data ... More enrichment can be added here
-def enrich_data(df):
+def enrich_data(df: pd.DataFrame) -> pd.DataFrame:
     """
     Enrich the data with additional columns
     """
@@ -59,7 +62,7 @@ def enrich_data(df):
     return df
 
 # Custom date parsing function
-def parse_date(date_string):
+def parse_date(date_string: str) -> Optional[datetime]:
     """Function to parse date strings in various formats"""
     date_formats = [
         '%b. %d, %Y',  # Aug. 1, 2024
@@ -78,7 +81,7 @@ def parse_date(date_string):
 
         
 # Function to clean data
-def clean_data(df):
+def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     """
     Function to clean data including:
         - drop unnecessary columns, 
@@ -167,7 +170,7 @@ def clean_data(df):
 #     return pd.DataFrame(data, columns=column_names)  # Convert the data into a Pandas DataFrame
 
 
-def execute_query(query, dbconfig=None):
+def execute_query(query: str, dbconfig: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     """
     Execute an arbitrary SQL query and return the results.
 
@@ -188,13 +191,13 @@ def execute_query(query, dbconfig=None):
                 results = cursor.fetchall()
 
     except pymysql.MySQLError as e:
-        print(f"Error executing query: {e}")
+        logger.error(f"Error executing query: {e}")
 
     return results
 
 
 
-def extract_workout_id(url):
+def extract_workout_id(url: str) -> str:
     match = re.search(r'/workout/(\d+)', url)
     if match:
         return match.group(1)
@@ -202,7 +205,7 @@ def extract_workout_id(url):
         return 'unsure'  # or you could return a specific value to indicate no match was found
 
 
-def calculate_workout_statistics(df_sub):
+def calculate_workout_statistics(df_sub: pd.DataFrame) -> Dict[str, Dict[str, Union[int, float]]]:
     """
     Calculate key statistics for workout data.
     

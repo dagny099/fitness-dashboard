@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Dict, List, Optional, Any
 import json
 import uuid
-from storage import get_storage_adapter
+from .storage import get_storage_adapter
 
 class SessionManager:
     """

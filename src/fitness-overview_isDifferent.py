@@ -7,9 +7,8 @@ import toml
 import json
 import os
 from datetime import datetime
-import platform
 
-# Initialize SessionManager chrisedit
+# Initialize SessionManager
 session_mgr = SessionManager()
 
 GET_HELP = f"""
@@ -20,16 +19,16 @@ Here's a quick guide to help you get started:
 
 # ============================================= #
 # Setup session
-# st.set_page_config(
-#     page_title="Fitness Dashboard",
-#     page_icon="🐇",
-#     layout="wide",
-#     initial_sidebar_state="auto",
-#     menu_items={
-#         "Get help": "https://www.streamlit.io/", 
-#         "Report a bug": "mailto:dagny099@gmail.com", 
-#         "About": GET_HELP},
-# )
+st.set_page_config(
+    page_title="Fitness Dashboard",
+    page_icon="🐇",
+    layout="wide",
+    initial_sidebar_state="auto",
+    menu_items={
+        "Get help": "https://www.streamlit.io/", 
+        "Report a bug": "mailto:dagny099@gmail.com", 
+        "About": GET_HELP},
+)
 
 # 0. Load dashboard style configuration from a JSON file
 with open("src/style_config.json") as config_file:
@@ -68,32 +67,20 @@ colors, font = style_config['colors'], style_config['font']
 # ------ Dashboard Layout: Sidebar ------ #
 st.sidebar.subheader("Connect to Database 🛢️")
 
-# Select connection type 
-# 1. Determine environment
-if platform.system() == "Darwin":
-    ENV = "development"
-    connection_type = st.sidebar.selectbox("Select Connection Type", ["Local", "Remote"], index=0)
-else:
-    ENV = "production"
-    connection_type = st.sidebar.selectbox("Select Connection Type", ["Local", "Remote"], index=1)
-
-# Load db config from .streamlit/secrets.toml
+# Select connection type & Load database configuration (.streamlit/secrets.toml)
+connection_type = st.sidebar.selectbox("Select Connection Type", ["Local", "Remote"], index=0)
 if connection_type == "Local":
-    dbconfig = {
-        "host": "localhost",  # or your local DB host
-        "port": 3306,         # default MySQL port
-        "username": os.environ.get("MYSQL_USER"),
-        "password": os.environ.get("MYSQL_PWD")
-}
+    with open(".streamlit/secrets.toml", "r") as f:
+        dbconfig = toml.load(f)
+        dbconfig = dbconfig['connections']['mysql']
 else:
     dbconfig = {
         "host": os.getenv("RDS_ENDPOINT"),
         "port": 3306,
         "username": os.getenv("RDS_USER"),
-        "password": os.getenv("RDS_PASSWORD")
+        "password": os.getenv("RDS_PASSWORD"),
+        "database": 'sweat',
     }
-dbconfig['database'] = "sweat"  # Database name
-
 tmpMsg = st.sidebar.empty()
 tmpMsg.write("Connecting to MySQL database...")
 conn = get_db_connection(dbconfig=dbconfig)  # Connect to the database

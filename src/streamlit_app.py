@@ -10,18 +10,18 @@ def logout():
         st.rerun()
 
 # Set up the page with MULTIPAGE NAVIGATION
-login_page = st.Page("login.py", title="Log in", icon=":material/login:")
+login_page = st.Page("views/login.py", title="Log in", icon=":material/login:")
 logout_page = st.Page(logout, title="Log out", icon=":material/logout:")
 
-dashboard = st.Page("dash.py", title="Monthly View", icon=":material/dashboard:", default=True)
+dashboard = st.Page("views/dash.py", title="Monthly View", icon=":material/dashboard:", default=True)
 
-calendar = st.Page("calendar_more.py", title="Detailed Stats", icon=":material/calendar_month:")
+calendar = st.Page("views/calendar_more.py", title="Detailed Stats", icon=":material/calendar_month:")
 
 # bugs = st.Page("tools/bugs.py", title="Trends", icon=":material/data_exploration:")
-trends = st.Page("tools/trends.py", title="Trends", icon=":material/data_exploration:")
-query_db = st.Page("fitness-overview.py", title="SQL Query", icon=":material/database_search:")
-mapping = st.Page("tools/mapping.py", title="Mapping", icon=":material/add_location:")
-history = st.Page("tools/history.py", title="DataFrame Demo", icon=":material/table_chart:")
+trends = st.Page("views/tools/trends.py", title="Trends", icon=":material/data_exploration:")
+query_db = st.Page("views/fitness-overview.py", title="SQL Query", icon=":material/database_search:")
+mapping = st.Page("views/tools/mapping.py", title="Mapping", icon=":material/add_location:")
+history = st.Page("views/tools/history.py", title="DataFrame Demo", icon=":material/table_chart:")
 
 if st.session_state.logged_in:
     pg = st.navigation(

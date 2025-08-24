@@ -1,9 +1,59 @@
+# Environment and secrets
 .env
-.venv
+.env.local
+.env.prod
 .envrc
-.DS_Store
+
+# Python
+.venv/
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+
+# Streamlit
+.streamlit/
+!.streamlit/config.toml  # Allow config.toml but not secrets.toml
+
+# Jupyter
 .ipynb_checkpoints/
-.streamlit
+
+# Dependencies
 poetry.lock
-.env
+
+# MkDocs build output
+site/
+.mkdocs_build/
+
+# Documentation - be selective about what to track
+docs/                    # Private docs - keep private
+!docs-public/           # Public docs - safe to commit
+!mkdocs-public.yml      # Public config - safe to commit
+!mkdocs.yml             # Private config - you might want to keep private
+
+# IDE and OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+sessions.db
+
+# Temporary files
+tmp/
+temp/
+.tmp

@@ -1,0 +1,105 @@
+site_name: Fitness Dashboard
+site_description: A comprehensive web application for tracking and managing workout routines with interactive visualizations and data insights.
+site_author: Barbara Hidalgo
+site_url: https://workouts.barbhs.com
+
+repo_name: dagny/fitness-dashboard
+repo_url: https://github.com/dagny/fitness-dashboard
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode  
+    - scheme: slate
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+    - content.code.copy
+    - content.code.select
+    - content.tabs.link
+
+plugins:
+  - search:
+      lang: en
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quick-start.md
+    - Database Setup: getting-started/database-setup.md
+  - User Guide:
+    - Dashboard Overview: user-guide/dashboard-overview.md
+    - Data Import: user-guide/data-import.md
+    - Visualization Features: user-guide/visualizations.md
+    - SQL Query Interface: user-guide/sql-queries.md
+  - Developer Guide:
+    - Architecture: developer/architecture.md
+    - API Reference: developer/api-reference.md
+    - Configuration: developer/configuration.md
+    - Contributing: developer/contributing.md
+  - Deployment:
+    - Local Development: deployment/local-development.md
+    - Production Setup: deployment/production.md
+    - Environment Variables: deployment/environment.md
+  - Reference:
+    - Database Schema: reference/database-schema.md
+    - Configuration Options: reference/configuration.md
+    - Troubleshooting: reference/troubleshooting.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/dagny/fitness-dashboard
+    - icon: fontawesome/solid/globe
+      link: https://workouts.barbhs.com
+  version:
+    provider: mike
+
+copyright: Copyright &copy; 2024 Barbara Hidalgo
