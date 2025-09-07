@@ -1,8 +1,8 @@
-from ..utils.session_manager import SessionManager
-from ..utils.utilities import calculate_workout_statistics, get_db_connection
-from ..services.database_service import DatabaseService
-from ..config.database import DatabaseConfig
-from ..config.app import STYLE_CONFIG
+from src.utils.session_manager import SessionManager
+from src.utils.utilities import calculate_workout_statistics, get_db_connection
+from src.services.database_service import DatabaseService
+from src.config.database import DatabaseConfig
+from src.config.app import STYLE_CONFIG
 import streamlit as st
 from streamlit_calendar import calendar
 from streamlit_plotly_events import plotly_events
@@ -381,7 +381,7 @@ with details_tab:
     try:
         default_year_index = years.index(str(month_start.year))
     except ValueError:
-        default_year_index = len(years)
+        default_year_index = len(years) - 1 if years else 0
     detail_selected_year = col1.selectbox("Select Year", options=years, index=default_year_index)
     # Convert to datetime object for filtering
     datetime_object = datetime.strptime(detail_selected_year, "%Y")
@@ -393,7 +393,7 @@ with details_tab:
     try:
         default_month_index = months.index(str(month_start.month))
     except ValueError:
-        default_month_index = len(months)
+        default_month_index = len(months) - 1 if months else 0
     selected_month_idx = col2.selectbox("Select Month", options=months, index=default_month_index)
     detail_selected_month = months.index(selected_month_idx) 
     

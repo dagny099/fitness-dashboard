@@ -6,7 +6,7 @@ import re
 import toml
 from typing import Dict, List, Any, Optional, Union, Tuple
 
-from ..config.logging_config import logger
+from src.config.logging_config import logger
 
 # Function to setup connectivity
 def get_db_connection(dbconfig: Optional[Dict[str, Any]] = None) -> pymysql.Connection:

@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import streamlit as st
 
 if "logged_in" not in st.session_state:
@@ -21,7 +25,7 @@ calendar = st.Page("views/calendar_more.py", title="Detailed Stats", icon=":mate
 trends = st.Page("views/tools/trends.py", title="Trends", icon=":material/data_exploration:")
 query_db = st.Page("views/fitness-overview.py", title="SQL Query", icon=":material/database_search:")
 mapping = st.Page("views/tools/mapping.py", title="Mapping", icon=":material/add_location:")
-history = st.Page("views/tools/history.py", title="DataFrame Demo", icon=":material/table_chart:")
+history = st.Page("views/tools/history.py", title="Workout History", icon=":material/table_chart:")
 
 if st.session_state.logged_in:
     pg = st.navigation(
