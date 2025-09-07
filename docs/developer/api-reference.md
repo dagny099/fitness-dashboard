@@ -1,6 +1,6 @@
 # API Reference
 
-This document provides detailed information about the internal APIs and functions available in the Fitness Dashboard codebase.
+This document provides detailed information about the internal APIs and functions available in the Fitness Dashboard codebase, including AI/ML services and statistical analysis utilities.
 
 ## Core Services
 
@@ -139,6 +139,198 @@ def bulk_insert(self, table: str, data: List[Dict],
         ]
         count = db_service.bulk_insert("workout_summary", workouts)
     """
+```
+
+## AI/ML Intelligence Services
+
+### FitnessIntelligenceService (`src/services/intelligence_service.py`)
+
+The core AI engine providing machine learning classification and automated insights.
+
+#### Class Definition
+
+```python
+class FitnessIntelligenceService:
+    """AI-powered fitness intelligence with ML classification and analytics"""
+    
+    def __init__(self):
+        """Initialize intelligence service with caching and ML models"""
+```
+
+#### Workout Classification
+
+##### `classify_workout_types()`
+
+```python
+def classify_workout_types(self, df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Classify workouts using K-means clustering on pace and distance patterns.
+    
+    Args:
+        df (pd.DataFrame): Workout data with avg_pace, distance_mi columns
+        
+    Returns:
+        pd.DataFrame: Input data enhanced with predicted_activity_type column
+        
+    Categories:
+        - real_run: Focused running sessions (8-12 min/mile pace)
+        - choco_adventure: Walking activities (20-28 min/mile pace)  
+        - mixed: Sessions combining running and walking
+        - outlier: Unusual patterns requiring attention
+        
+    Example:
+        classified_df = intelligence.classify_workout_types(workout_df)
+        print(classified_df['predicted_activity_type'].value_counts())
+    """
+```
+
+##### `generate_daily_intelligence_brief()`
+
+```python
+def generate_daily_intelligence_brief(self, df: pd.DataFrame) -> Dict[str, Any]:
+    """
+    Generate comprehensive AI-powered fitness insights.
+    
+    Args:
+        df (pd.DataFrame): Workout data for analysis
+        
+    Returns:
+        Dict[str, Any]: Intelligence brief with insights, trends, and recommendations
+        
+    Structure:
+        {
+            'insights': {
+                'performance': List[str],  # Performance-related insights
+                'trends': List[str],       # Trend analysis insights  
+                'consistency': List[str],  # Consistency observations
+                'recommendations': List[str] # AI recommendations
+            },
+            'metrics': Dict[str, float],   # Key performance metrics
+            'classification_stats': Dict   # ML model performance stats
+        }
+        
+    Example:
+        brief = intelligence.generate_daily_intelligence_brief(df)
+        for insight in brief['insights']['performance']:
+            print(f"💡 {insight}")
+    """
+```
+
+### ConsistencyAnalyzer (`src/utils/consistency_analyzer.py`)
+
+Multi-dimensional consistency analysis with advanced scoring algorithms.
+
+#### Class Definition
+
+```python
+class ConsistencyAnalyzer:
+    """Advanced consistency analysis and scoring system"""
+    
+    def __init__(self, df: pd.DataFrame):
+        """
+        Initialize analyzer with workout dataframe.
+        
+        Args:
+            df (pd.DataFrame): Workout data with workout_date column
+        """
+```
+
+#### Core Analysis Methods
+
+##### `calculate_consistency_score()`
+
+```python
+def calculate_consistency_score(self, periods: int = 30) -> Dict[str, Any]:
+    """
+    Calculate comprehensive consistency score across multiple dimensions.
+    
+    Args:
+        periods (int): Number of days to analyze for consistency
+        
+    Returns:
+        Dict[str, Any]: Multi-dimensional consistency metrics
+        
+    Scoring Dimensions:
+        - frequency_score: Workout frequency consistency (40% weight)
+        - timing_score: Day-of-week and interval patterns (20% weight)  
+        - performance_score: Metric consistency across workouts (20% weight)
+        - streak_score: Current and historical streaks (20% weight)
+        
+    Score Range: 0-100 (higher = more consistent)
+        
+    Example:
+        analyzer = ConsistencyAnalyzer(df)
+        consistency = analyzer.calculate_consistency_score(30)
+        print(f"Overall Score: {consistency['consistency_score']}")
+    """
+```
+
+##### `generate_consistency_insights()`
+
+```python
+def generate_consistency_insights(self) -> List[str]:
+    """
+    Generate human-readable consistency insights.
+    
+    Returns:
+        List[str]: AI-generated insights about workout consistency patterns
+        
+    Insight Categories:
+        - Overall consistency assessment with scoring
+        - Day-of-week preferences and patterns  
+        - Activity type preferences and distribution
+        - Frequency trends and recommendations
+        
+    Example:
+        insights = analyzer.generate_consistency_insights()
+        for insight in insights:
+            print(f"🔥 {insight}")
+    """
+```
+
+### Statistical Analysis Engine (`src/utils/statistics.py`)
+
+Advanced statistical analysis with trend detection and forecasting capabilities.
+
+#### TrendAnalysis
+
+```python
+class TrendAnalysis:
+    """Advanced trend analysis for fitness metrics"""
+    
+    @staticmethod
+    def calculate_trend(values: pd.Series, periods: int = 30) -> Dict[str, Any]:
+        """
+        Calculate trend analysis with statistical confidence.
+        
+        Returns:
+            Dict containing trend_direction, trend_strength, confidence, 
+            slope, r_squared, and p_value
+        """
+        
+    @staticmethod  
+    def forecast_values(values: pd.Series, periods: int = 14) -> Dict[str, Any]:
+        """
+        Forecast future values with confidence intervals.
+        
+        Returns:
+            Dict with forecast arrays and confidence bounds
+        """
+```
+
+#### PerformanceMetrics
+
+```python
+class PerformanceMetrics:
+    """Advanced performance metrics calculation"""
+    
+    @staticmethod
+    def calculate_consistency_score(values: pd.Series, method: str = 'cv') -> float:
+        """Calculate 0-100 consistency score using coefficient of variation"""
+        
+    @staticmethod
+    def calculate_improvement_rate(values: pd.Series, periods: int = 90) -> Dict[str, float]:
+        """Calculate performance improvement rate with confidence metrics"""
 ```
 
 ## Configuration Management

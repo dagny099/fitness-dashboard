@@ -7,8 +7,18 @@ This guide will walk you through setting up the Fitness Dashboard on your local 
 Before you begin, ensure you have the following installed:
 
 - **Python 3.10+**: Download from [python.org](https://python.org)
-- **Git**: For cloning the repository
+- **Git**: For cloning the repository  
 - **MySQL**: Local database server (for development)
+
+### AI/ML Dependencies
+
+The application includes advanced analytics features requiring:
+
+- **scipy**: Statistical analysis and scientific computing
+- **scikit-learn**: Machine learning algorithms for workout classification
+- **plotly**: Interactive visualizations and charts
+
+These are automatically installed with Poetry but may require additional system dependencies on some platforms.
 
 ## Installation Methods
 
@@ -141,9 +151,17 @@ DEBUG=true
 Test your installation by running:
 
 ```bash
+# Core dependencies
 python -c "import streamlit; print('Streamlit version:', streamlit.__version__)"
 python -c "import pymysql; print('PyMySQL installed successfully')"
+
+# AI/ML dependencies  
+python -c "import scipy; print('SciPy version:', scipy.__version__)"
+python -c "import sklearn; print('Scikit-learn version:', sklearn.__version__)"
+python -c "import plotly; print('Plotly version:', plotly.__version__)"
 ```
+
+If all imports succeed, your installation is ready for AI-powered fitness analytics.
 
 ## Next Steps
 

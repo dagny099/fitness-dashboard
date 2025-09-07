@@ -1,8 +1,30 @@
 # Visualization Features
 
-The Fitness Dashboard provides rich, interactive visualizations powered by Plotly to help you understand your fitness data and track progress over time.
+The Fitness Dashboard provides rich, interactive visualizations powered by Plotly and AI-driven insights to help you understand your fitness data, track progress, and discover behavioral patterns.
 
 ## Chart Types Overview
+
+### The Choco Effect Dashboard
+
+**Purpose**: Showcase AI-driven behavioral transformation analysis through data storytelling
+
+**Key Visualizations**:
+- **Transformation Timeline**: Interactive dual-axis charts showing workout frequency and pace changes over time
+- **Before/After Comparison**: Statistical cards displaying key performance metrics across different life periods
+- **ML Classification Demo**: Pie charts and sample tables demonstrating automated workout categorization
+- **Behavioral Pattern Analysis**: Visual representation of the dramatic lifestyle change captured in fitness data
+
+**AI Features**:
+- **Smart Timeline Markers**: Automatically identifies significant behavioral change points
+- **Classification Confidence**: ML confidence scores for workout type predictions
+- **Statistical Significance**: Trend analysis with confidence intervals and p-values
+- **Automated Insights**: AI-generated explanations of pattern changes and their implications
+
+**Interview Showcase Elements**:
+- Data science methodology demonstration
+- Machine learning model performance visualization
+- Statistical analysis with confidence metrics
+- Professional portfolio-quality presentation
 
 ### Time Series Charts
 
@@ -49,9 +71,25 @@ ORDER BY workout_date;
 
 **Visualizations**:
 - **Pace Analysis**: Average vs. maximum pace trends
-- **Duration Distribution**: Workout length patterns
+- **Duration Distribution**: Workout length patterns  
 - **Intensity Heatmaps**: Performance by day/time
 - **Progress Indicators**: Goal achievement tracking
+
+### AI-Powered Analytics Charts
+
+**Purpose**: Leverage machine learning for deeper fitness insights
+
+**Statistical Visualizations**:
+- **Trend Lines with Confidence Intervals**: Statistical significance of performance improvements
+- **Anomaly Detection Plots**: Highlight unusual workouts with confidence scores
+- **Classification Scatter Plots**: Visual representation of ML workout categorization
+- **Consistency Heat Maps**: Multi-dimensional consistency scoring across time periods
+
+**Smart Features**:
+- **Automated Pattern Recognition**: Charts automatically highlight significant changes
+- **Predictive Forecasting**: Future performance projections with uncertainty bands
+- **Behavioral Segmentation**: Visual clustering of different activity patterns
+- **Intelligence Overlays**: AI-generated insights displayed directly on charts
 
 ## Interactive Features
 
