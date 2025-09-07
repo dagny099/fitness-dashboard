@@ -19,6 +19,9 @@ ENV/
 .streamlit/
 !.streamlit/config.toml  # Allow config.toml but not secrets.toml
 
+# Ignore Streamlit / SQLite session state
+sessions.db
+
 # Jupyter
 .ipynb_checkpoints/
 
