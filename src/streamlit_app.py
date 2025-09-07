@@ -26,11 +26,12 @@ trends = st.Page("views/tools/trends.py", title="Trends", icon=":material/data_e
 query_db = st.Page("views/fitness-overview.py", title="SQL Query", icon=":material/database_search:")
 mapping = st.Page("views/tools/mapping.py", title="Mapping", icon=":material/add_location:")
 history = st.Page("views/tools/history.py", title="Workout History", icon=":material/table_chart:")
+choco_effect = st.Page("views/choco_effect.py", title="The Choco Effect", icon="🐕")
 
 if st.session_state.logged_in:
     pg = st.navigation(
         {
-            "Reports": [dashboard],
+            "Reports": [dashboard, choco_effect],
             "Calendar": [calendar],
             "Tools": [trends, mapping, query_db, history],
             "Account": [logout_page],
