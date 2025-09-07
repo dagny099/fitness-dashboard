@@ -1,16 +1,24 @@
 # Fitness Dashboard
 
 ## Project Description
-The Fitness Dashboard is a web application designed to help users track and manage their workout routines. It provides features such as logging exercises, tracking progress, and visualizing workout data.
+The Fitness Dashboard is an AI-powered web application for tracking and analyzing workout data. Built with Streamlit and MySQL, it features intelligent workout classification, trend analysis, and data-driven insights that help users understand their fitness patterns and progress.
+
+### Key Features
+- **AI Workout Classification**: Machine learning algorithms automatically categorize workouts based on pace and distance patterns
+- **Intelligent Analytics**: Statistical analysis with trend detection, anomaly identification, and performance forecasting  
+- **The Choco Effect Dashboard**: Interactive visualization showcasing behavioral transformation through data storytelling
+- **Multi-dimensional Consistency Scoring**: Advanced algorithms to measure workout consistency across frequency, timing, and performance
 
 [Google Document with project notes](https://docs.google.com/document/d/1lj6R9rybGuRNgUUzizTrjVLj5xpU9R1nWajcMkRqpwI/edit?usp=drive_link)
 
 Link to download a user's own [MapMyRun workout history](https://www.mapmyfitness.com/workout/export/csv) (*requires sign-in*). 
 
-## Features
-- Exercise logging with customizable workout classification
-- Progress tracking with charts and statistics
-- Responsive design for mobile and desktop use
+## Core Functionality
+- **Workout Data Import**: CSV import from MapMyRun and other fitness platforms
+- **Interactive Dashboards**: Monthly views, trends analysis, and workout history
+- **SQL Query Interface**: Advanced data exploration with direct database queries
+- **AI-Powered Insights**: Automated pattern recognition and personalized recommendations
+- **Responsive Design**: Optimized for mobile and desktop use
 
 ## Installation 
 1. Clone the repository:
@@ -91,7 +99,7 @@ To follow along:
 ### 1. SETUP LOCAL DB FOR TESTING  
 Run "init.py" from main project directory to CREATE DATABASE & TABLES
 ```bash
-python init.py
+python scripts/init.py
 ```
 **What this script does:**  
 - Loads `pyproject.toml` and looks for `.streamlit folder`; if none found, creates it and the `.streamlit/secrets.toml` file with db credentials...  
@@ -107,14 +115,20 @@ You may want to check the local database to ensure you have the login, database,
 ### 2. UPDATE DB 
 Run "update_db.py" from main project directory to UPDATE DATABASE:
 ```bash
-python update_db.py
+python src/update_db.py
 ```
 
 ### 3. RUN DASHBOARD AND VISIT AT`http://localhost:8501`** 
-Run "dashboard.py" from main project directory to SHOW DASHBOARD:
+Run the Streamlit application from main project directory:
 ```bash
-streamlit run streamlit_app.py
+streamlit run src/streamlit_app.py
 ```
+
+### 4. EXPLORE AI FEATURES
+Once running, explore the new intelligent features:
+- **Reports** → **The Choco Effect**: Interactive dashboard showcasing AI-driven fitness insights
+- **Tools** → **Trends**: Statistical analysis and forecasting
+- **Tools** → **Workout History**: Classified workout data with ML insights
 
 ## Deployment  
 

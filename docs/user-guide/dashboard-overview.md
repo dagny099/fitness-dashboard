@@ -1,6 +1,6 @@
 # Dashboard Overview
 
-The Fitness Dashboard provides an intuitive interface for tracking and analyzing your workout data. This guide covers the main features and navigation.
+The Fitness Dashboard provides an AI-powered interface for tracking and analyzing your workout data with intelligent insights and automated pattern recognition. This guide covers the main features and navigation.
 
 ## Main Interface
 
@@ -10,10 +10,21 @@ When you first launch the dashboard at `http://localhost:8501`, you'll see the m
 
 The sidebar contains the following sections:
 
-- **🏠 Dashboard**: Monthly overview and key statistics
-- **📊 Fitness Overview**: SQL query interface for advanced analysis  
-- **📅 Calendar**: Calendar view of your workouts
-- **🔧 Tools**: Additional analysis tools and utilities
+#### Reports
+- **📊 Monthly View**: Monthly overview and key statistics (default page)
+- **🐕 The Choco Effect**: AI-powered dashboard showcasing behavioral transformation insights
+
+#### Calendar
+- **📅 Detailed Stats**: Calendar view with comprehensive workout statistics
+
+#### Tools
+- **📈 Trends**: Statistical analysis with trend detection and forecasting
+- **🗺️ Mapping**: Geographic visualization of workout routes
+- **🔍 SQL Query**: Direct database interface for advanced analysis
+- **📋 Workout History**: Classified workout data with AI insights
+
+#### Account
+- **🚪 Log out**: Session management
 
 ## Dashboard Home
 
@@ -84,32 +95,54 @@ Customize your visualizations:
 - Adjust time groupings (daily, weekly, monthly)
 - Toggle between different metrics (distance, calories, duration)
 
+## AI-Powered Features
+
+### The Choco Effect Dashboard
+
+A specialized dashboard that demonstrates AI-driven fitness intelligence:
+
+- **Timeline Visualization**: Interactive charts showing behavioral transformation over time
+- **ML Classification Demo**: Real-time demonstration of workout type classification
+- **Before/After Analysis**: Statistical comparison of fitness patterns across different life periods  
+- **Automated Insights**: AI-generated explanations of behavioral changes and trends
+
+### Intelligent Workout Classification  
+
+Machine learning algorithms automatically categorize your workouts:
+
+- **Real Runs**: Focused running sessions (typically 8-12 min/mile pace)
+- **Choco Adventures**: Walking activities (typically 20-28 min/mile pace) 
+- **Mixed Activities**: Sessions combining running and walking
+- **Outliers**: Unusual workout patterns requiring attention
+
+### Statistical Analysis Engine
+
+Advanced analytics providing:
+
+- **Trend Detection**: Identifies improving, declining, or stable performance patterns
+- **Anomaly Detection**: Highlights unusual workouts that deviate from normal patterns
+- **Performance Forecasting**: Predicts future performance based on historical trends
+- **Consistency Scoring**: Multi-dimensional scoring across frequency, timing, and performance
+
 ## Dashboard Widgets
 
-### Progress Indicators
+### AI Insights Cards
 
-Visual progress bars and indicators show:
+Smart cards displaying:
 
-- Progress toward monthly goals
-- Improvement trends over time
-- Performance comparisons
+- Real-time intelligence briefs with personalized recommendations
+- Trend indicators with confidence scores
+- Performance improvement rates and forecasts
+- Consistency scores with actionable feedback
 
-### Calendar Integration
+### Interactive Classification Display
 
-A mini calendar widget allows:
+Visual representation showing:
 
-- Quick navigation to specific dates
-- Visual indicators for workout days
-- Click-through to detailed workout information
-
-### Quick Stats Cards
-
-Informative cards displaying:
-
-- Weekly averages
-- Personal records
-- Trend indicators (up/down arrows)
-- Percentage changes from previous periods
+- Workout type distribution with ML confidence scores
+- Classification accuracy metrics
+- Sample workouts demonstrating each category
+- Classification evolution over time
 
 ## Customization Options
 
