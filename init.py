@@ -24,6 +24,9 @@ import os
 import toml
 import pymysql
 import platform
+import logging
+from src.config.database import DatabaseConfig
+from src.services.database_service import DatabaseService
 
 # ----------------------------------------------
 # with open("pyproject.toml", "r") as f:
@@ -32,6 +35,8 @@ import platform
 tablename = "workout_summary"
 
 # Initialize database service
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 logger.info("Initializing database service...")
 db_config = DatabaseConfig.from_environment()
 db_service = DatabaseService(db_config)
