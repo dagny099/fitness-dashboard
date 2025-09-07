@@ -8,9 +8,9 @@ from urllib.error import URLError
 st.markdown("# Mapping Demo")
 st.sidebar.header("Mapping Demo")
 st.write(
-    """This demo shows how to use
+    """This is work being updated, Sept 2025 -- Tune in again soon. Below is a referece from streamlit documentation.
 [`st.pydeck_chart`](https://docs.streamlit.io/develop/api-reference/charts/st.pydeck_chart)
-to display geospatial data."""
+"""
 )
 
 

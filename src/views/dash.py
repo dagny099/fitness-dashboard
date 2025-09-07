@@ -295,7 +295,7 @@ c1, c2, c3 = st.columns([2, 1, 1])
 # with c1:
 #     st.markdown("#### 📆 Select a Month to View Your Calendar: ")
 with c2:
-    selected_date = st.date_input("PICK ANY DATE IN THE MONTH you're interested in", value=date.today()) #, label_visibility="collapsed")
+    selected_date = st.date_input("PICK ANY DATE IN THE MONTH you're interested in", value=date(2025, 4, 20)) #, label_visibility="collapsed")
 
 
 # ---------------------

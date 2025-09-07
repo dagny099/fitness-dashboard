@@ -22,12 +22,12 @@ from services.database_service import DatabaseService
 from services.intelligence_service import FitnessIntelligenceService
 from utils.consistency_analyzer import ConsistencyAnalyzer
 
-# Page configuration
-st.set_page_config(
-    page_title="The Choco Effect", 
-    page_icon="🐕",
-    layout="wide"
-)
+# # Page configuration
+# st.set_page_config(
+#     page_title="The Choco Effect", 
+#     page_icon="🐕",
+#     layout="wide"
+# )
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def load_workout_data():
@@ -45,6 +45,10 @@ def load_workout_data():
         st.error(f"Database connection failed: {e}")
         return []
 
+@st.cache_resource
+def get_intelligence_service():
+    return FitnessIntelligenceService()
+
 @st.cache_data(ttl=300)
 def get_choco_analysis(workout_data):
     """Get comprehensive Choco Effect analysis."""
@@ -55,31 +59,44 @@ def get_choco_analysis(workout_data):
         df = pd.DataFrame(workout_data)
         df['workout_date'] = pd.to_datetime(df['workout_date'])
         
-        # Initialize intelligence service
-        intelligence = FitnessIntelligenceService()
+        # # Initialize intelligence service
+        # intelligence = FitnessIntelligenceService()
         
-        # Get workout classifications
+        # # Get workout classifications
+        # classified_workouts = intelligence.classify_workout_types(df)
+        
+        # # Calculate consistency metrics
+        # analyzer = ConsistencyAnalyzer(df)
+        
+        # Use cached resource, but DO NOT return it
+        intelligence = get_intelligence_service()
         classified_workouts = intelligence.classify_workout_types(df)
-        
-        # Calculate consistency metrics
-        analyzer = ConsistencyAnalyzer(df)
-        
+
         # Define Choco arrival date
-        choco_date = pd.to_datetime('2018-06-01')
-        
+        # choco_date = pd.to_datetime('2018-06-01')
+        choco_date = datetime(2018, 6, 1)
+
         # Split data into pre/post Choco periods
         pre_choco = df[df['workout_date'] < choco_date].copy()
         post_choco = df[df['workout_date'] >= choco_date].copy()
-        
+
         return {
             'df': df,
             'classified_df': classified_workouts,
             'pre_choco': pre_choco,
             'post_choco': post_choco,
-            'choco_date': choco_date,
-            'analyzer': analyzer,
-            'intelligence': intelligence
+            'choco_date': choco_date
         }
+            
+        # return {
+        #     'df': df,
+        #     'classified_df': classified_workouts,
+        #     'pre_choco': pre_choco,
+        #     'post_choco': post_choco,
+        #     'choco_date': choco_date,
+        #     'analyzer': analyzer,
+        #     'intelligence': intelligence
+        # }
     except Exception as e:
         st.error(f"Analysis failed: {e}")
         return None
@@ -116,13 +133,22 @@ def create_transformation_timeline(analysis_data):
     )
     
     # Add Choco arrival line
+    # Add the vertical line as a shape
     fig.add_vline(
-        x=choco_date, 
-        line_dash="dash", 
-        line_color="#9b59b6", 
+        x=choco_date,
+        line_dash="dash",
+        line_color="#9b59b6",
         line_width=3,
-        annotation_text="🐕 Choco Arrives",
-        annotation_position="top",
+        row=1, col=1
+    )
+
+    # Then manually place annotation at that x
+    fig.add_annotation(
+        x=choco_date,
+        y=monthly_counts.max(),   # top of the bar chart
+        text="🐕 Choco Arrives",
+        showarrow=False,
+        yshift=20,
         row=1, col=1
     )
     
@@ -321,9 +347,12 @@ def create_classification_demo(analysis_data):
 
 def create_consistency_insights(analysis_data):
     """Create consistency and intelligence insights."""
-    analyzer = analysis_data['analyzer']
-    intelligence = analysis_data['intelligence']
+    # analyzer = analysis_data['analyzer']
+    # intelligence = analysis_data['intelligence']
+    # df = analysis_data['df']
     df = analysis_data['df']
+    analyzer = ConsistencyAnalyzer(df)                 # build locally (cheap)
+    intelligence = get_intelligence_service()          # cached resource
     
     st.markdown("### 🧠 AI-Generated Insights")
     
