@@ -252,6 +252,7 @@ class FitnessIntelligenceService:
             }
             
             # Core intelligence sections
+            brief['classification_intelligence'] = self._analyze_classification_intelligence(recent_df)
             brief['performance_intelligence'] = self._analyze_performance_intelligence(recent_df, df)
             brief['consistency_intelligence'] = self._analyze_consistency_intelligence(recent_df)
             brief['anomaly_intelligence'] = self._analyze_anomaly_intelligence(recent_df)
@@ -263,6 +264,40 @@ class FitnessIntelligenceService:
         
         except Exception as e:
             return {'error': f'Failed to generate intelligence brief: {str(e)}'}
+    
+    def _analyze_classification_intelligence(self, recent_df: pd.DataFrame) -> Dict[str, Any]:
+        """Analyze workout classification patterns and accuracy."""
+        try:
+            if 'predicted_activity_type' not in recent_df.columns:
+                return {'error': 'Classification data not available'}
+            
+            summary = self.get_classification_summary(recent_df)
+            
+            # Add specific insights about classification patterns
+            intelligence = summary.copy()
+            
+            # Activity type preferences in recent period
+            activity_counts = recent_df['predicted_activity_type'].value_counts()
+            total_classified = len(recent_df[recent_df['predicted_activity_type'] != 'unknown'])
+            
+            if total_classified > 0:
+                primary_activity = activity_counts.index[0]
+                primary_percentage = (activity_counts.iloc[0] / total_classified) * 100
+                
+                intelligence['primary_activity'] = {
+                    'type': primary_activity,
+                    'percentage': primary_percentage,
+                    'count': activity_counts.iloc[0]
+                }
+                
+                # Activity diversity score
+                diversity_score = (len(activity_counts) - 1) / 3 * 100  # Scale 0-100
+                intelligence['activity_diversity_score'] = min(100, diversity_score)
+            
+            return intelligence
+            
+        except Exception as e:
+            return {'error': str(e)}
     
     def _analyze_performance_intelligence(self, recent_df: pd.DataFrame, 
                                         full_df: pd.DataFrame) -> Dict[str, Any]:
@@ -511,8 +546,33 @@ class FitnessIntelligenceService:
             else:
                 insights.append(f"📈 Building Phase: {recent_frequency:.1f} workouts per week - room to grow")
             
-            # Pattern insights
-            if 'activity_type' in recent_df.columns:
+            # Activity classification insights (enhanced)
+            if 'predicted_activity_type' in recent_df.columns:
+                classified_df = recent_df[recent_df['predicted_activity_type'].isin(['real_run', 'choco_adventure', 'mixed'])]
+                
+                if len(classified_df) > 0:
+                    activity_counts = classified_df['predicted_activity_type'].value_counts()
+                    top_activity = activity_counts.index[0]
+                    activity_pct = (activity_counts.iloc[0] / len(classified_df)) * 100
+                    
+                    # Generate activity-specific insights
+                    if top_activity == 'real_run':
+                        run_pace = classified_df[classified_df['predicted_activity_type'] == 'real_run']['avg_pace'].mean()
+                        insights.append(f"🏃 Running Focus: {activity_pct:.0f}% real runs averaging {run_pace:.1f} min/mile")
+                    elif top_activity == 'choco_adventure':
+                        walk_pace = classified_df[classified_df['predicted_activity_type'] == 'choco_adventure']['avg_pace'].mean()
+                        insights.append(f"🐕 Walking Dominant: {activity_pct:.0f}% choco adventures averaging {walk_pace:.1f} min/mile")
+                    else:
+                        insights.append(f"⚖️ Mixed Activity: {activity_pct:.0f}% mixed workouts - good training variety")
+                    
+                    # Add secondary activity insight if significant
+                    if len(activity_counts) > 1 and activity_counts.iloc[1] / len(classified_df) > 0.2:
+                        second_activity = activity_counts.index[1]
+                        second_pct = (activity_counts.iloc[1] / len(classified_df)) * 100
+                        insights.append(f"➕ Secondary Activity: {second_pct:.0f}% {second_activity.replace('_', ' ')}")
+            
+            # Fallback to original activity_type if classification not available
+            elif 'activity_type' in recent_df.columns:
                 top_activity = recent_df['activity_type'].mode().iloc[0]
                 activity_pct = (recent_df['activity_type'] == top_activity).mean() * 100
                 
