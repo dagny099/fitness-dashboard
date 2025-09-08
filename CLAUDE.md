@@ -124,3 +124,35 @@ direnv allow
 - Production deployment uses systemd service management
 - **AI Features**: Fitness intelligence system provides automated workout classification and personalized insights
 - **The Choco Effect**: Specialized portfolio dashboard showcasing behavioral transformation through data analysis
+
+## SQL Documentation Guidelines
+
+**CRITICAL: Always validate SQL examples before committing documentation changes.**
+
+### SQL Query Validation Requirements
+
+1. **Test All Queries**: Every SQL example in documentation must be tested against the actual database
+2. **Run Validation Script**: Use `python scripts/validate_sql_docs.py` before committing documentation
+3. **MySQL Compatibility**: Ensure queries work with the current MySQL version (9.2.0) and `sql_mode=only_full_group_by`
+
+### Common SQL Issues to Avoid
+
+1. **Reserved Word Aliases**: 
+   - ❌ `SELECT NOW() as current_time` 
+   - ✅ `SELECT NOW() as 'current_time'` or `SELECT NOW() as execution_time`
+
+2. **GROUP BY Compliance**:
+   - ❌ `SELECT col1, COUNT(*) FROM table GROUP BY col2` (missing col1 in GROUP BY)
+   - ✅ `SELECT col1, COUNT(*) FROM table GROUP BY col1, col2`
+
+3. **Aggregation Without GROUP BY**:
+   - ❌ `SELECT MAX(col1), col2 FROM table` (non-aggregated col2)
+   - ✅ `SELECT col1, col2 FROM table WHERE col1 = (SELECT MAX(col1) FROM table)`
+
+### Prevention Strategy
+
+- **Before adding SQL examples**: Test each query in the actual Streamlit SQL interface
+- **For multi-statement blocks**: Test each statement separately
+- **Reserved words to watch**: `current_time`, `current_date`, `date`, `time`, `order`, `group`, `user`
+- **Always quote problematic aliases**: Use single quotes or backticks for column aliases that might be reserved
+- **Regular validation**: Run the validation script as part of documentation updates

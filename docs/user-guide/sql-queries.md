@@ -74,7 +74,7 @@ Copy and paste these queries to get started:
     ```sql
     SELECT 
         'Longest Distance' as record_type,
-        MAX(distance_mi) as value,
+        distance_mi as value,
         workout_date,
         activity_type
     FROM workout_summary
@@ -84,7 +84,7 @@ Copy and paste these queries to get started:
     
     SELECT 
         'Most Calories',
-        MAX(kcal_burned),
+        kcal_burned,
         workout_date,
         activity_type
     FROM workout_summary
@@ -94,7 +94,7 @@ Copy and paste these queries to get started:
     
     SELECT 
         'Longest Duration',
-        MAX(duration_sec / 60),
+        duration_sec / 60,
         workout_date,
         activity_type
     FROM workout_summary
@@ -324,7 +324,13 @@ SELECT
     ROUND(AVG(distance_mi), 2) as avg_distance,
     ROUND(AVG(kcal_burned)) as avg_calories
 FROM workout_summary
-GROUP BY QUARTER(workout_date)
+GROUP BY QUARTER(workout_date), 
+         CASE QUARTER(workout_date)
+             WHEN 1 THEN 'Q1: Jan-Mar'
+             WHEN 2 THEN 'Q2: Apr-Jun'
+             WHEN 3 THEN 'Q3: Jul-Sep'
+             WHEN 4 THEN 'Q4: Oct-Dec'
+         END
 ORDER BY quarter;
 ```
 
