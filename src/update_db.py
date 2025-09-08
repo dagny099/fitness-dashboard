@@ -10,12 +10,14 @@ Usage:
 Pre-requisites:
     $ ~/.local/bin/poetry run python init.py     # Initialize the database
 """
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utilities import execute_query, insert_data, clean_data, enrich_data
+from src.utils.utilities import execute_query, insert_data, clean_data, enrich_data
 import os
 import toml
-import pandas as pd
-import toml
+import platform
 
 # ----------------------------------------------
 # Get the project & database configuration
@@ -23,9 +25,10 @@ with open("pyproject.toml", "r") as f:
     config = toml.load(f)
 
 # Get the input file path: for `user2632022_workout_history.csv`
-input_filepath = 'build_workout_dashboard' + os.path.sep + config['tool']['project']['input_filename'] 
+input_filepath = 'src' + os.path.sep + config['tool']['project']['input_filename'] 
 
 # Load the CSV file with full workout history
+import pandas as pd
 if os.path.exists(input_filepath):
     print(f'\n-------\nChecking for workout data in this file: {input_filepath}')
     df = pd.read_csv(input_filepath)
@@ -47,12 +50,29 @@ tablename = "workout_summary"
 # DATABASE INTERACTIONS START HERE
 
 # 1. Load database configuration (.streamlit/secrets.toml)
-with open(".streamlit/secrets.toml", "r") as f:
-    dbconfig = toml.load(f)
-    dbconfig = dbconfig['connections']['mysql']
-    print(f"\nUsing this Databse configuration:")    
-    print(dbconfig)    
+if platform.system() == "Darwin":
+    ENV = "development"
+    connection_type = "Local"
+else:
+    ENV = "production"
+    connection_type = "Remote"
 
+# Load db config from .streamlit/secrets.toml
+if connection_type == "Local":
+    dbconfig = {
+        "host": "localhost",  # or your local DB host
+        "port": 3306,         # default MySQL port
+        "username": os.environ.get("MYSQL_USER"),
+        "password": os.environ.get("MYSQL_PWD")
+}
+else:
+    dbconfig = {
+        "host": os.getenv("RDS_ENDPOINT"),
+        "port": 3306,
+        "username": os.getenv("RDS_USER"),
+        "password": os.getenv("RDS_PASSWORD")
+    }
+dbconfig['database'] = "sweat"  # Database name
 
 # 2. Query database for existing workouts
 query = "SELECT workout_id FROM workout_summary"
