@@ -383,9 +383,8 @@ with details_tab:
     except ValueError:
         default_year_index = len(years) - 1 if years else 0
     detail_selected_year = col1.selectbox("Select Year", options=years, index=default_year_index)
-    # Convert to datetime object for filtering
-    datetime_object = datetime.strptime(detail_selected_year, "%Y")
-    detail_selected_year = datetime_object.year
+    # Convert to integer for filtering
+    detail_selected_year = int(detail_selected_year)
 
     # 2. Month Selector
     months = sorted(df[df["workout_date"].dt.year == detail_selected_year]["workout_date"].dt.month.unique())
