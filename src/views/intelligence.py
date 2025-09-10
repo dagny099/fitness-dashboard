@@ -21,12 +21,12 @@ from services.database_service import DatabaseService
 from utils.consistency_analyzer import ConsistencyAnalyzer
 
 # Page configuration
-st.set_page_config(
-    page_title="Your Fitness Intelligence",
-    page_icon="🧠",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# st.set_page_config(
+#     page_title="Your Fitness Intelligence",
+#     page_icon="🧠",
+#     layout="wide",
+#     initial_sidebar_state="expanded"
+# )
 
 # Algorithm transparency configuration
 ALGORITHM_INFO = {
