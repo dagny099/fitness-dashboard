@@ -8,40 +8,59 @@ The Fitness Dashboard follows a clean, layered architecture that separates conce
 
 ```mermaid
 graph TB
-    subgraph "Frontend Layer"
-        A[Streamlit UI]
-        B[Interactive Components]
-        C[Visualization Layer]
+    subgraph "Intelligence Layer"
+        A[Intelligence Dashboard]
+        B[Algorithm Transparency]
+        C[AI Classification Demo]
+        D[Daily Intelligence Brief]
+    end
+    
+    subgraph "AI Services Layer"
+        E[Intelligence Service]
+        F[ML Classification Engine]
+        G[Statistical Analysis]
+        H[Consistency Analyzer]
+        I[Algorithm Registry]
     end
     
     subgraph "Business Logic Layer"
-        D[Services Layer]
-        E[Data Processing]
-        F[Query Engine]
+        J[Database Service]
+        K[Data Processing]
+        L[Query Engine]
+        M[UI Components]
     end
     
-    subgraph "Data Layer"
-        G[Database Service]
-        H[Configuration Management]
-        I[Session Management]
+    subgraph "Data & Infrastructure"
+        N[MySQL Database]
+        O[Configuration Management]
+        P[Session Management]
+        Q[Testing Infrastructure]
     end
     
     subgraph "External"
-        J[MySQL Database]
-        K[CSV Import Files]
-        L[Environment Config]
+        R[CSV Import Files]
+        S[Environment Config]
     end
     
-    A --> D
-    B --> D
+    A --> E
+    B --> I
     C --> F
-    D --> G
+    D --> E
+    E --> F
     E --> G
-    F --> G
+    E --> H
+    F --> J
     G --> J
-    H --> L
-    I --> G
-    K --> E
+    H --> J
+    I --> M
+    J --> N
+    K --> J
+    L --> J
+    M --> A
+    O --> S
+    P --> J
+    Q --> E
+    R --> K
 ```
 
 ## Project Structure
@@ -56,27 +75,31 @@ fitness-dashboard/
 │   │   ├── app.py               # Application settings
 │   │   ├── database.py          # Database configuration
 │   │   └── logging_config.py    # Logging setup
-│   ├── models/                   # Data models (future expansion)
-│   │   └── __init__.py
-│   ├── services/                 # Business logic layer
+│   ├── services/                 # AI-powered business logic layer
 │   │   ├── __init__.py
-│   │   └── database_service.py  # Database operations
-│   ├── utils/                    # Shared utilities
+│   │   ├── database_service.py  # Database operations
+│   │   └── intelligence_service.py # AI/ML intelligence engine
+│   ├── utils/                    # AI & Analytics utilities
 │   │   ├── __init__.py
+│   │   ├── statistics.py        # Statistical analysis engine
+│   │   ├── consistency_analyzer.py # Multi-dimensional consistency scoring
+│   │   ├── ui_components.py     # Algorithm transparency UI components
 │   │   ├── session_manager.py   # Session handling
 │   │   ├── storage.py           # Data persistence
 │   │   └── utilities.py         # Helper functions
-│   ├── views/                    # UI components and pages
+│   ├── views/                    # AI-enhanced UI components and pages
 │   │   ├── __init__.py
-│   │   ├── dash.py              # Main dashboard
+│   │   ├── intelligence.py      # Intelligence-first dashboard (NEW DEFAULT)
+│   │   ├── dash.py              # Monthly dashboard view
+│   │   ├── choco_effect.py      # AI-powered portfolio dashboard
 │   │   ├── fitness-overview.py  # SQL interface
 │   │   ├── login.py             # Authentication
 │   │   ├── calendar_more.py     # Calendar view
-│   │   └── tools/               # Analysis tools
-│   │       ├── history.py
-│   │       ├── mapping.py
-│   │       ├── testcard.py
-│   │       └── trends.py
+│   │   └── tools/               # Enhanced analysis tools
+│   │       ├── history.py       # Workout history with AI insights
+│   │       ├── mapping.py       # Geographic visualization
+│   │       ├── trends.py        # Statistical trend analysis
+│   │       └── testcard.py      # Testing components
 │   ├── streamlit_app.py          # Application entry point
 │   ├── calendar.py               # Calendar utilities
 │   ├── update_db.py              # Data import script
@@ -84,10 +107,17 @@ fitness-dashboard/
 ├── scripts/                      # Setup and deployment
 │   ├── init.py                  # Database initialization
 │   └── deploy.sh                # Production deployment
-├── tests/                        # Test suite
-├── docs/                         # Documentation (MkDocs)
+├── tests/                        # Comprehensive test suite (200+ methods)
+│   ├── test_intelligence_service.py # AI/ML testing
+│   ├── test_statistics.py       # Statistical analysis testing
+│   ├── test_consistency_analyzer.py # Consistency analysis testing
+│   ├── test_database_integration.py # Integration testing
+│   ├── test_performance_benchmarks.py # Performance & scalability
+│   └── test_queries.py          # Database query testing
+├── docs/                         # AI-enhanced documentation
+├── AI_ALGORITHM_TRANSPARENCY_GUIDE.md # Complete algorithm documentation
 ├── pyproject.toml               # Project configuration
-└── requirements.txt             # Dependencies
+└── requirements.txt             # Dependencies (includes scikit-learn, scipy)
 ```
 
 ## Core Components
@@ -138,7 +168,7 @@ def setup_logging():
 
 ### Services Layer (`src/services/`)
 
-**Purpose**: Business logic and data access abstraction
+**Purpose**: AI-powered business logic and data access abstraction
 
 #### `database_service.py`
 ```python
@@ -160,26 +190,147 @@ class DatabaseService:
         """Business logic for workout data retrieval"""
 ```
 
+### Intelligence Services Layer (`src/services/`)
+
+**Purpose**: AI-powered analysis and machine learning capabilities
+
+#### `intelligence_service.py`
+```python
+class IntelligenceService:
+    """AI/ML intelligence engine for workout analysis"""
+    
+    def classify_workout_types(self, workouts: List[Dict]) -> Dict:
+        """ML classification using K-means clustering
+        
+        Categories workouts into:
+        - real_run: Focused running sessions (8-12 min/mile)
+        - choco_adventure: Walking activities (20-28 min/mile)  
+        - mixed: Combined running/walking sessions
+        - outlier: Unusual patterns requiring attention
+        """
+        
+    def generate_daily_intelligence_brief(self, user_data: Dict) -> Dict:
+        """Generate AI-powered daily intelligence brief
+        
+        Returns:
+        - Key insights with confidence scores
+        - Performance trends with statistical significance
+        - Personalized recommendations
+        - Algorithm transparency metadata
+        """
+        
+    def analyze_specific_metric(self, metric: str, timeframe: str) -> Dict:
+        """Deep analysis of specific performance metrics
+        
+        Features:
+        - Trend analysis with confidence intervals
+        - Anomaly detection using multiple methods
+        - Performance forecasting
+        - Classification-aware analysis
+        """
+        
+    def get_classification_summary(self) -> Dict:
+        """ML model performance and accuracy metrics"""
+```
+
+### AI/ML Utilities Layer (`src/utils/`)
+
+**Purpose**: Advanced analytics and machine learning utilities
+
+#### `statistics.py`
+```python
+class TrendAnalysis:
+    """Advanced statistical analysis engine"""
+    
+    def calculate_trend(self, data: List[float]) -> Dict:
+        """Trend detection with confidence intervals
+        - Linear regression analysis
+        - Statistical significance testing (p-values)
+        - Confidence interval calculation
+        """
+        
+    def forecast_values(self, data: List[float], periods: int = 14) -> Dict:
+        """Performance forecasting with uncertainty bounds
+        - Linear extrapolation method
+        - Moving average forecasting
+        - Confidence bands for predictions
+        """
+
+class AnomalyDetection:
+    """Multi-method anomaly detection system"""
+    
+    def detect_outliers(self, data: List[float]) -> Dict:
+        """Comprehensive outlier detection
+        - IQR method (1.5 * interquartile range)
+        - Z-score method (2.5 standard deviations)
+        - Modified Z-score using median absolute deviation
+        """
+        
+    def detect_performance_anomalies(self, workouts: List[Dict]) -> List[Dict]:
+        """Workout-specific anomaly detection with rolling baselines"""
+```
+
+#### `consistency_analyzer.py`
+```python
+class ConsistencyAnalyzer:
+    """Multi-dimensional consistency scoring and pattern recognition"""
+    
+    def calculate_consistency_score(self, workouts: List[Dict]) -> Dict:
+        """Weighted composite consistency scoring
+        - Frequency consistency (40% weight)
+        - Timing consistency (20% weight)  
+        - Performance consistency (20% weight)
+        - Streak metrics (20% weight)
+        """
+        
+    def analyze_workout_patterns(self, workouts: List[Dict]) -> Dict:
+        """Pattern recognition and preference analysis
+        - Preferred workout days (day-of-week analysis)
+        - Seasonal patterns and monthly trends
+        - Activity type preferences
+        """
+        
+    def detect_consistency_phases(self, workouts: List[Dict]) -> List[Dict]:
+        """Training phase detection with rolling analysis
+        - High consistency periods (80%+ score)
+        - Moderate consistency periods (60-80% score)
+        - Low consistency periods (<60% score)
+        """
+```
+
+#### `ui_components.py`
+```python
+def render_algorithm_badge(algorithm_type: str, confidence: float) -> str:
+    """Algorithm transparency badge system
+    - Visual indicators for AI insights
+    - Confidence score visualization
+    - Algorithm type identification
+    """
+    
+def render_algorithm_explanation_card(algorithm_type: str) -> None:
+    """Interactive algorithm explanation system
+    - Complete algorithm descriptions
+    - Source file references with line numbers
+    - Parameter explanations and configuration
+    """
+```
+
 ### Views Layer (`src/views/`)
 
-**Purpose**: User interface components and page logic
+**Purpose**: AI-enhanced user interface components and pages
 
-#### Main Dashboard (`dash.py`)
-- Monthly activity overview
-- Interactive charts and visualizations  
-- Key performance indicators
-- Activity type breakdown
+#### Intelligence Dashboard (`intelligence.py`) - **NEW DEFAULT PAGE**
+- **Daily intelligence brief** with AI-generated insights
+- **Interactive AI classification demo** with step-by-step reasoning
+- **Algorithm transparency sidebar** with complete source traceability
+- **Smart recommendations** with confidence scoring and user feedback
 
-#### SQL Interface (`fitness-overview.py`)
-- Custom query execution
-- Result visualization
-- Query history and favorites
-- Performance metrics
-
-#### Calendar View (`calendar_more.py`)
-- Calendar-based workout browsing
-- Daily activity summaries
-- Historical data navigation
+#### Enhanced Traditional Views
+- **Monthly Dashboard (`dash.py`)**: Enhanced with AI insights
+- **Choco Effect (`choco_effect.py`)**: AI-powered portfolio dashboard  
+- **SQL Interface (`fitness-overview.py`)**: Query execution with AI annotations
+- **Calendar View (`calendar_more.py`)**: Workout browsing with classification
+- **Tools Section**: AI-enhanced analysis tools with transparency features
 
 ### Utilities Layer (`src/utils/`)
 
@@ -367,20 +518,46 @@ def get_monthly_summary(month: str):
 
 ## Testing Architecture
 
-### Test Structure
+### Comprehensive Test Infrastructure (200+ Test Methods)
+
+The testing architecture includes comprehensive coverage for AI/ML systems with performance benchmarking and scalability validation.
 
 ```
 tests/
-├── conftest.py              # Test configuration
-├── test_queries.py          # Database query tests
-├── test_session.py          # Session management tests
-├── unit/                    # Unit tests
-│   ├── test_services.py
-│   ├── test_utilities.py
-│   └── test_config.py
-└── integration/             # Integration tests
-    ├── test_database.py
-    └── test_views.py
+├── conftest.py                         # Test configuration with AI fixtures
+├── test_intelligence_service.py        # AI/ML intelligence testing (25+ methods)
+├── test_statistics.py                  # Statistical analysis validation (30+ methods)  
+├── test_consistency_analyzer.py        # Consistency analysis testing (25+ methods)
+├── test_database_integration.py        # Integration pipeline testing (20+ methods)
+├── test_performance_benchmarks.py      # Performance & scalability (15+ methods)
+└── test_queries.py                     # Database query tests
+```
+
+### AI/ML Testing Capabilities
+
+#### **Intelligence Service Testing**
+- **ML Model Validation**: Classification accuracy and confidence scoring
+- **Synthetic Data Generation**: Realistic workout patterns for testing
+- **Performance Benchmarking**: 1K workout classification <5 seconds
+- **Error Recovery**: Edge cases and graceful AI system degradation
+
+#### **Statistical Analysis Testing**  
+- **Trend Detection**: Validates statistical significance and confidence intervals
+- **Forecasting Accuracy**: Tests linear and moving average prediction methods
+- **Anomaly Precision**: Validates outlier detection with known anomalous data
+- **Scalability Testing**: 10K+ data point analysis <2 seconds
+
+#### **Performance Thresholds**
+```python
+# Established performance benchmarks
+PERFORMANCE_THRESHOLDS = {
+    'small_dataset_classification': 2,      # 100 workouts < 2 seconds
+    'medium_dataset_classification': 5,     # 1K workouts < 5 seconds  
+    'large_dataset_classification': 15,     # 10K workouts < 15 seconds
+    'intelligence_brief_generation': 3,     # Intelligence brief < 3 seconds
+    'memory_usage_limit': 500,              # Large operations < 500MB
+    'concurrent_users_supported': 10        # 10+ simultaneous requests
+}
 ```
 
 ### Testing Patterns

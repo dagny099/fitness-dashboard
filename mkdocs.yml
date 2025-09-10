@@ -1,5 +1,5 @@
-site_name: Fitness Dashboard
-site_description: A comprehensive web application for tracking and managing workout routines with interactive visualizations and data insights.
+site_name: Fitness AI Intelligence Platform
+site_description: An AI-powered fitness intelligence platform that transforms workout data into actionable insights through machine learning, algorithm transparency, and intelligent automation.
 site_author: Barbara Hidalgo
 site_url: https://workouts.barbhs.com
 
@@ -74,6 +74,12 @@ nav:
     - Installation: getting-started/installation.md
     - Quick Start: getting-started/quick-start.md
     - Database Setup: getting-started/database-setup.md
+  - AI Intelligence:
+    - Overview: ai/overview.md
+    - Intelligence Dashboard: ai/intelligence-dashboard.md
+    - Algorithm Transparency: ai/algorithm-transparency.md
+    - ML Classification: ai/ml-classification.md
+    - User Feedback: ai/user-feedback.md
   - User Guide:
     - Dashboard Overview: user-guide/dashboard-overview.md
     - Data Import: user-guide/data-import.md
