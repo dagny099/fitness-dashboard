@@ -7,8 +7,12 @@ as quality control checks for your query execution system.
 """
 
 import pytest
-from build_workout_dashboard.utilities import execute_query
 import pandas as pd
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from services.database_service import DatabaseService
 
 @pytest.fixture
 def sample_query_data():
@@ -28,7 +32,8 @@ def test_basic_query_execution(sample_query_data):
     Tests that a simple SELECT query executes successfully and returns results.
     This is like verifying that the most basic operation of your system works.
     """
-    result = execute_query(sample_query_data['simple_query'])
+    db_service = DatabaseService()
+    result = db_service.execute_query(sample_query_data['simple_query'])
     
     # Verify we got some results back
     assert result is not None
@@ -44,7 +49,8 @@ def test_aggregate_query(sample_query_data):
     Tests that aggregate queries (like COUNT, SUM) work correctly.
     This verifies that your system can handle data analysis queries.
     """
-    result = execute_query(sample_query_data['aggregate_query'])
+    db_service = DatabaseService()
+    result = db_service.execute_query(sample_query_data['aggregate_query'])
     
     # Verify we got a count back
     assert result is not None
@@ -60,7 +66,8 @@ def test_query_with_parameters():
     # Instead of using parameters, we'll embed the date in the query
     query = "SELECT * FROM workout_summary WHERE workout_date = '2024-01-01'"
     
-    result = execute_query(query)
+    db_service = DatabaseService()
+    result = db_service.execute_query(query)
     
     assert result is not None
     # If we get results, we can add more specific assertions
@@ -87,14 +94,15 @@ def test_invalid_query_handling(sample_query_data):
         return result
 
     # Test query with non-existent table
-    result = execute_query(sample_query_data['invalid_query'])
+    db_service = DatabaseService()
+    result = db_service.execute_query(sample_query_data['invalid_query'])
     result_df = to_dataframe(result)
     
     # Check that result is either None or an empty DataFrame
     assert result_df is None or (isinstance(result_df, pd.DataFrame) and len(result_df) == 0)
     
     # Test malformed query
-    result_malformed = execute_query(sample_query_data['malformed_query'])
+    result_malformed = db_service.execute_query(sample_query_data['malformed_query'])
     result_malformed_df = to_dataframe(result_malformed)
     assert result_malformed_df is None or (isinstance(result_malformed_df, pd.DataFrame) and len(result_malformed_df) == 0)
 
@@ -105,7 +113,8 @@ def test_empty_result_handling():
     This verifies your system gracefully handles queries that find no matching data.
     """
     query = "SELECT * FROM workout_summary WHERE workout_date = '1900-01-01'"
-    result = execute_query(query)
+    db_service = DatabaseService()
+    result = db_service.execute_query(query)
     
     assert result is not None
     if isinstance(result, pd.DataFrame):
@@ -120,7 +129,8 @@ def test_large_result_handling():
     """
     # Query all records
     query = "SELECT * FROM workout_summary"
-    result = execute_query(query)
+    db_service = DatabaseService()
+    result = db_service.execute_query(query)
     
     assert result is not None
     # Verify we can handle more than a trivial number of records
@@ -140,5 +150,6 @@ def test_special_characters_in_queries():
     ORDER BY workout_date DESC
     """
     
-    result = execute_query(query)
+    db_service = DatabaseService()
+    result = db_service.execute_query(query)
     assert result is not None

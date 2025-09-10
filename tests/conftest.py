@@ -7,8 +7,11 @@ tests/conftest.py - Shared test configurations and fixtures
 import pytest
 import pandas as pd
 import os
-from build_workout_dashboard.utilities import execute_query, get_db_connection
-from build_workout_dashboard.session_manager import SessionManager
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from services.database_service import DatabaseService
+from utils.session_manager import SessionManager
 
 @pytest.fixture
 def test_database():
