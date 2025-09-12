@@ -7,6 +7,27 @@ import streamlit as st
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
+# Development mode bypass for testing
+def check_dev_mode():
+    """Check if development mode is enabled via environment variable or URL parameter"""
+    # Check environment variable
+    if os.getenv('STREAMLIT_DEV_MODE', '').lower() == 'true':
+        return True
+    
+    # Check URL parameter (if available)
+    try:
+        query_params = st.query_params
+        if query_params.get('dev_mode', '').lower() == 'true':
+            return True
+    except:
+        pass
+    
+    return False
+
+# Auto-login in development mode
+if check_dev_mode() and not st.session_state.logged_in:
+    st.session_state.logged_in = True
+
 def logout():
     st.subheader("👋🏽 You're now logged out")
     if st.button("Reset"):

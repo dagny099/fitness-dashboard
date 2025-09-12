@@ -316,10 +316,11 @@ with saved_tab:
 st.subheader("Statistics Calculated on Subset of Data")
 
 total_workouts = df.shape[0]
-avg_distance = round(df['distance_mi'].mean(), 2)
-avg_duration = round(df['duration_sec'].mean(), 2)
-avg_calories = round(df['kcal_burned'].mean(), 2)
-fastest_speed = round(df['max_pace'].max(), 2)
+# Safely calculate statistics with column existence checks
+avg_distance = round(df['distance_mi'].mean(), 2) if 'distance_mi' in df.columns and not df.empty else 0
+avg_duration = round(df['duration_sec'].mean() / 60, 2) if 'duration_sec' in df.columns and not df.empty else 0  # Convert to minutes
+avg_calories = round(df['kcal_burned'].mean(), 2) if 'kcal_burned' in df.columns and not df.empty else 0
+fastest_speed = round(df['max_pace'].max(), 2) if 'max_pace' in df.columns and not df.empty else 0
 
 metrics = [
     {"label": "Total Workouts", "value": total_workouts, "color": colors["distance"]},

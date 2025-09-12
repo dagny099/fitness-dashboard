@@ -254,15 +254,27 @@ def create_before_after_comparison(analysis_data):
         """, unsafe_allow_html=True)
     
     # Calculate and display the transformation magnitude
-    freq_increase = (metrics['Post-Choco (6.5 years)']['Avg Workouts/Month'] / 
-                    metrics['Pre-Choco (7 years)']['Avg Workouts/Month'])
+    pre_choco_freq = metrics['Pre-Choco (7 years)']['Avg Workouts/Month']
+    post_choco_freq = metrics['Post-Choco (6.5 years)']['Avg Workouts/Month']
+    
+    # Handle division by zero case (no pre-Choco data)
+    if pre_choco_freq == 0:
+        if post_choco_freq > 0:
+            freq_increase = float('inf')  # Infinite increase from zero
+            transformation_text = "∞x increase - started from zero!"
+        else:
+            freq_increase = 0
+            transformation_text = "No workout data available"
+    else:
+        freq_increase = post_choco_freq / pre_choco_freq
+        transformation_text = f"{freq_increase:.1f}x increase in workout frequency"
     
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, #667eea 0%, #f093fb 100%); 
                 padding: 25px; border-radius: 15px; color: white; text-align: center; 
                 margin: 20px 0; font-size: 18px;">
         <h3>🚀 The Transformation</h3>
-        <p><strong>{freq_increase:.1f}x</strong> increase in workout frequency</p>
+        <p><strong>{transformation_text}</strong></p>
         <p>From <strong>{metrics['Pre-Choco (7 years)']['Avg Workouts/Month']:.0f}</strong> to <strong>{metrics['Post-Choco (6.5 years)']['Avg Workouts/Month']:.0f}</strong> workouts per month</p>
     </div>
     """, unsafe_allow_html=True)

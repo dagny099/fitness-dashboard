@@ -229,6 +229,14 @@ def create_calendar_events(df):
     return events
 
 def get_week_dates(year, month, week_num):
+    # Convert week_num to integer if it's a string
+    if isinstance(week_num, str):
+        try:
+            week_num = int(week_num)
+        except ValueError:
+            # If conversion fails, default to week 1
+            week_num = 1
+    
     # Get the calendar for the given month and year
     month_calendar = cl.monthcalendar(year, month)
 
@@ -383,8 +391,11 @@ with details_tab:
     except ValueError:
         default_year_index = len(years) - 1 if years else 0
     detail_selected_year = col1.selectbox("Select Year", options=years, index=default_year_index)
-    # Convert to integer for filtering
-    detail_selected_year = int(detail_selected_year)
+    # Convert to integer for filtering (handle None case)
+    if detail_selected_year is None:
+        detail_selected_year = datetime.now().year  # Default to current year
+    else:
+        detail_selected_year = int(detail_selected_year)
 
     # 2. Month Selector
     months = sorted(df[df["workout_date"].dt.year == detail_selected_year]["workout_date"].dt.month.unique())

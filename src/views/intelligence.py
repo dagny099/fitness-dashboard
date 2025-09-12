@@ -143,7 +143,13 @@ def render_focus_card(brief):
     
     # Extract focus from consistency intelligence
     consistency_data = brief.get('consistency_intelligence', {})
-    consistency_score = consistency_data.get('consistency_score', 0)
+    consistency_score_data = consistency_data.get('consistency_score', 0)
+    
+    # Handle case where consistency_score is a dict (from analyzer) or a number
+    if isinstance(consistency_score_data, dict):
+        consistency_score = consistency_score_data.get('consistency_score', 0)
+    else:
+        consistency_score = consistency_score_data
     
     if consistency_score < 50:
         focus_area = "Consistency Building"
