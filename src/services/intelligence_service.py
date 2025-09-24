@@ -11,11 +11,18 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 import warnings
+import logging
 warnings.filterwarnings('ignore', category=FutureWarning)
+
+# Configure logging for intelligence service
+logger = logging.getLogger(__name__)
 
 from utils.statistics import TrendAnalysis, AnomalyDetection, PerformanceMetrics, StatisticalInsights
 from utils.consistency_analyzer import ConsistencyAnalyzer
 from services.database_service import DatabaseService
+from config.app import app_config, CLASSIFICATION_DEFAULTS
+from utils.data_filters import filter_workouts_by_date
+from ml.model_manager import model_manager
 
 class FitnessIntelligenceService:
     """Main service for fitness AI analysis and insights generation."""
@@ -27,6 +34,31 @@ class FitnessIntelligenceService:
         self._cache_timestamp = None
         self._cache_duration = timedelta(minutes=10)  # Cache for 10 minutes
         self._classification_cache = {}  # Cache for classification results
+
+    def _get_era_based_default(self, workout_date: datetime) -> str:
+        """
+        Get default classification based on era (pre/post Choco Effect date).
+
+        Args:
+            workout_date: Date of the workout to classify
+
+        Returns:
+            str: Default classification based on era
+                - Pre-Choco Era: 'real_run' (running-focused period)
+                - Post-Choco Era: 'pup_walk' (walking/dog-walking period)
+
+        Business Logic:
+            The Choco Effect represents a significant behavioral transition from
+            running-focused activities to walking/dog-walking activities. This
+            method leverages years of training data patterns to provide intelligent
+            defaults when machine learning classification is not possible.
+        """
+        choco_effect_date = app_config.choco_effect_date
+
+        if workout_date < choco_effect_date:
+            return CLASSIFICATION_DEFAULTS["pre_choco_era_default"]
+        else:
+            return CLASSIFICATION_DEFAULTS["post_choco_era_default"]
     
     def _load_workout_data(self, force_refresh: bool = False) -> pd.DataFrame:
         """Load workout data with caching."""
@@ -57,8 +89,8 @@ class FitnessIntelligenceService:
                     df = pd.DataFrame(rows)
                     df['duration_min'] = (df['duration_sec'] / 60).round(1)
                     
-                    # Apply workout classification automatically
-                    df = self.classify_workout_types(df)
+                    # Apply workout classification using new ML architecture
+                    df = model_manager.classify_workouts(df)
                     
                     # Cache the data
                     self._cached_data = df.copy()
@@ -69,122 +101,76 @@ class FitnessIntelligenceService:
                     return pd.DataFrame()
         
         except Exception as e:
-            print(f"Error loading workout data: {e}")
+            logger.error(f"Error loading workout data: {e}")
             return pd.DataFrame()
     
     def classify_workout_types(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Classify workouts into 'real_run', 'choco_adventure', or 'mixed' using ML clustering.
-        
-        Based on the Choco Effect analysis:
-        - Real Runs: 8-12 min/mile, 3-8 miles, 30-70 minutes
-        - Choco Adventures: 20-28 min/mile, 1-3 miles, 20-90 minutes
-        - Mixed: Edge cases between the two
-        
+        Classify workouts using the new persistent ML model architecture.
+
+        This method now delegates to the ModelManager, which handles:
+        - Training on full historical dataset
+        - Persistent model storage and loading
+        - Era-based fallbacks when appropriate
+
         Args:
             df: DataFrame with workout data
-            
+
         Returns:
-            DataFrame with added columns: predicted_activity_type, classification_confidence
+            DataFrame with added classification columns
         """
-        if df.empty:
-            return df
-        
-        # Create cache key based on data hash
-        data_hash = str(hash(str(df[['avg_pace', 'distance_mi', 'duration_sec']].values.tobytes())))
-        if data_hash in self._classification_cache:
-            return self._classification_cache[data_hash]
-        
-        try:
-            # Prepare features for clustering
-            features_df = df[['avg_pace', 'distance_mi', 'duration_sec']].copy()
-            
-            # Convert duration to minutes for better clustering
-            features_df['duration_min'] = features_df['duration_sec'] / 60
-            
-            # Remove rows with missing critical data
-            clean_features = features_df[['avg_pace', 'distance_mi', 'duration_min']].dropna()
-            
-            # Remove extreme outliers that would skew clustering
-            # Filter out impossible pace values (>60 min/mile) and distances (>50 miles)
-            pace_filter = (clean_features['avg_pace'] > 0) & (clean_features['avg_pace'] <= 60)
-            distance_filter = (clean_features['distance_mi'] > 0) & (clean_features['distance_mi'] <= 50)  
-            duration_filter = (clean_features['duration_min'] > 0) & (clean_features['duration_min'] <= 1440)  # Max 24 hours
-            
-            clean_features = clean_features[pace_filter & distance_filter & duration_filter]
-            
-            if len(clean_features) < 5:
-                # Not enough data for clustering
-                result_df = df.copy()
-                result_df['predicted_activity_type'] = 'unknown'
-                result_df['classification_confidence'] = 0.0
-                return result_df
-            
-            # Standardize features for K-means
-            scaler = StandardScaler()
-            features_scaled = scaler.fit_transform(clean_features)
-            
-            # Apply K-means clustering (3 clusters: fast, mixed, slow)
-            kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
-            cluster_labels = kmeans.fit_predict(features_scaled)
-            
-            # Analyze cluster centers to assign activity types
-            centers_original = scaler.inverse_transform(kmeans.cluster_centers_)
-            centers_df = pd.DataFrame(centers_original, columns=['avg_pace', 'distance_mi', 'duration_min'])
-            
-            # Sort by pace (fastest to slowest) and assign labels
-            centers_df['cluster_id'] = range(len(centers_df))
-            centers_sorted = centers_df.sort_values('avg_pace')
-            
-            cluster_labels_map = {}
-            for idx, (_, row) in enumerate(centers_sorted.iterrows()):
-                cluster_id = int(row['cluster_id'])
-                if idx == 0:  # Fastest pace cluster
-                    cluster_labels_map[cluster_id] = 'real_run'
-                elif idx == 1:  # Medium pace cluster  
-                    cluster_labels_map[cluster_id] = 'mixed'
-                else:  # Slowest pace cluster
-                    cluster_labels_map[cluster_id] = 'choco_adventure'
-            
-            # Calculate confidence based on distance to cluster center
-            distances = np.min(kmeans.transform(features_scaled), axis=1)
-            max_distance = np.max(distances)
-            confidences = 1.0 - (distances / max_distance) if max_distance > 0 else np.ones(len(distances))
-            
-            # Create result DataFrame
-            result_df = df.copy()
-            result_df['predicted_activity_type'] = 'unknown'
-            result_df['classification_confidence'] = 0.0
-            
-            # Assign classifications to rows with valid features
-            valid_indices = clean_features.index
-            for i, idx in enumerate(valid_indices):
-                cluster_id = cluster_labels[i]
-                result_df.loc[idx, 'predicted_activity_type'] = cluster_labels_map[cluster_id]
-                result_df.loc[idx, 'classification_confidence'] = confidences[i]
-            
-            # Mark outliers that were filtered out
-            all_indices = set(features_df.index)
-            valid_indices_set = set(valid_indices)
-            outlier_indices = all_indices - valid_indices_set
-            
-            for idx in outlier_indices:
-                result_df.loc[idx, 'predicted_activity_type'] = 'outlier'
-                result_df.loc[idx, 'classification_confidence'] = 0.0
-            
-            # Cache the result
-            self._classification_cache[data_hash] = result_df.copy()
-            
-            return result_df
-            
-        except Exception as e:
-            print(f"Error in workout classification: {e}")
-            # Return original DataFrame with unknown classifications
-            result_df = df.copy()
-            result_df['predicted_activity_type'] = 'unknown'
-            result_df['classification_confidence'] = 0.0
-            return result_df
-    
+        return model_manager.classify_workouts(df)
+
+    def ensure_model_trained(self) -> Dict[str, Any]:
+        """
+        Ensure that a trained model is available, training one if necessary.
+
+        Returns:
+            Dict with model status and training results
+        """
+        if model_manager.is_model_available():
+            model_stats = model_manager.get_model_stats()
+            return {
+                'model_ready': True,
+                'message': 'Model already trained and ready',
+                'model_info': model_stats['model_summary']
+            }
+        else:
+            logger.info("No trained model found, initiating training on full historical dataset...")
+            training_result = model_manager.train_new_model()
+
+            if training_result['success']:
+                return {
+                    'model_ready': True,
+                    'message': 'Model trained successfully on full historical dataset',
+                    'training_result': training_result
+                }
+            else:
+                return {
+                    'model_ready': False,
+                    'message': f"Model training failed: {training_result['message']}",
+                    'error': training_result.get('error', 'Unknown error')
+                }
+
+    def get_model_status(self) -> Dict[str, Any]:
+        """
+        Get comprehensive information about the current ML model status.
+
+        Returns:
+            Dict with model availability, performance, and metadata
+        """
+        return model_manager.get_model_stats()
+
+    def retrain_model(self) -> Dict[str, Any]:
+        """
+        Force retrain the model on full historical dataset.
+
+        Returns:
+            Dict with retraining results
+        """
+        logger.info("Forcing model retraining...")
+        return model_manager.train_new_model(force_retrain=True)
+
     def get_classification_summary(self, df: pd.DataFrame) -> Dict[str, Any]:
         """
         Generate summary statistics for workout classifications.
@@ -233,20 +219,44 @@ class FitnessIntelligenceService:
             return {'error': f'Error generating classification summary: {str(e)}'}
     
     def generate_daily_intelligence_brief(self, days_lookback: int = 30, activity_filter: Optional[str] = None) -> Dict[str, Any]:
-        """Generate comprehensive daily intelligence brief."""
+        """
+        Generate comprehensive daily intelligence brief.
+
+        Args:
+            days_lookback (int): Number of days back from current date to analyze
+            activity_filter (str, optional): Filter by specific activity type
+
+        Returns:
+            dict: Intelligence brief with analysis results and metadata
+
+        Business Logic:
+            - Uses current date as reference point for "days back" calculations
+            - Leverages shared date filtering utility for consistency across app
+            - Includes both recent period analysis and full dataset context
+        """
         try:
+            # Ensure ML model is trained before proceeding
+            model_status = self.ensure_model_trained()
+            if not model_status['model_ready']:
+                logger.warning(f"Model not ready: {model_status['message']}")
+                # Continue with era-based classification as fallback
+
             df = self._load_workout_data()
             if df.empty:
                 return {'error': 'No workout data available'}
-            
-            # Focus on recent period for daily insights
-            end_date = df['workout_date'].max()
-            start_date = end_date - pd.Timedelta(days=days_lookback)
-            recent_df = df[df['workout_date'] >= start_date].copy()
-            
+
+            # Use shared filtering utility for consistency across the application
+            recent_df, filter_metadata = filter_workouts_by_date(df, days_lookback=days_lookback)
+
             brief = {
                 'generated_at': datetime.now().isoformat(),
                 'analysis_period': f"Last {days_lookback} days",
+                'date_range': {
+                    'start_date': filter_metadata['start_date'].isoformat() if filter_metadata['start_date'] else None,
+                    'end_date': filter_metadata['end_date'].isoformat() if filter_metadata['end_date'] else None,
+                    'days_in_range': filter_metadata['date_range_days'],
+                    'filter_method': filter_metadata['filter_method_used']
+                },
                 'total_workouts_analyzed': len(df),
                 'recent_workouts_analyzed': len(recent_df)
             }
@@ -275,10 +285,16 @@ class FitnessIntelligenceService:
             
             # Add specific insights about classification patterns
             intelligence = summary.copy()
-            
+
             # Activity type preferences in recent period
             activity_counts = recent_df['predicted_activity_type'].value_counts()
             total_classified = len(recent_df[recent_df['predicted_activity_type'] != 'unknown'])
+
+            # Include the classified workouts data for UI consistency
+            intelligence['classified_workouts'] = recent_df
+
+            # Create summary statistics for UI display
+            intelligence['summary'] = activity_counts.to_dict()
             
             if total_classified > 0:
                 primary_activity = activity_counts.index[0]
@@ -309,7 +325,7 @@ class FitnessIntelligenceService:
             metrics = ['kcal_burned', 'distance_mi', 'duration_min', 'avg_pace']
             
             for metric in metrics:
-                if metric in recent_df.columns and recent_df[metric].notna().sum() > 3:
+                if metric in recent_df.columns and recent_df[metric].notna().sum() > 0:
                     # Trend analysis
                     trend_data = TrendAnalysis.calculate_trend(recent_df[metric])
                     
@@ -360,9 +376,10 @@ class FitnessIntelligenceService:
             metrics = ['kcal_burned', 'distance_mi', 'duration_min']
             
             for metric in metrics:
-                if metric in recent_df.columns and recent_df[metric].notna().sum() > 5:
+                if metric in recent_df.columns and recent_df[metric].notna().sum() > 0:
+                    # Anomaly detection now works with small samples since we have historical context
                     anomalies = AnomalyDetection.detect_performance_anomalies(
-                        recent_df, metric=metric, window=min(14, len(recent_df)//2)
+                        recent_df, metric=metric, window=min(14, max(1, len(recent_df)//2))
                     )
                     anomaly_data[metric] = anomalies
             
@@ -548,7 +565,7 @@ class FitnessIntelligenceService:
             
             # Activity classification insights (enhanced)
             if 'predicted_activity_type' in recent_df.columns:
-                classified_df = recent_df[recent_df['predicted_activity_type'].isin(['real_run', 'choco_adventure', 'mixed'])]
+                classified_df = recent_df[recent_df['predicted_activity_type'].isin(['real_run', 'pup_walk', 'mixed'])]
                 
                 if len(classified_df) > 0:
                     activity_counts = classified_df['predicted_activity_type'].value_counts()
@@ -559,8 +576,8 @@ class FitnessIntelligenceService:
                     if top_activity == 'real_run':
                         run_pace = classified_df[classified_df['predicted_activity_type'] == 'real_run']['avg_pace'].mean()
                         insights.append(f"🏃 Running Focus: {activity_pct:.0f}% real runs averaging {run_pace:.1f} min/mile")
-                    elif top_activity == 'choco_adventure':
-                        walk_pace = classified_df[classified_df['predicted_activity_type'] == 'choco_adventure']['avg_pace'].mean()
+                    elif top_activity == 'pup_walk':
+                        walk_pace = classified_df[classified_df['predicted_activity_type'] == 'pup_walk']['avg_pace'].mean()
                         insights.append(f"🐕 Walking Dominant: {activity_pct:.0f}% choco adventures averaging {walk_pace:.1f} min/mile")
                     else:
                         insights.append(f"⚖️ Mixed Activity: {activity_pct:.0f}% mixed workouts - good training variety")

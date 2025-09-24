@@ -1,0 +1,16 @@
+workout_id,workout_date,activity_type,kcal_burned,distance_mi,duration_sec,avg_pace,max_pace,steps,ambiguity_reason
+1,2021-06-15,Mixed Activity,385,3.7,2760,12:25,8:10,4710,pace_variance_high
+2,2021-08-22,Mixed Activity,420,4.1,3450,14:02,9:15,5200,run_walk_intervals
+3,2021-10-08,Running,295,2.8,2100,12:30,8:45,3590,slow_run_vs_fast_walk
+4,2022-03-14,Walking,350,3.2,2880,15:00,11:30,4080,power_walking_elevated_hr
+5,2022-05-20,Mixed Activity,375,3.5,2640,12:35,8:50,4460,mixed_terrain_pace_shift
+6,2022-07-12,Running,315,2.9,2220,12:45,9:20,3720,recovery_run_walking_pace
+7,2022-09-05,Walking,425,4.0,3600,15:00,12:00,5080,long_walk_elevated_effort
+8,2022-11-18,Mixed Activity,395,3.8,2880,12:38,8:35,4840,interval_training_mixed
+9,2023-01-25,Running,340,3.1,2340,12:35,9:10,3950,jogwalk_boundary_case
+10,2023-04-10,Walking,380,3.6,3240,15:00,13:20,4580,brisk_walk_elevated_cal
+11,2020-07-30,Mixed Activity,360,3.3,2520,12:44,8:25,4210,dog_walking_with_runs
+12,2021-02-14,Running,325,2.7,2040,12:35,8:55,3460,cold_weather_slow_run
+13,2021-12-03,Walking,410,4.2,3780,15:00,13:45,5340,holiday_shopping_walk
+14,2022-08-16,Mixed Activity,345,3.4,2700,13:14,9:05,4320,beach_sand_resistance
+15,2023-06-08,Running,365,3.0,2280,12:40,8:48,3850,heat_affected_performance

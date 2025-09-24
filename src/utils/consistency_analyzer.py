@@ -81,7 +81,8 @@ class ConsistencyAnalyzer:
             workouts_per_week = len(df) / (periods / 7)
             
             # Daily workout distribution
-            df['date'] = df['workout_date'].dt.date
+            df = df.copy()
+            df.loc[:, 'date'] = df['workout_date'].dt.date
             daily_counts = df.groupby('date').size()
             
             # Create complete date range
@@ -121,7 +122,8 @@ class ConsistencyAnalyzer:
                 return 50.0  # Neutral score for insufficient data
             
             # Day of week consistency
-            df['day_of_week'] = df['workout_date'].dt.dayofweek
+            df = df.copy()
+            df.loc[:, 'day_of_week'] = df['workout_date'].dt.dayofweek
             dow_distribution = df['day_of_week'].value_counts()
             dow_consistency = 100 - (dow_distribution.std() / dow_distribution.mean() * 100)
             
@@ -171,7 +173,8 @@ class ConsistencyAnalyzer:
         """Calculate streak-based consistency metrics."""
         try:
             # Create daily workout indicator
-            df['date'] = df['workout_date'].dt.date
+            df = df.copy()
+            df.loc[:, 'date'] = df['workout_date'].dt.date
             workout_dates = set(df['date'])
             
             # Find current and recent streaks

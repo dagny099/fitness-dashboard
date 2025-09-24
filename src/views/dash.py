@@ -1,8 +1,8 @@
-from src.utils.session_manager import SessionManager
-from src.utils.utilities import calculate_workout_statistics, get_db_connection
-from src.services.database_service import DatabaseService
-from src.config.database import DatabaseConfig
-from src.config.app import STYLE_CONFIG
+from utils.session_manager import SessionManager
+from utils.utilities import calculate_workout_statistics, get_db_connection
+from services.database_service import DatabaseService
+from config.database import DatabaseConfig
+from config.app import STYLE_CONFIG
 import streamlit as st
 from streamlit_calendar import calendar
 from streamlit_plotly_events import plotly_events

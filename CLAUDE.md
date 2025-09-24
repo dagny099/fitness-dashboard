@@ -14,7 +14,7 @@ The Fitness Dashboard is an AI-powered Streamlit web application for intelligent
 python scripts/init.py
 
 # Update database with workout data
-python src/update_db.py
+python scripts/update_db.py
 ```
 
 ### Running the Application
@@ -97,9 +97,10 @@ Primary table: `workout_summary` with fields for workout_id, workout_date, activ
 - **Data Import**: CSV processing for MapMyRun workout history
 
 ### AI/ML Features
-- **Workout Classification**: K-means clustering to automatically categorize workouts (real_run, choco_adventure, mixed, outlier)
+- **Workout Classification**: K-means clustering to automatically categorize workouts (real_run, pup_walk, mixed, outlier)
+- **Era-Based Defaults**: Smart fallback classification based on Choco Effect date (pre-2018: runs, post-2018: walks)
 - **Trend Analysis**: Statistical trend detection with confidence intervals and forecasting
-- **Anomaly Detection**: Outlier identification using IQR, z-score, and modified z-score methods  
+- **Anomaly Detection**: Outlier identification using IQR, z-score, and modified z-score methods
 - **Consistency Scoring**: Multi-dimensional analysis of frequency, timing, performance, and streak patterns
 - **Intelligence Briefing**: Automated generation of personalized workout insights and recommendations
 
@@ -306,3 +307,217 @@ STREAMLIT_DEV_MODE=true streamlit run src/streamlit_app.py --server.port 8501 --
 ```
 
 **Status**: All 6 major pages have been tested and verified working with comprehensive real data as of September 2025.
+
+## Visual Assets & Documentation Management
+
+### Screenshot Management
+The project maintains comprehensive visual assets for documentation:
+
+```bash
+# Visual assets are organized in:
+docs/assets/screenshots/
+├── pages/              # Full page screenshots
+├── components/         # UI component screenshots
+└── [legacy files]      # Older screenshots (marked for replacement)
+
+# Use development mode + Playwright for screenshot capture:
+STREAMLIT_DEV_MODE=true streamlit run src/streamlit_app.py --server.port 8501 --server.headless true &
+# Then use MCP Playwright to capture screenshots
+```
+
+### Visual Assets Table of Contents
+- **Location**: `docs/VISUAL_ASSETS_TOC.md` - Complete inventory of all visual assets
+- **Purpose**: Reference guide for all screenshots, diagrams, and their documentation usage
+- **Maintenance**: Update when adding new screenshots or UI changes
+
+### Documentation Structure
+```
+docs/
+├── ai/                 # AI/ML feature documentation
+├── user-guide/         # End-user documentation
+├── developer/          # Technical documentation
+├── getting-started/    # Onboarding guides
+├── reference/          # API and reference material
+├── assets/             # Screenshots, diagrams, media
+└── VISUAL_ASSETS_TOC.md # Visual assets inventory
+```
+
+### MkDocs Guidelines
+- **Serve locally**: `mkdocs serve` for live preview
+- **Build for production**: `mkdocs build`
+- **Configuration**: `mkdocs.yml` defines site structure and theme
+- **Extensions**: Uses Material theme with code highlighting and tabs
+
+## AI/ML Development Guidelines
+
+### Working with Intelligence Service
+The AI system is modular and extensible:
+
+```python
+# Key AI service location: src/services/intelligence_service.py
+# Add new algorithms to the ALGORITHM_REGISTRY
+# Maintain algorithm transparency for all AI features
+```
+
+### Algorithm Development Workflow
+1. **Implement algorithm** in appropriate service/utility file
+2. **Add to algorithm registry** with transparency details
+3. **Create explanation system** for user-facing descriptions
+4. **Add confidence scoring** for all predictions
+5. **Update algorithm transparency documentation**
+
+### ML Model Management
+- **Classification models**: K-means clustering in `intelligence_service.py`
+- **Statistical models**: Trend analysis in `utils/statistics.py`
+- **Consistency scoring**: Multi-dimensional analysis in `utils/consistency_analyzer.py`
+- **Performance benchmarks**: <5s for 1K+ workout classification
+
+## Git Workflow & Branch Management
+
+### Current Branch Structure
+- **Main branch**: `main` - Production-ready code
+- **Feature branches**: Use descriptive names (e.g., `docs/week5-consolidation-polish`)
+- **Development branches**: For ongoing feature work
+
+### Commit Guidelines
+- **Test all pages** before committing UI changes
+- **Run validation scripts** for SQL documentation updates
+- **Update screenshots** when UI changes affect documentation
+- **Include comprehensive testing** for AI/ML feature changes
+
+## Environment Configuration Deep Dive
+
+### Development Environment (macOS)
+```bash
+# Required environment variables:
+MYSQL_USER=your_mysql_user
+MYSQL_PWD=your_mysql_password
+
+# Optional for development:
+STREAMLIT_DEV_MODE=true  # Bypasses authentication
+```
+
+### Production Environment (Linux)
+```bash
+# AWS RDS configuration:
+RDS_ENDPOINT=your_rds_endpoint
+RDS_USER=your_rds_user
+RDS_PASSWORD=your_rds_password
+```
+
+### Testing Environment Variables
+```bash
+# For MCP Playwright testing:
+STREAMLIT_DEV_MODE=true streamlit run src/streamlit_app.py --server.port 8501 --server.headless true
+```
+
+## Performance & Optimization Guidelines
+
+### Caching Strategy
+- **Intelligence briefs**: 10-minute cache for performance
+- **Classification data**: 5-minute cache for demo features
+- **Database queries**: Strategic caching in database service
+
+### Performance Benchmarks
+- **AI Classification**: <5 seconds for 1,000+ workouts
+- **Intelligence Brief**: <3 seconds generation time
+- **Algorithm Transparency**: <3 seconds loading time
+- **Page Load**: All pages should load within 2 seconds
+
+### Scalability Considerations
+- **Database indexing**: Ensure proper indexing on workout_date and activity_type
+- **Memory management**: Monitor memory usage for large datasets
+- **Concurrent users**: Architecture supports 10+ concurrent users
+
+## Troubleshooting Quick Reference
+
+### Common Issues & Solutions
+
+**AI Dashboard Not Loading:**
+```bash
+# Check AI services initialization
+# Verify database connection with workout data
+# Ensure ML dependencies installed (scikit-learn, scipy)
+```
+
+**Authentication Issues:**
+```bash
+# Use development mode bypass:
+STREAMLIT_DEV_MODE=true streamlit run src/streamlit_app.py
+```
+
+**Database Connection Problems:**
+```bash
+# Verify environment variables are set
+# Test database connection: python scripts/init.py
+# Check MySQL service is running
+```
+
+**Performance Issues:**
+```bash
+# Check dataset size (>1K workouts may need optimization)
+# Monitor memory usage and database queries
+# Consider data aggregation for historical views
+```
+
+## Data Pipeline Management
+
+### Workout Data Import
+```bash
+# Standard import workflow:
+1. Export CSV from MapMyRun
+2. Replace: src/user2632022_workout_history.csv
+3. Run: python src/update_db.py
+4. Verify: Check classification results in dashboard
+```
+
+### Classification System
+- **real_run**: 8-12 min/mile pace, focused running
+- **pup_walk**: 20-28 min/mile, walking/dog-walking activities
+- **mixed**: Variable pace, combined activities
+- **outlier**: Extreme values requiring attention
+
+### Era-Based Classification Architecture
+
+#### The Choco Effect Date
+The system uses a configurable **Choco Effect Date** (default: June 1, 2018) to provide intelligent classification defaults based on behavioral patterns:
+
+**Configuration Location:** `src/config/app.py`
+```python
+# Set in pyproject.toml under [tool.project.business_dates]:
+choco_effect_date = "2018-06-01"
+```
+
+#### Business Logic Implementation
+- **Pre-Choco Era** (before 2018-06-01): Defaults to `real_run` - running-focused period
+- **Post-Choco Era** (after 2018-06-01): Defaults to `pup_walk` - walking/dog-walking period
+
+This approach leverages years of training data patterns to provide accurate classification even when machine learning clustering has insufficient data (<5 workouts).
+
+#### Smart Fallback Hierarchy
+1. **Primary**: K-means ML clustering (requires ≥5 workouts)
+2. **Secondary**: Era-based defaults (medium confidence: 0.5)
+3. **Tertiary**: Rule-based classification by pace thresholds
+
+### Data Architecture Improvements
+
+#### Unified Data Filtering
+All pages now use shared filtering utilities (`src/utils/data_filters.py`) for consistency:
+
+- **Date Filtering**: `filter_workouts_by_date()` - supports days_lookback and explicit ranges
+- **Metric Filtering**: `filter_workouts_by_metrics()` - pace, distance, duration, calories
+- **Smart Suggestions**: `get_optimal_date_range_suggestion()` - recommends better timeframes
+
+#### Eliminated Duplicate Filtering
+- Intelligence Brief and View Selected Data use the same filtered dataset
+- Prevents inconsistencies between "22 workouts analyzed" and "1 workout shown"
+- Single source of truth for date range calculations
+
+### Data Quality Assurance
+- **Validate imports**: Check for missing fields or invalid data
+- **Monitor classification confidence**: Low confidence may indicate data quality issues
+- **Review outliers**: Investigate unusual patterns for data integrity
+- **Era consistency**: Verify classifications align with expected pre/post-Choco patterns
+- **Date consistency**: All pages use current date as reference for "days back" calculations
+
+**Last Updated**: September 13, 2025 - Added visual assets, AI development, and comprehensive troubleshooting sections.

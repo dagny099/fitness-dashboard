@@ -12,15 +12,19 @@ This script sets up the environment for this Streamlit application by performing
 
 Usage:
     Run this script from main project directory to prepare the environment and initialize the database:
-    $ ~/.local/bin/poetry run python init.py
+    $ ~/.local/bin/poetry run python scripts/init.py
 
 
 Pre-requisites:
     $ poetry install  # Within a virtual environment, install dependencies using poetry
 
 """
-
+import sys
 import os
+# Add project root to Python path -- This lets the "src" folder to be found below
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
+
 import toml
 import pymysql
 import platform

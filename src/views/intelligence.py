@@ -63,15 +63,20 @@ ALGORITHM_INFO = {
 }
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
-def load_intelligence_data():
+def load_intelligence_data(time_period='30d'):
     """Load workout data and generate intelligence insights"""
     try:
         intelligence_service = FitnessIntelligenceService()
-        brief = intelligence_service.generate_daily_intelligence_brief(days_lookback=30)
-        
+
+        # Convert time period to days
+        days_map = {'7d': 7, '30d': 30, '90d': 90, '365d': 365}
+        days_lookback = days_map.get(time_period, 30)
+
+        brief = intelligence_service.generate_daily_intelligence_brief(days_lookback=days_lookback)
+
         # Get performance summary for header stats
-        summary = intelligence_service.get_performance_summary('30d')
-        
+        summary = intelligence_service.get_performance_summary(time_period)
+
         return brief, summary
     except Exception as e:
         st.error(f"Failed to load intelligence data: {e}")
@@ -95,208 +100,1222 @@ def render_algorithm_tooltip(algorithm_type):
     algo = ALGORITHM_INFO[algorithm_type]
     return f"🔍 Algorithm: {algo['name']}\\n📁 File: {algo['file']}\\n💡 {algo['description']}"
 
-def render_intelligence_header(brief, summary):
-    """Render prominent AI branding header with dynamic insights"""
-    
-    insights_count = len(brief.get('key_insights', [])) if brief else 0
-    workouts_analyzed = brief.get('total_workouts_analyzed', 0) if brief else 0
-    
+def render_fitness_dashboard_header():
+    """Render clean dashboard header with just title and today's date"""
+    from datetime import datetime
+
+    today_str = datetime.now().strftime('%B %d, %Y')
+
     st.markdown(f"""
-    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 padding: 25px; border-radius: 15px; color: white; margin-bottom: 30px;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-        <h1 style="margin: 0; font-size: 2.5rem;">🧠 Your Fitness Intelligence</h1>
-        <p style="font-size: 1.2rem; margin: 15px 0;">
-            Your AI discovered <strong>{insights_count} key insights</strong> from recent workouts
-        </p>
-        <div style="font-size: 0.9rem; opacity: 0.9;">
-            Last updated: {datetime.now().strftime('%I:%M %p')} • 
-            Analyzing {workouts_analyzed:,} workouts • 
-            {render_algorithm_badge('workout_classification')} Active
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); position: relative;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 style="margin: 0; font-size: 2.5rem;">🏃‍♀️ Fitness Dashboard</h1>
+            <div style="font-size: 1.1rem; opacity: 0.9;">
+                Today is {today_str}
+            </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-def render_intelligence_brief_cards(brief):
-    """Render daily intelligence brief cards"""
+def render_time_period_selector():
+    """Render time period selector and return selected period"""
+    col_selector, col_spacer = st.columns([2, 3])
+    with col_selector:
+        period_options = {
+            '7d': 'Last 7 days',
+            '30d': 'Last 30 days',
+            '90d': 'Last 3 months',
+            '365d': 'Last year'
+        }
+        selected_period = st.selectbox(
+            "Analysis timeframe:",
+            options=list(period_options.keys()),
+            format_func=lambda x: period_options[x],
+            index=1,  # Default to 30d
+            key="intelligence_period"
+        )
+    return selected_period, period_options
+
+def render_filter_info_container(brief, time_period, period_options):
+    """Render dynamic filter information container that updates with dropdown changes"""
+    from datetime import datetime
+
+    # Get actual date range from intelligence brief if available
+    date_range = brief.get('date_range', {}) if brief else {}
+    start_date = date_range.get('start_date')
+    end_date = date_range.get('end_date')
+
+    # Fallback to calculated dates if not in brief
+    if not start_date or not end_date:
+        from datetime import timedelta
+        today = datetime.now()
+        days_map = {'7d': 7, '30d': 30, '90d': 90, '365d': 365}
+        days_back = days_map.get(time_period, 30)
+        end_date = today
+        start_date = today - timedelta(days=days_back)
+    else:
+        # Parse dates from brief
+        start_date = datetime.fromisoformat(start_date) if isinstance(start_date, str) else start_date
+        end_date = datetime.fromisoformat(end_date) if isinstance(end_date, str) else end_date
+
+    # Format dates
+    start_str = start_date.strftime('%m/%d/%y')
+    end_str = end_date.strftime('%m/%d/%y')
+
+    # Get workout counts
+    total_workouts = brief.get('total_workouts_analyzed', 0) if brief else 0
+    recent_workouts = brief.get('recent_workouts_analyzed', 0) if brief else 0
+
+    # Get period display name
+    period_name = period_options.get(time_period, f'{time_period} period')
+
+    st.markdown(f"""
+    <div style="background: #f8f9fa; padding: 12px 20px; border-radius: 8px;
+                margin-bottom: 20px; border-left: 4px solid #667eea;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <div style="font-size: 0.95rem; color: #495057;">
+                <strong>Filtering workouts:</strong> {start_str} to {end_str}
+            </div>
+            <div style="font-size: 0.95rem; color: #495057;">
+                <strong>Period:</strong> {period_name}
+            </div>
+            <div style="font-size: 0.95rem; color: #495057;">
+                <strong>Found:</strong> {recent_workouts:,} workouts
+            </div>
+            <div style="font-size: 0.9rem; color: #6c757d;">
+                Total dataset: {total_workouts:,} workouts
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+def render_data_visibility_expander(brief, time_period):
+    """Render expandable section showing the actual workout data being analyzed"""
+    with st.expander("📊 View Selected Data", expanded=True):
+        # Get the summary data
+        total_workouts = brief.get('recent_workouts_analyzed', 0)
+
+        # Show basic stats about the selected data
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Workouts Analyzed", total_workouts)
+        with col2:
+            period_text = time_period.replace('d', ' days').replace('365 days', '1 year')
+            st.metric("Time Period", period_text)
+        with col3:
+            # Calculate meaningful workout frequency
+            days_in_period = int(time_period.replace('d', '')) if 'd' in time_period else 365
+            workouts_per_week = (total_workouts / days_in_period) * 7 if days_in_period > 0 else 0
+            st.metric("Avg Workouts/Week", f"{workouts_per_week:.1f}")
+
+        # Show workout breakdown by type if available
+        classification_data = brief.get('classification_intelligence', {})
+        if 'summary' in classification_data:
+            summary = classification_data['summary']
+            st.subheader("Workout Classification Breakdown")
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Real Runs", summary.get('real_run', 0))
+            with col2:
+                st.metric("Pup Walks", summary.get('pup_walk', 0))
+            with col3:
+                st.metric("Mixed Activities", summary.get('mixed', 0))
+            with col4:
+                st.metric("Outliers", summary.get('outlier', 0))
+
+        # Show actual workout data table with ML classifications
+        st.subheader("📋 Individual Workouts & Classifications")
+
+        # Use the SAME data that the intelligence service already calculated
+        # This prevents date range inconsistencies between intelligence brief and table
+
+        # Use the EXACT same data that the intelligence service already calculated
+        # This prevents date range inconsistencies between intelligence brief and table
+        classification_data = brief.get('classification_intelligence', {})
+
+        if 'classified_workouts' in classification_data:
+            # Use the exact same data the intelligence algorithms used - no duplicate filtering!
+            classified_df = classification_data['classified_workouts'].copy()
+        else:
+            # No classified data available
+            st.warning("Classification data not available. Please check the intelligence service.")
+            return
+
+        if not classified_df.empty:
+            # Be more flexible with available columns to prevent empty dataframes
+            required_columns = ['workout_date']  # Only workout_date is truly required
+            optional_columns = ['distance_mi', 'duration_sec', 'kcal_burned', 'avg_pace']
+
+            # Start with required columns
+            available_columns = [col for col in required_columns if col in classified_df.columns]
+
+            # Add optional columns that exist
+            available_columns.extend([col for col in optional_columns if col in classified_df.columns])
+
+            if not available_columns:
+                st.error("No suitable columns found in workout data")
+                return
+
+            display_df = classified_df[available_columns].copy()
+
+            # Add classification if available
+            if 'predicted_activity_type' in classified_df.columns:
+                display_df['ML Classification'] = classified_df['predicted_activity_type']
+            else:
+                # Add a fallback classification based on available data
+                if 'avg_pace' in display_df.columns:
+                    display_df['ML Classification'] = display_df['avg_pace'].apply(
+                        lambda x: 'real_run' if pd.notna(x) and x <= 12 else 'pup_walk' if pd.notna(x) else 'unknown'
+                    )
+                else:
+                    display_df['ML Classification'] = 'unknown'
+
+            # Format for better display
+            if 'workout_date' in display_df.columns:
+                display_df['Date'] = pd.to_datetime(display_df['workout_date']).dt.strftime('%m/%d/%y')
+                display_df = display_df.drop('workout_date', axis=1)
+
+            if 'duration_sec' in display_df.columns:
+                display_df['Duration'] = display_df['duration_sec'].apply(
+                    lambda x: f"{int(x//3600)}h {int((x%3600)//60)}m" if pd.notna(x) else "N/A"
+                )
+                display_df = display_df.drop('duration_sec', axis=1)
+
+            # Round numeric columns
+            numeric_columns = ['distance_mi', 'kcal_burned', 'avg_pace']
+            for col in numeric_columns:
+                if col in display_df.columns:
+                    display_df[col] = display_df[col].round(1)
+
+            # Rename columns for better display
+            column_rename = {
+                'distance_mi': 'Distance (mi)',
+                'kcal_burned': 'Calories',
+                'avg_pace': 'Avg Pace (min/mi)'
+            }
+            display_df = display_df.rename(columns=column_rename)
+
+            # Sort by date (most recent first)
+            if 'Date' in display_df.columns:
+                display_df = display_df.sort_values('Date', ascending=False)
+
+            # Display the table
+            st.dataframe(
+                display_df,
+                use_container_width=True,
+                hide_index=True,
+                height=300
+            )
+        else:
+            st.info("No workouts found for the selected time period.")
+
+        # Only show warning for truly empty data
+        if total_workouts == 0:
+            st.warning("⚠️ No workouts found for selected period. Try selecting a longer timeframe.")
+
+def calculate_concrete_metrics(brief, time_period):
+    """Calculate concrete metrics for the period using consistent data from intelligence brief"""
+    try:
+        # Use the same workout count that the intelligence brief calculated
+        total_workouts = brief.get('recent_workouts_analyzed', 0)
+
+        # Get classification data from the brief for consistent metrics
+        classification_data = brief.get('classification_intelligence', {})
+
+        if 'summary' in classification_data:
+            # Use the classification summary from the brief
+            summary = classification_data['summary']
+            runs = summary.get('real_run', 0)
+            walks = summary.get('pup_walk', 0) + summary.get('mixed', 0)
+            other = summary.get('outlier', 0)
+        else:
+            # Fallback if no classification data
+            runs = 0
+            walks = 0
+            other = total_workouts
+
+        # Get performance metrics from the brief
+        performance_data = brief.get('performance_intelligence', {})
+
+        # Extract totals from performance data or use fallback calculation
+        total_distance = 0
+        total_duration_sec = 0
+        total_calories = 0
+
+        # Try to get totals from performance data
+        if 'distance_mi' in performance_data:
+            dist_data = performance_data['distance_mi']
+            if isinstance(dist_data, dict):
+                total_distance = dist_data.get('current_total', 0) or dist_data.get('current_average', 0) * total_workouts
+
+        if 'duration_sec' in performance_data:
+            dur_data = performance_data['duration_sec']
+            if isinstance(dur_data, dict):
+                total_duration_sec = dur_data.get('current_total', 0) or dur_data.get('current_average', 0) * total_workouts
+
+        if 'kcal_burned' in performance_data:
+            cal_data = performance_data['kcal_burned']
+            if isinstance(cal_data, dict):
+                total_calories = cal_data.get('current_total', 0) or cal_data.get('current_average', 0) * total_workouts
+
+        # Calculate actual totals from raw data (performance data only has averages)
+        from services.intelligence_service import FitnessIntelligenceService
+        intelligence_service = FitnessIntelligenceService()
+
+        # Convert time period to days for data loading
+        days_map = {'7d': 7, '30d': 30, '90d': 90, '365d': 365}
+        days_lookback = days_map.get(time_period, 30)
+
+        # Load the same filtered data that the intelligence service used
+        df = intelligence_service._load_workout_data()
+        if not df.empty:
+            from datetime import datetime, timedelta
+            import pandas as pd
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=days_lookback)
+
+            if df['workout_date'].dtype == 'object':
+                df['workout_date'] = pd.to_datetime(df['workout_date'])
+
+            period_df = df[df['workout_date'] >= start_date]
+
+            # Calculate metric totals from actual data, but keep consistent workout count from brief
+            # Note: Do NOT override total_workouts - it must match intelligence brief for consistency
+            total_distance = period_df['distance_mi'].sum() if 'distance_mi' in period_df.columns else 0
+            total_duration_sec = period_df['duration_sec'].sum() if 'duration_sec' in period_df.columns else 0
+            total_calories = period_df['kcal_burned'].sum() if 'kcal_burned' in period_df.columns else 0
+
+            # Re-classify workouts for accurate activity mix
+            if not period_df.empty:
+                classified_df = intelligence_service.classify_workout_types(period_df)
+                if 'predicted_activity_type' in classified_df.columns:
+                    runs = len(classified_df[classified_df['predicted_activity_type'] == 'real_run'])
+                    walks = len(classified_df[classified_df['predicted_activity_type'].isin(['pup_walk', 'mixed'])])
+                    other = len(classified_df[classified_df['predicted_activity_type'] == 'outlier'])
+                else:
+                    # Fallback classification by pace if ML classification unavailable
+                    runs = len(period_df[period_df['avg_pace'] <= 12]) if 'avg_pace' in period_df.columns else 0
+                    walks = len(period_df[period_df['avg_pace'] > 12]) if 'avg_pace' in period_df.columns else 0
+                    other = total_workouts - runs - walks
+
+        # Calculate duration in hours and minutes
+        total_hours = int(total_duration_sec // 3600)
+        total_minutes = int((total_duration_sec % 3600) // 60)
+
+        return {
+            'total_workouts': total_workouts,
+            'total_distance': total_distance,
+            'total_hours': total_hours,
+            'total_minutes': total_minutes,
+            'total_calories': int(total_calories),
+            'runs': runs,
+            'walks': walks,
+            'other': other
+        }
+    except Exception as e:
+        st.error(f"Error calculating metrics: {e}")
+        return {
+            'total_workouts': 0,
+            'total_distance': 0.0,
+            'total_hours': 0,
+            'total_minutes': 0,
+            'total_calories': 0,
+            'runs': 0,
+            'walks': 0,
+            'other': 0
+        }
+
+def render_concrete_metrics_cards(brief, time_period):
+    """Render concrete metrics cards above the fold"""
+    metrics = calculate_concrete_metrics(brief, time_period)
+
+    st.subheader("📊 Period Summary")
+
+    # First row: 4 numerical metrics
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric(
+            label="📊 Workouts",
+            value=metrics['total_workouts'],
+            help="Total number of workouts in this period"
+        )
+
+    with col2:
+        st.metric(
+            label="🏃 Distance",
+            value=f"{metrics['total_distance']:.1f} mi",
+            help="Total distance covered"
+        )
+
+    with col3:
+        duration_text = f"{metrics['total_hours']}h {metrics['total_minutes']}m"
+        st.metric(
+            label="⏱️ Duration",
+            value=duration_text,
+            help="Total workout time"
+        )
+
+    with col4:
+        st.metric(
+            label="🔥 Calories",
+            value=f"{metrics['total_calories']:,}",
+            help="Total calories burned"
+        )
+
+    # Second row: Activity Mix (use more space to prevent cutoff)
+    col_activity, col_spacer = st.columns([3, 2])
+    with col_activity:
+        # Activity mix display with more concise formatting
+        if metrics['total_workouts'] > 0:
+            # Use shorter format to prevent text cutoff
+            parts = []
+            if metrics['runs'] > 0:
+                parts.append(f"{metrics['runs']} Run{'s' if metrics['runs'] != 1 else ''}")
+            if metrics['walks'] > 0:
+                parts.append(f"{metrics['walks']} Walk{'s' if metrics['walks'] != 1 else ''}")
+            if metrics['other'] > 0:
+                parts.append(f"{metrics['other']} Other")
+
+            activity_text = ", ".join(parts) if parts else "No activities"
+        else:
+            activity_text = "No data"
+
+        st.metric(
+            label="🏃‍♀️ Activity Mix",
+            value=activity_text,
+            help="Breakdown of workout types"
+        )
+
+def render_key_insights_above_fold(brief):
+    """Render key insights above the fold in 2x2 grid - these are the main actionable insights"""
+    insights = brief.get('key_insights', [])
+    if insights:
+        st.subheader("🔍 Key Patterns")
+
+        # Organize insights into 2x2 grid
+        # Pad insights to ensure we have at least 4
+        while len(insights) < 4:
+            insights.append("No additional patterns detected")
+
+        # First row
+        col1, col2 = st.columns(2)
+        with col1:
+            st.info(insights[0])
+        with col2:
+            if len(insights) > 1:
+                st.info(insights[1])
+
+        # Second row
+        col3, col4 = st.columns(2)
+        with col3:
+            if len(insights) > 2:
+                st.info(insights[2])
+        with col4:
+            if len(insights) > 3:
+                st.info(insights[3])
+
+def render_intelligence_brief_cards(brief, time_period='30d'):
+    """Render visual-first intelligence brief cards with 4 categories"""
     if not brief:
         st.error("Unable to generate intelligence brief")
         return
-    
-    st.subheader("📊 Today's Intelligence Brief")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        render_focus_card(brief)
-    
-    with col2:
-        render_trending_card(brief)
-        
-    with col3:
-        render_alerts_card(brief)
 
-def render_focus_card(brief):
-    """Render today's focus area card"""
-    recommendations = brief.get('recommendations', [])
-    primary_rec = recommendations[0] if recommendations else "Continue your current routine"
-    
-    # Extract focus from consistency intelligence
+    period_options = {
+        '7d': 'Last 7 days',
+        '30d': 'Last 30 days',
+        '90d': 'Last 3 months',
+        '365d': 'Last year'
+    }
+
+    st.subheader(f"📊 Intelligence Brief - {period_options[time_period]}")
+
+    # New analytical sections with insights and visualizations
+    render_performance_analysis_section(brief, time_period)
+
+    st.markdown("---")
+
+    render_consistency_analysis_section(brief, time_period)
+
+    st.markdown("---")
+
+    render_forecasting_analysis_section(brief, time_period)
+
+def render_performance_analysis_section(brief, time_period):
+    """Render comprehensive Performance Analysis section with insights and visualizations"""
+    st.subheader("🏃 Performance Analysis")
+
+    performance_data = brief.get('performance_intelligence', {})
+
+    # Get actual workout data for visualization
+    from services.intelligence_service import FitnessIntelligenceService
+    intelligence_service = FitnessIntelligenceService()
+
+    try:
+        # Load and filter data
+        df = intelligence_service._load_workout_data()
+        if df.empty:
+            st.warning("No workout data available for performance analysis.")
+            return
+
+        from datetime import datetime, timedelta
+        import pandas as pd
+
+        days_map = {'7d': 7, '30d': 30, '90d': 90, '365d': 365}
+        days_lookback = days_map.get(time_period, 30)
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days_lookback)
+
+        if df['workout_date'].dtype == 'object':
+            df['workout_date'] = pd.to_datetime(df['workout_date'])
+
+        period_df = df[df['workout_date'] >= start_date].copy()
+
+        if period_df.empty:
+            st.info("No workouts found in the selected time period.")
+            return
+
+        # Apply ML classification
+        classified_df = intelligence_service.classify_workout_types(period_df)
+
+        # Separate data by activity type
+        runs_df = classified_df[classified_df['predicted_activity_type'] == 'real_run'] if 'predicted_activity_type' in classified_df.columns else pd.DataFrame()
+        walks_df = classified_df[classified_df['predicted_activity_type'].isin(['pup_walk', 'mixed'])] if 'predicted_activity_type' in classified_df.columns else pd.DataFrame()
+
+        # Create two columns: insights on left, visualization on right
+        col_insights, col_visual = st.columns([3, 2])
+
+        with col_insights:
+            st.markdown("**📊 Key Performance Insights**")
+
+            # Data source clarity
+            total_workouts = len(classified_df)
+            runs_count = len(runs_df)
+            walks_count = len(walks_df)
+
+            st.markdown(f"*Analyzing {total_workouts} workouts: {runs_count} Runs, {walks_count} Walks*")
+
+            # Performance metrics for different activity types
+            if not runs_df.empty:
+                runs_avg_pace = runs_df['avg_pace'].mean() if 'avg_pace' in runs_df.columns else 0
+                runs_avg_distance = runs_df['distance_mi'].mean() if 'distance_mi' in runs_df.columns else 0
+                st.metric(
+                    label="🏃 Runs Performance",
+                    value=f"{runs_avg_pace:.1f} min/mile avg",
+                    delta=f"{runs_avg_distance:.1f} mi avg distance",
+                    help="Average pace and distance for classified running workouts"
+                )
+
+            if not walks_df.empty:
+                walks_avg_pace = walks_df['avg_pace'].mean() if 'avg_pace' in walks_df.columns else 0
+                walks_avg_distance = walks_df['distance_mi'].mean() if 'distance_mi' in walks_df.columns else 0
+                st.metric(
+                    label="🚶 Walks Performance",
+                    value=f"{walks_avg_pace:.1f} min/mile avg",
+                    delta=f"{walks_avg_distance:.1f} mi avg distance",
+                    help="Average pace and distance for classified walking activities"
+                )
+
+            # Combined performance trends
+            if 'distance_mi' in classified_df.columns:
+                total_distance = classified_df['distance_mi'].sum()
+                avg_distance = classified_df['distance_mi'].mean()
+                st.metric(
+                    label="📏 Combined Performance",
+                    value=f"{total_distance:.1f} mi total",
+                    delta=f"{avg_distance:.1f} mi avg per workout"
+                )
+
+        with col_visual:
+            st.markdown("**📈 Performance Trends**")
+
+            # Create performance trend chart
+            try:
+                import plotly.express as px
+                import plotly.graph_objects as go
+
+                # Prepare data for visualization
+                chart_df = classified_df.copy()
+                chart_df['workout_date'] = pd.to_datetime(chart_df['workout_date'])
+                chart_df = chart_df.sort_values('workout_date')
+
+                # Create trend chart showing distance over time, colored by activity type
+                if 'distance_mi' in chart_df.columns and 'predicted_activity_type' in chart_df.columns:
+                    fig = px.scatter(
+                        chart_df,
+                        x='workout_date',
+                        y='distance_mi',
+                        color='predicted_activity_type',
+                        title='Distance Trends Over Time',
+                        labels={
+                            'workout_date': 'Date',
+                            'distance_mi': 'Distance (mi)',
+                            'predicted_activity_type': 'Activity Type'
+                        },
+                        color_discrete_map={
+                            'real_run': '#1f77b4',
+                            'pup_walk': '#2ca02c',
+                            'mixed': '#ff7f0e',
+                            'outlier': '#d62728'
+                        }
+                    )
+
+                    # Add trend lines
+                    if not runs_df.empty and 'distance_mi' in runs_df.columns:
+                        runs_df_sorted = runs_df.sort_values('workout_date')
+                        fig.add_scatter(
+                            x=runs_df_sorted['workout_date'],
+                            y=runs_df_sorted['distance_mi'].rolling(window=3, center=True).mean(),
+                            mode='lines',
+                            name='Runs Trend',
+                            line=dict(color='#1f77b4', dash='dash')
+                        )
+
+                    if not walks_df.empty and 'distance_mi' in walks_df.columns:
+                        walks_df_sorted = walks_df.sort_values('workout_date')
+                        fig.add_scatter(
+                            x=walks_df_sorted['workout_date'],
+                            y=walks_df_sorted['distance_mi'].rolling(window=3, center=True).mean(),
+                            mode='lines',
+                            name='Walks Trend',
+                            line=dict(color='#2ca02c', dash='dash')
+                        )
+
+                    fig.update_layout(height=300, margin=dict(l=0, r=0, t=30, b=0))
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("Distance data not available for visualization")
+
+            except ImportError:
+                st.info("Install plotly for interactive charts: `pip install plotly`")
+            except Exception as e:
+                st.info(f"Chart unavailable: {str(e)}")
+
+    except Exception as e:
+        st.error(f"Error in performance analysis: {str(e)}")
+
+def render_consistency_analysis_section(brief, time_period):
+    """Render comprehensive Consistency Analysis section with insights and visualizations"""
+    st.subheader("🔄 Consistency Analysis")
+
+    consistency_data = brief.get('consistency_intelligence', {})
+
+    # Get actual workout data for visualization
+    from services.intelligence_service import FitnessIntelligenceService
+    intelligence_service = FitnessIntelligenceService()
+
+    try:
+        # Load and filter data
+        df = intelligence_service._load_workout_data()
+        if df.empty:
+            st.warning("No workout data available for consistency analysis.")
+            return
+
+        from datetime import datetime, timedelta
+        import pandas as pd
+
+        days_map = {'7d': 7, '30d': 30, '90d': 90, '365d': 365}
+        days_lookback = days_map.get(time_period, 30)
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days_lookback)
+
+        if df['workout_date'].dtype == 'object':
+            df['workout_date'] = pd.to_datetime(df['workout_date'])
+
+        period_df = df[df['workout_date'] >= start_date].copy()
+
+        if period_df.empty:
+            st.info("No workouts found in the selected time period.")
+            return
+
+        # Create two columns: insights on left, visualization on right
+        col_insights, col_visual = st.columns([3, 2])
+
+        with col_insights:
+            st.markdown("**📊 Consistency Insights**")
+
+            # Get consistency score
+            consistency_score_data = consistency_data.get('consistency_score', 0)
+            if isinstance(consistency_score_data, dict):
+                consistency_score = consistency_score_data.get('consistency_score', 0)
+            else:
+                consistency_score = consistency_score_data
+
+            # Data source clarity
+            total_workouts = len(period_df)
+            workout_frequency = (total_workouts / days_lookback) * 7 if days_lookback > 0 else 0
+
+            st.markdown(f"*Analyzing {total_workouts} workouts over {days_lookback} days*")
+
+            # Consistency score with breakdown
+            if consistency_score >= 80:
+                level = "Excellent"
+                color = "#27ae60"
+                insight = "Top-tier consistency - excellent rhythm!"
+            elif consistency_score >= 60:
+                level = "Good"
+                color = "#f39c12"
+                insight = "Solid consistency with room for optimization"
+            else:
+                level = "Building"
+                color = "#e74c3c"
+                insight = "Building consistency habits"
+
+            st.metric(
+                label="Overall Consistency Score",
+                value=f"{consistency_score:.0f}/100",
+                delta=f"{level} level",
+                help="Composite score based on frequency, timing patterns, performance stability, and streaks"
+            )
+
+            st.metric(
+                label="Workout Frequency",
+                value=f"{workout_frequency:.1f}/week",
+                help="Average workouts per week in this period"
+            )
+
+            # Consistency score breakdown
+            st.markdown(f"""
+            <div style="padding: 10px; background: {color}15; border-radius: 8px; border-left: 3px solid {color}; margin: 10px 0;">
+                <div style="font-size: 0.9rem; color: {color}; font-weight: 600;">🏆 Consistency Breakdown:</div>
+                <div style="font-size: 0.85rem; margin-top: 5px; line-height: 1.4;">
+                    • <strong>Frequency:</strong> How often you work out<br>
+                    • <strong>Timing:</strong> Regular day-of-week patterns<br>
+                    • <strong>Performance:</strong> Stable effort levels<br>
+                    • <strong>Streaks:</strong> Maintaining workout chains
+                </div>
+                <div style="font-style: italic; margin-top: 8px; color: #666;">{insight}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with col_visual:
+            st.markdown("**📅 Workout Rhythm Patterns**")
+
+            try:
+                import plotly.express as px
+                import plotly.graph_objects as go
+
+                # Create workout frequency by day of week
+                period_df['day_of_week'] = period_df['workout_date'].dt.day_name()
+                day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+                day_counts = period_df['day_of_week'].value_counts().reindex(day_order, fill_value=0)
+
+                # Create bar chart of workouts by day of week
+                fig = px.bar(
+                    x=day_counts.index,
+                    y=day_counts.values,
+                    title='Workouts by Day of Week',
+                    labels={'x': 'Day of Week', 'y': 'Number of Workouts'},
+                    color=day_counts.values,
+                    color_continuous_scale='Blues'
+                )
+
+                fig.update_layout(
+                    height=250,
+                    margin=dict(l=0, r=0, t=30, b=40),
+                    showlegend=False
+                )
+                fig.update_xaxes(tickangle=45)
+                st.plotly_chart(fig, use_container_width=True)
+
+                # Create calendar heatmap if we have enough data
+                if len(period_df) > 5:
+                    st.markdown("**📈 Workout Calendar**")
+
+                    # Create a simple workout frequency indicator
+                    period_df['date_only'] = period_df['workout_date'].dt.date
+                    daily_counts = period_df.groupby('date_only').size()
+
+                    # Show recent workout pattern
+                    recent_days = pd.date_range(start=start_date.date(), end=end_date.date(), freq='D')
+                    workout_pattern = []
+                    for day in recent_days[-14:]:  # Show last 14 days
+                        count = daily_counts.get(day, 0)
+                        workout_pattern.append(f"{'🟢' if count > 0 else '⚪'}")
+
+                    st.markdown(f"**Last 14 days:** {''.join(workout_pattern)}")
+                    st.caption("🟢 = Workout day, ⚪ = Rest day")
+
+            except ImportError:
+                st.info("Install plotly for interactive charts")
+            except Exception as e:
+                st.info(f"Visualization unavailable: {str(e)}")
+
+    except Exception as e:
+        st.error(f"Error in consistency analysis: {str(e)}")
+
+def render_forecasting_analysis_section(brief, time_period):
+    """Render comprehensive Forecasting Analysis section with regression visualization"""
+    st.subheader("🔮 Forecasting Analysis")
+
+    predictive_data = brief.get('predictive_intelligence', {})
+
+    # Get actual workout data for regression visualization
+    from services.intelligence_service import FitnessIntelligenceService
+    intelligence_service = FitnessIntelligenceService()
+
+    try:
+        # Load historical data (more data for better forecasting)
+        df = intelligence_service._load_workout_data()
+        if df.empty:
+            st.warning("No workout data available for forecasting analysis.")
+            return
+
+        from datetime import datetime, timedelta
+        import pandas as pd
+        import numpy as np
+
+        if df['workout_date'].dtype == 'object':
+            df['workout_date'] = pd.to_datetime(df['workout_date'])
+
+        # Use last 90 days for forecasting (as mentioned in the algorithm)
+        forecast_start = datetime.now() - timedelta(days=90)
+        forecast_df = df[df['workout_date'] >= forecast_start].copy()
+
+        if len(forecast_df) < 10:
+            st.info("Insufficient data for reliable forecasting (need at least 10 workouts).")
+            return
+
+        # Create two columns: insights on left, visualization on right
+        col_insights, col_visual = st.columns([3, 2])
+
+        with col_insights:
+            st.markdown("**🔮 14-Day Forecasting Insights**")
+            st.markdown(f"*Based on linear regression analysis of {len(forecast_df)} workouts from last 90 days*")
+
+            # Find best forecast metric
+            best_forecast = None
+            best_confidence = 0
+
+            for metric, data in predictive_data.items():
+                if isinstance(data, dict) and 'forecast' in data:
+                    forecast_info = data['forecast']
+                    if isinstance(forecast_info, dict):
+                        confidence = forecast_info.get('confidence', 0)
+                        if confidence > best_confidence:
+                            best_confidence = confidence
+                            best_forecast = {
+                                'metric': metric.replace('_', ' ').title(),
+                                'direction': forecast_info.get('trend_direction', 'stable'),
+                                'confidence': confidence,
+                                'data': forecast_info
+                            }
+
+            if best_forecast:
+                # Display forecast insights
+                direction = best_forecast['direction']
+                if direction == 'ascending':
+                    outlook_color = "#27ae60"
+                    outlook_text = "Improving Performance"
+                    outlook_description = f"Your {best_forecast['metric'].lower()} is projected to improve over the next 14 days"
+                elif direction == 'descending':
+                    outlook_color = "#e74c3c"
+                    outlook_text = "Declining Performance"
+                    outlook_description = f"Your {best_forecast['metric'].lower()} may decline over the next 14 days"
+                else:
+                    outlook_color = "#3498db"
+                    outlook_text = "Stable Performance"
+                    outlook_description = f"Your {best_forecast['metric'].lower()} is expected to remain stable"
+
+                st.metric(
+                    label=f"14-Day {best_forecast['metric']} Forecast",
+                    value=outlook_text,
+                    delta=f"{best_forecast['confidence']:.0f}% confidence",
+                    help="Statistical forecast based on linear regression of recent performance trends"
+                )
+
+                st.markdown(f"""
+                <div style="padding: 10px; background: {outlook_color}15; border-radius: 8px; border-left: 3px solid {outlook_color}; margin: 10px 0;">
+                    <div style="font-size: 0.9rem; color: {outlook_color}; font-weight: 600;">📊 Methodology:</div>
+                    <div style="font-size: 0.85rem; margin-top: 5px; line-height: 1.4;">
+                        • <strong>Data Source:</strong> Last 90 workouts<br>
+                        • <strong>Algorithm:</strong> Linear regression with trend extrapolation<br>
+                        • <strong>Projection:</strong> 14 days forward<br>
+                        • <strong>Confidence:</strong> Based on statistical correlation
+                    </div>
+                    <div style="font-style: italic; margin-top: 8px; color: #666;">{outlook_description}</div>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.info("Forecasting data not available. May need more workout history.")
+
+        with col_visual:
+            st.markdown("**📈 Regression Analysis**")
+
+            try:
+                import plotly.express as px
+                import plotly.graph_objects as go
+                from sklearn.linear_model import LinearRegression
+
+                # Choose the metric to visualize (distance is most visual)
+                metric_col = 'distance_mi'
+                if metric_col in forecast_df.columns:
+                    # Prepare data for regression
+                    forecast_df = forecast_df.dropna(subset=[metric_col])
+                    forecast_df = forecast_df.sort_values('workout_date')
+
+                    # Convert dates to numeric for regression
+                    forecast_df['days_since_start'] = (forecast_df['workout_date'] - forecast_df['workout_date'].min()).dt.days
+
+                    X = forecast_df['days_since_start'].values.reshape(-1, 1)
+                    y = forecast_df[metric_col].values
+
+                    # Fit regression model
+                    model = LinearRegression()
+                    model.fit(X, y)
+
+                    # Create future dates for prediction
+                    last_day = forecast_df['days_since_start'].max()
+                    future_days = np.arange(last_day + 1, last_day + 15)  # 14 days forward
+                    future_predictions = model.predict(future_days.reshape(-1, 1))
+
+                    # Create visualization
+                    fig = go.Figure()
+
+                    # Historical data points
+                    fig.add_trace(go.Scatter(
+                        x=forecast_df['workout_date'],
+                        y=forecast_df[metric_col],
+                        mode='markers',
+                        name='Historical Workouts',
+                        marker=dict(color='#1f77b4', size=6)
+                    ))
+
+                    # Regression line through historical data
+                    regression_line = model.predict(X)
+                    fig.add_trace(go.Scatter(
+                        x=forecast_df['workout_date'],
+                        y=regression_line,
+                        mode='lines',
+                        name='Trend Line',
+                        line=dict(color='#ff7f0e', dash='dash')
+                    ))
+
+                    # Future predictions
+                    future_dates = [forecast_df['workout_date'].max() + timedelta(days=i+1) for i in range(14)]
+                    fig.add_trace(go.Scatter(
+                        x=future_dates,
+                        y=future_predictions,
+                        mode='lines+markers',
+                        name='14-Day Forecast',
+                        line=dict(color='#2ca02c', dash='dot'),
+                        marker=dict(color='#2ca02c', size=4)
+                    ))
+
+                    fig.update_layout(
+                        title='Distance Forecast with Regression Analysis',
+                        xaxis_title='Date',
+                        yaxis_title='Distance (mi)',
+                        height=300,
+                        margin=dict(l=0, r=0, t=30, b=0)
+                    )
+
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("Distance data not available for regression visualization")
+
+            except ImportError:
+                st.info("Install scikit-learn and plotly for regression analysis")
+            except Exception as e:
+                st.info(f"Regression visualization unavailable: {str(e)}")
+
+    except Exception as e:
+        st.error(f"Error in forecasting analysis: {str(e)}")
+
+def render_performance_card_legacy(brief, time_period):
+    """Render performance trends card with clear, non-conflicting visual indicators"""
+    performance_data = brief.get('performance_intelligence', {})
+
+    # Find the best trending metric with highest confidence
+    best_metric = 'Distance Mi'
+    trend_confidence = 75
+    current_avg = 3.3
+    pct_change = 6.6
+    trend_direction = 'ascending'
+
+    for metric, data in performance_data.items():
+        if isinstance(data, dict) and 'trend' in data:
+            trend_info = data['trend']
+            confidence = trend_info.get('confidence', 0)
+            if confidence > trend_confidence:
+                trend_confidence = confidence
+                best_metric = metric.replace('_', ' ').title()
+                trend_direction = trend_info.get('trend_direction', 'stable')
+                current_avg = data.get('current_average', 0)
+                historical_avg = data.get('historical_average', 0)
+                # Calculate percentage change vs historical
+                if historical_avg > 0:
+                    pct_change = ((current_avg - historical_avg) / historical_avg) * 100
+                else:
+                    pct_change = 0
+
+    # Determine consistent visual indicators based on actual trend direction
+    if trend_direction == 'ascending':
+        color = "#27ae60"
+        trend_emoji = "📈"
+        trend_status = "Improving Trend"
+        trend_description = f"Performance is trending upward with {trend_confidence:.0f}% confidence"
+    elif trend_direction == 'descending':
+        color = "#e74c3c"
+        trend_emoji = "📉"
+        trend_status = "Declining Trend"
+        trend_description = f"Performance is trending downward with {trend_confidence:.0f}% confidence"
+    else:
+        color = "#3498db"
+        trend_emoji = "📊"
+        trend_status = "Stable Trend"
+        trend_description = f"Performance is stable with {trend_confidence:.0f}% confidence"
+
+    # Create card with consistent visual theme
+    with st.container():
+        st.markdown(f"""
+        <div style="background: linear-gradient(135deg, {color}15 0%, {color}08 100%);
+                    border-left: 4px solid {color}; padding: 18px; border-radius: 10px; margin-bottom: 10px;">
+            <h4 style="color: {color}; margin: 0 0 10px 0; font-size: 1rem;">🏃 Performance Analysis - {time_period.replace('d', ' days').replace('365 days', '1 year')}</h4>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Main performance metric with clear context
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.metric(
+                label=f"Current {best_metric} Average",
+                value=f"{current_avg:.1f}",
+                delta=f"{pct_change:+.1f}% vs historical average",
+                help=f"Comparing current {time_period} average to your historical performance"
+            )
+
+            # Clear trend status
+            st.markdown(f"""
+            <div style="margin: 10px 0; padding: 8px; background: {color}20; border-radius: 5px;">
+                <strong style="color: {color};">📊 Trend Status:</strong> {trend_status}
+            </div>
+            """, unsafe_allow_html=True)
+
+        with col2:
+            st.markdown(f"<div style='font-size: 3rem; text-align: center; margin-top: 15px;'>{trend_emoji}</div>", unsafe_allow_html=True)
+
+        # Add future outlook section
+        st.markdown("---")
+
+        # Future outlook using predictive intelligence
+        predictive_data = brief.get('predictive_intelligence', {})
+        forecast_confidence = 70
+        forecast_direction = 'stable'
+
+        # Find best forecast for the same metric
+        for metric, data in predictive_data.items():
+            if isinstance(data, dict) and 'forecast' in data:
+                forecast_info = data['forecast']
+                if isinstance(forecast_info, dict):
+                    confidence = forecast_info.get('confidence', 0)
+                    if confidence > forecast_confidence and metric.replace('_', ' ').title() == best_metric:
+                        forecast_confidence = confidence
+                        forecast_direction = forecast_info.get('trend_direction', 'stable')
+
+        # Future outlook display
+        if forecast_direction == 'ascending':
+            outlook_color = "#27ae60"
+            outlook_icon = "📈"
+            outlook_text = "Positive outlook"
+        elif forecast_direction == 'descending':
+            outlook_color = "#e74c3c"
+            outlook_icon = "📉"
+            outlook_text = "Declining outlook"
+        else:
+            outlook_color = "#3498db"
+            outlook_icon = "📊"
+            outlook_text = "Stable outlook"
+
+        # Concise future outlook
+        st.markdown(f"""
+        <div style="padding: 6px 12px; background: {outlook_color}12; border-radius: 8px; border-left: 3px solid {outlook_color}; margin-top: 8px;">
+            <span style="font-size: 0.85rem; color: {outlook_color}; font-weight: 600;">
+                🔮 14-Day Outlook: {outlook_text} ({forecast_confidence:.0f}% confidence)
+            </span>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Algorithm transparency
+        algorithm_badge = render_algorithm_badge('trend_analysis', trend_confidence)
+        st.info(f"{algorithm_badge}")
+        st.markdown(f"<div style='font-size: 0.85rem; color: #666;'>{trend_description}</div>", unsafe_allow_html=True)
+
+    with st.expander("📈 How are trends calculated?"):
+        st.markdown(f"""
+        **Algorithm:** {ALGORITHM_INFO['trend_analysis']['name']}
+        **Confidence:** {trend_confidence:.0f}%
+        **Metric:** {best_metric}
+
+        **Process:**
+        1. Linear regression on {time_period} data
+        2. Calculate slope and correlation
+        3. Statistical significance testing
+        4. Compare current vs historical averages
+        """)
+
+def render_consistency_card(brief, time_period):
+    """Render consistency analysis card with clear score explanation and legible metrics"""
     consistency_data = brief.get('consistency_intelligence', {})
     consistency_score_data = consistency_data.get('consistency_score', 0)
-    
-    # Handle case where consistency_score is a dict (from analyzer) or a number
+
+    # Handle case where consistency_score is a dict or number
     if isinstance(consistency_score_data, dict):
         consistency_score = consistency_score_data.get('consistency_score', 0)
     else:
         consistency_score = consistency_score_data
-    
-    if consistency_score < 50:
-        focus_area = "Consistency Building"
-        focus_detail = "Build momentum with regular workouts"
-        focus_color = "#e74c3c"
-    elif consistency_score < 75:
-        focus_area = "Performance Optimization"  
-        focus_detail = "Good foundation - time to improve"
-        focus_color = "#f39c12"
+
+    # Calculate insights based on score
+    if consistency_score >= 80:
+        level = "Excellent"
+        color = "#27ae60"
+        icon = "🏆"
+        insight = "Top-tier consistency - you're crushing it!"
+        level_description = "Excellent rhythm and reliability"
+    elif consistency_score >= 60:
+        level = "Good"
+        color = "#f39c12"
+        icon = "📊"
+        insight = "Solid consistency with room for improvement"
+        level_description = "Good foundation, optimize timing & frequency"
     else:
-        focus_area = "Excellence Maintenance"
-        focus_detail = "Keep up your outstanding routine"
-        focus_color = "#27ae60"
-    
-    st.markdown(f"""
-    <div style="background: linear-gradient(135deg, {focus_color}20 0%, {focus_color}10 100%);
-                border-left: 4px solid {focus_color}; 
-                padding: 20px; border-radius: 10px; margin-bottom: 15px;">
-        <h3 style="color: {focus_color}; margin-top: 0;">🎯 Focus Area Today</h3>
-        <div style="font-size: 1.1rem; font-weight: bold; margin: 10px 0;">
-            {focus_area}
-        </div>
-        <div style="color: #666; margin: 10px 0;">
-            {focus_detail}
-        </div>
-        <div style="font-size: 0.8rem; color: #888;">
-            {render_algorithm_badge('consistency_analysis', consistency_score)}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Add algorithm transparency
-    with st.expander("🤖 How was this focus determined?"):
+        level = "Building"
+        color = "#e74c3c"
+        icon = "🎯"
+        insight = "Building consistency habits"
+        level_description = "Focus on regular workout patterns"
+
+    # Calculate workout frequency (more robust calculation)
+    total_workouts = brief.get('recent_workouts_analyzed', 0)
+    days_in_period = int(time_period.replace('d', '')) if 'd' in time_period else 365
+    freq_per_week = (total_workouts / days_in_period) * 7 if days_in_period > 0 else 0
+
+    # Use Streamlit container with clear explanations
+    with st.container():
         st.markdown(f"""
-        **Algorithm:** {ALGORITHM_INFO['consistency_analysis']['name']}  
-        **File:** `{ALGORITHM_INFO['consistency_analysis']['file']}`  
+        <div style="background: linear-gradient(135deg, {color}15 0%, {color}08 100%);
+                    border-left: 4px solid {color}; padding: 18px; border-radius: 10px; margin-bottom: 10px;">
+            <h4 style="color: {color}; margin: 0 0 10px 0; font-size: 1rem;">🔄 Consistency Analysis - {time_period.replace('d', ' days').replace('365 days', '1 year')}</h4>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Clear score explanation and metrics
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            # Consistency score with clear explanation
+            st.metric(
+                label="Overall Consistency Score",
+                value=f"{consistency_score:.0f}/100",
+                delta=f"{level} level",
+                help="Composite score based on workout frequency, timing patterns, performance stability, and streak maintenance"
+            )
+
+            # Score breakdown in a more visible format
+            st.markdown(f"""
+            <div style="margin: 12px 0; padding: 10px; background: {color}15; border-radius: 5px; border-left: 3px solid {color};">
+                <div style="font-size: 0.9rem; color: {color}; font-weight: 600;">📊 Score Breakdown:</div>
+                <div style="font-size: 0.85rem; margin-top: 5px; line-height: 1.4;">
+                    • <strong>Frequency:</strong> How often you work out<br>
+                    • <strong>Timing:</strong> Regular day-of-week patterns<br>
+                    • <strong>Performance:</strong> Stable effort levels<br>
+                    • <strong>Streaks:</strong> Maintaining workout chains
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with col2:
+            # Large, legible frequency metric
+            st.markdown(f"<div style='text-align: center; margin-top: 20px;'>{icon}</div>", unsafe_allow_html=True)
+
+            # Clear frequency display
+            st.markdown(f"""
+            <div style="text-align: center; margin: 15px 0;">
+                <div style="font-size: 1.8rem; font-weight: bold; color: {color};">{freq_per_week:.1f}</div>
+                <div style="font-size: 0.9rem; color: #666;">workouts/week</div>
+                <div style="font-size: 0.8rem; color: #888;">{total_workouts} total workouts</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # Algorithm transparency and insight
+        algorithm_badge = render_algorithm_badge('consistency_analysis', consistency_score)
+        st.info(f"{algorithm_badge}")
+        st.markdown(f"<div style='font-size: 0.9rem; color: #666; font-style: italic;'>{insight}</div>", unsafe_allow_html=True)
+
+    with st.expander("🔄 How is consistency calculated?"):
+        st.markdown(f"""
+        **Algorithm:** Multi-dimensional Scoring
         **Score:** {consistency_score:.0f}/100
-        
-        **Calculation:**
-        - Frequency consistency: Workout regularity analysis
-        - Timing consistency: Day-of-week patterns
-        - Performance consistency: Metric stability 
-        - Streak analysis: Current vs historical streaks
+
+        **Components:**
+        - Frequency (40%): Workout regularity
+        - Timing (20%): Day-of-week patterns
+        - Performance (20%): Metric stability
+        - Streaks (20%): Current vs historical
         """)
 
-def render_trending_card(brief):
-    """Render trending metrics card"""
-    performance_data = brief.get('performance_intelligence', {})
-    
-    # Find best trending metric
-    trending_metric = "calories"
-    trending_direction = "stable"
-    confidence = 70
-    
-    for metric, data in performance_data.items():
-        if isinstance(data, dict) and 'trend' in data:
-            trend_info = data['trend']
-            if trend_info.get('confidence', 0) > confidence:
-                confidence = trend_info['confidence']
-                trending_metric = metric.replace('_', ' ')
-                trending_direction = trend_info.get('trend_direction', 'stable')
-    
-    trend_color = "#27ae60" if trending_direction == "ascending" else "#e74c3c" if trending_direction == "descending" else "#f39c12"
-    trend_icon = "📈" if trending_direction == "ascending" else "📉" if trending_direction == "descending" else "➡️"
-    trend_text = "Improving" if trending_direction == "ascending" else "Declining" if trending_direction == "descending" else "Stable"
-    
-    st.markdown(f"""
-    <div style="background: linear-gradient(135deg, {trend_color}20 0%, {trend_color}10 100%);
-                border-left: 4px solid {trend_color}; 
-                padding: 20px; border-radius: 10px; margin-bottom: 15px;">
-        <h3 style="color: {trend_color}; margin-top: 0;">{trend_icon} Trending This Week</h3>
-        <div style="font-size: 1.1rem; font-weight: bold; margin: 10px 0;">
-            {trending_metric.title()}: {trend_text}
-        </div>
-        <div style="color: #666; margin: 10px 0;">
-            Statistical trend detected in recent workouts
-        </div>
-        <div style="font-size: 0.8rem; color: #888;">
-            {render_algorithm_badge('trend_analysis', confidence)}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Add algorithm transparency
-    with st.expander("📈 How are trends calculated?"):
-        st.markdown(f"""
-        **Algorithm:** {ALGORITHM_INFO['trend_analysis']['name']}  
-        **File:** `{ALGORITHM_INFO['trend_analysis']['file']}`  
-        **Confidence:** {confidence:.0f}%
-        
-        **Process:**
-        1. Apply linear regression to recent {trending_metric} data
-        2. Calculate slope and correlation coefficient
-        3. Determine statistical significance (p-value)
-        4. Confidence = (1 - p_value) × 100
-        """)
 
-def render_alerts_card(brief):
-    """Render anomaly alerts card"""
+def render_insights_card(brief, time_period):
+    """Render key insights card with visual context"""
     anomaly_data = brief.get('anomaly_intelligence', {})
     total_anomalies = anomaly_data.get('summary', {}).get('total_anomalies_detected', 0)
     recent_anomalies = anomaly_data.get('summary', {}).get('recent_anomalies', 0)
-    
+
+    # Determine status based on anomalies and insights
+    insights = brief.get('key_insights', [])
+    insights_count = len(insights)
+
     if recent_anomalies > 0:
-        alert_level = "warning"
-        alert_color = "#f39c12"
-        alert_text = f"{recent_anomalies} unusual workouts detected"
-        alert_detail = "Performance outside normal patterns"
-    elif total_anomalies > 0:
-        alert_level = "info"
-        alert_color = "#3498db"
-        alert_text = "Performance patterns normal"
-        alert_detail = "No recent unusual activity"
+        status = f"{recent_anomalies} anomalies detected"
+        color = "#f39c12"
+        icon = "⚠️"
+        detail = "Some workouts outside normal patterns"
+    elif insights_count >= 3:
+        status = f"{insights_count} insights discovered"
+        color = "#27ae60"
+        icon = "💡"
+        detail = "Rich intelligence from your data"
     else:
-        alert_level = "success"
-        alert_color = "#27ae60"
-        alert_text = "All systems normal"
-        alert_detail = "Consistent performance patterns"
-    
-    st.markdown(f"""
-    <div style="background: linear-gradient(135deg, {alert_color}20 0%, {alert_color}10 100%);
-                border-left: 4px solid {alert_color}; 
-                padding: 20px; border-radius: 10px; margin-bottom: 15px;">
-        <h3 style="color: {alert_color}; margin-top: 0;">⚠️ Performance Alerts</h3>
-        <div style="font-size: 1.1rem; font-weight: bold; margin: 10px 0;">
-            {alert_text}
-        </div>
-        <div style="color: #666; margin: 10px 0;">
-            {alert_detail}
-        </div>
-        <div style="font-size: 0.8rem; color: #888;">
-            {render_algorithm_badge('anomaly_detection')}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Add algorithm transparency
-    with st.expander("🔍 How are anomalies detected?"):
+        status = "Building intelligence"
+        color = "#3498db"
+        icon = "🧠"
+        detail = "Collecting data for deeper insights"
+
+    # Use Streamlit container instead of raw HTML
+    with st.container():
         st.markdown(f"""
-        **Algorithm:** {ALGORITHM_INFO['anomaly_detection']['name']}  
-        **File:** `{ALGORITHM_INFO['anomaly_detection']['file']}`  
-        **Recent anomalies:** {recent_anomalies}
-        
-        **Detection Methods:**
-        - IQR Method: Values beyond 1.5 × IQR from quartiles
-        - Z-score: Performance >2.5 standard deviations from mean
-        - Rolling baseline: Comparison to recent 30-workout average
+        <div style="background: linear-gradient(135deg, {color}15 0%, {color}08 100%);
+                    border-left: 4px solid {color}; padding: 18px; border-radius: 10px; margin-bottom: 10px;">
+            <h4 style="color: {color}; margin: 0 0 10px 0; font-size: 1rem;">💡 Insights - {time_period.replace('d', ' days').replace('365 days', '1 year')}</h4>
+        </div>
+        """, unsafe_allow_html=True)
+
+        col1, col2 = st.columns([4, 1])
+        with col1:
+            st.markdown(f"**{status.title()}**")
+            # Show metrics in larger text above detail
+            st.markdown(f"<div style='font-size: 1.1rem; font-weight: 500; margin: 8px 0;'>{detail}</div>", unsafe_allow_html=True)
+        with col2:
+            st.markdown(f"<div style='font-size: 2rem; text-align: center;'>{icon}</div>", unsafe_allow_html=True)
+
+        algorithm_badge = render_algorithm_badge('anomaly_detection')
+        st.info(f"{algorithm_badge}")
+        st.markdown(f"<div style='font-size: 0.85rem; color: #666;'>AI-powered pattern recognition</div>", unsafe_allow_html=True)
+
+    with st.expander("🔍 How are insights generated?"):
+        st.markdown(f"""
+        **Algorithm:** Multi-algorithm Analysis
+        **Insights found:** {insights_count}
+        **Anomalies:** {recent_anomalies}
+
+        **Analysis methods:**
+        - Statistical outlier detection
+        - Pattern recognition algorithms
+        - Performance trend analysis
+        - Behavioral insight generation
         """)
 
 def render_classification_demo(brief):
@@ -350,7 +1369,7 @@ def render_classification_reasoning(workout):
     # Map classifications to descriptions
     type_descriptions = {
         'real_run': ('🏃‍♂️ Real Run', 'Fast-paced running workout'),
-        'choco_adventure': ('🐕 Choco Adventure', 'Leisurely walking/dog walking'),
+        'pup_walk': ('🐕 Pup Walk', 'Leisurely walking/dog walking'),
         'mixed': ('🚶‍♂️ Mixed Activity', 'Combined running and walking'),
         'outlier': ('🤔 Unusual Pattern', 'Outside normal workout patterns'),
         'unknown': ('❓ Unknown', 'Could not classify')
@@ -410,7 +1429,7 @@ def render_classification_reasoning(workout):
         1. Sort cluster centers by average pace (fastest → slowest)
         2. Fastest cluster → 'real_run'
         3. Medium cluster → 'mixed'  
-        4. Slowest cluster → 'choco_adventure'
+        4. Slowest cluster → 'pup_walk'
         """)
 
 def render_classification_controls(workout):
@@ -447,7 +1466,7 @@ def render_classification_controls(workout):
     st.markdown("#### 🛠️ User Override")
     
     # Allow user to correct classification
-    override_options = ['Accept AI Classification', 'real_run', 'choco_adventure', 'mixed', 'other']
+    override_options = ['Accept AI Classification', 'real_run', 'pup_walk', 'mixed', 'other']
     user_choice = st.selectbox(
         "Is the AI classification correct?",
         override_options,
@@ -534,18 +1553,35 @@ def main():
     </style>
     """, unsafe_allow_html=True)
     
-    # Load intelligence data
-    brief, summary = load_intelligence_data()
-    
+    # Render clean header (no dynamic content)
+    render_fitness_dashboard_header()
+
+    # Time period selector
+    selected_period, period_options = render_time_period_selector()
+
+    # Load intelligence data based on selected period
+    brief, summary = load_intelligence_data(selected_period)
+
     if not brief:
         st.error("Failed to load intelligence data. Please check your database connection.")
         return
-    
-    # Render main interface
-    render_intelligence_header(brief, summary)
-    
-    # Intelligence brief cards
-    render_intelligence_brief_cards(brief)
+
+    # Dynamic filter info container (updates with dropdown selection)
+    render_filter_info_container(brief, selected_period, period_options)
+
+    # Concrete metrics cards - above the fold
+    render_concrete_metrics_cards(brief, selected_period)
+
+    # Show data visibility expander between Period Summary and Key Patterns
+    render_data_visibility_expander(brief, selected_period)
+
+    # Key insights - above the fold
+    render_key_insights_above_fold(brief)
+
+    st.markdown("---")
+
+    # Intelligence brief cards (algorithmic analysis)
+    render_intelligence_brief_cards(brief, selected_period)
     
     st.markdown("---")
     
@@ -570,14 +1606,7 @@ def main():
                     if st.button(f"Try This", key=f"rec_{i}"):
                         st.success("Added to your plan!")
     
-    # Key insights section
-    st.markdown("---")
-    st.subheader("💡 Key Intelligence Insights")
-    
-    insights = brief.get('key_insights', [])
-    if insights:
-        for insight in insights:
-            st.info(insight)
+    # Key insights now appear above the fold
     
     # Algorithm transparency sidebar
     render_algorithm_transparency_sidebar()

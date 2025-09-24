@@ -1,0 +1,279 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2821
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;\f1\fnil\fcharset0 Menlo-BoldItalic;\f2\fnil\fcharset0 Menlo-Italic;
+\f3\fnil\fcharset0 Menlo-Bold;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red171\green216\blue255;}
+{\*\expandedcolortbl;;\csgray\c0;\cssrgb\c72102\c87821\c100000;}
+\margl1440\margr1440\vieww22360\viewh17260\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\fs22 \cf2 \CocoaLigature0  
+\f1\i\b \ul Phase 2 Intelligence UI - User Journey Testing Guide
+\f0\i0\b0 \ulnone \
+\
+  
+\f2\i Strategic test paths for new AI transparency features
+\f0\i0 \
+\
+  
+\f3\b \uc0\u55358 \u56800  User Journey 1: "First-Time Intelligence Experience"
+\f0\b0 \
+\
+  
+\f3\b Goal
+\f0\b0 : Experience AI-first interface as new default\
+\
+  
+\f3\b Path
+\f0\b0 :\
+  1. Login \uc0\u8594  
+\f3\b Auto-lands on Intelligence dashboard
+\f0\b0  (not old Monthly View)\
+  2. 
+\f3\b See AI header
+\f0\b0 : "Your AI discovered X key insights from recent workouts"\
+  3. 
+\f3\b Notice algorithm badges
+\f0\b0 : \uc0\u55358 \u56598  K-means ML Classification Active\
+  4. 
+\f3\b Scan intelligence brief cards
+\f0\b0 : Focus Area, Trending, Alerts with confidence %\
+  5. 
+\f3\b Test transparency
+\f0\b0 : Click algorithm badge \uc0\u8594  See explanation popup\
+\
+  
+\f3\b Expected Result
+\f0\b0 : User immediately understands this is AI-powered, not static data\
+\
+  ---\
+  
+\f3\b \uc0\u55357 \u56589  User Journey 2: "Algorithm Transparency Deep Dive"
+\f0\b0 \
+\
+  
+\f3\b Goal
+\f0\b0 : Trace any AI insight back to source code\
+\
+  
+\f3\b Path
+\f0\b0 :\
+  1. 
+\f3\b Pick any AI insight
+\f0\b0  (e.g., "Consistency Score: 87/100")\
+  2. 
+\f3\b Click algorithm badge
+\f0\b0 : \uc0\u55357 \u56522  Multi-dimensional Scoring (87% confident)\
+  3. 
+\f3\b Expand "How was this calculated?"
+\f0\b0 : See 4-step process explanation\
+  4. 
+\f3\b View source details
+\f0\b0 : \cf3 consistency_analyzer.py:24-75\cf2 \
+  5. 
+\f3\b Check sidebar
+\f0\b0 : Algorithm Explorer \uc0\u8594  Select "Multi-dimensional Scoring"\
+  6. 
+\f3\b Deep dive
+\f0\b0 : See weights (Frequency 40% + Timing 20% + Performance 20% + Streak 20%)\
+\
+  
+\f3\b Expected Result
+\f0\b0 : Complete traceability from insight \uc0\u8594  algorithm \u8594  source code\
+\
+  ---\
+  
+\f3\b \uc0\u55358 \u56598  User Journey 3: "Interactive AI Classification Demo"
+\f0\b0 \
+\
+  
+\f3\b Goal
+\f0\b0 : Watch AI classify workouts with full reasoning\
+\
+  
+\f3\b Path
+\f0\b0 :\
+  1. 
+\f3\b Scroll to AI Classification section
+\f0\b0 : "\uc0\u55358 \u56598  AI Classification in Action"\
+  2. 
+\f3\b Select workout
+\f0\b0 : Pick from dropdown (e.g., "2025-01-15: 3.2mi in 45min")\
+  3. 
+\f3\b See AI reasoning
+\f0\b0 :\
+    - Step 1: Data Analysis (pace, distance, duration)\
+    - Step 2: Feature Standardization\
+    - Step 3: K-means Clustering\
+    - Step 4: Classification Result \uc0\u8594  \u55356 \u57283 \u8205 \u9794 \u65039  Real Run (89% confident)\
+  4. 
+\f3\b Check confidence
+\f0\b0 : Visual bar + "\uc0\u9889  Confident" label\
+  5. 
+\f3\b Test override
+\f0\b0 : Select "choco_adventure" \uc0\u8594  Submit Correction\
+  6. 
+\f3\b Expand deep dive
+\f0\b0 : "\uc0\u55357 \u56620  Deep Dive: K-means Algorithm Details"\
+\
+  
+\f3\b Expected Result
+\f0\b0 : Complete ML algorithm transparency with user correction capability\
+\
+  ---\
+  
+\f3\b \uc0\u55357 \u56520  User Journey 4: "AI Recommendation Interaction"
+\f0\b0 \
+\
+  
+\f3\b Goal
+\f0\b0 : Understand AI recommendations and provide feedback\
+\
+  
+\f3\b Path
+\f0\b0 :\
+  1. 
+\f3\b Find recommendations section
+\f0\b0 : "\uc0\u55356 \u57263  Personalized AI Recommendations"\
+  2. 
+\f3\b Read first recommendation
+\f0\b0 : e.g., "Focus Priority: Build consistency with 3 workouts/week"\
+  3. 
+\f3\b Check algorithm source
+\f0\b0 : See badge showing generating algorithm\
+  4. 
+\f3\b Test feedback
+\f0\b0 : Click \uc0\u55357 \u56397  "Helpful" or "\u55358 \u56596  Why this?"\
+  5. 
+\f3\b If "Why this?"
+\f0\b0 : See expanded algorithm explanation\
+  6. 
+\f3\b Try recommendation
+\f0\b0 : Click "Try This" button\
+\
+  
+\f3\b Expected Result
+\f0\b0 : AI recommendations feel trustworthy with clear reasoning and feedback loop\
+\
+  ---\
+  
+\f3\b \uc0\u9889  User Journey 5: "Confidence System Understanding"
+\f0\b0 \
+\
+  
+\f3\b Goal
+\f0\b0 : Learn to interpret AI confidence levels\
+\
+  
+\f3\b Path
+\f0\b0 :\
+  1. 
+\f3\b Find various confidence indicators
+\f0\b0  throughout dashboard\
+  2. 
+\f3\b High confidence (90%+)
+\f0\b0 : \uc0\u55357 \u56594  "Very Confident" green bars\
+  3. 
+\f3\b Medium confidence (70-89%)
+\f0\b0 : \uc0\u9889  "Confident" orange bars\
+  4. 
+\f3\b Low confidence (<50%)
+\f0\b0 : \uc0\u9888 \u65039  "Low Confidence" red bars\
+  5. 
+\f3\b Test tooltip
+\f0\b0 : Hover over confidence indicator \uc0\u8594  See explanation\
+  6. 
+\f3\b Compare
+\f0\b0 : Notice high confidence insights vs uncertain ones\
+\
+  
+\f3\b Expected Result
+\f0\b0 : User understands when to trust AI vs when to be cautious\
+\
+  ---\
+  
+\f3\b \uc0\u55357 \u56620  User Journey 6: "Algorithm Explorer Discovery"
+\f0\b0 \
+\
+  
+\f3\b Goal
+\f0\b0 : Explore all AI systems in sidebar\
+\
+  
+\f3\b Path
+\f0\b0 :\
+  1. 
+\f3\b Check sidebar
+\f0\b0 : "\uc0\u55357 \u56620  Algorithm Transparency" section\
+  2. 
+\f3\b See active systems
+\f0\b0 : \uc0\u55358 \u56598  K-means, \u55357 \u56520  Linear Regression, \u55357 \u56589  Anomaly Detection, etc.\
+  3. 
+\f3\b Select algorithm
+\f0\b0 : Pick "K-means Classification" from dropdown\
+  4. 
+\f3\b Expand details
+\f0\b0 : "\uc0\u55357 \u56534  K-means Classification Details"\
+  5. 
+\f3\b Read implementation
+\f0\b0 : File location, parameters, description\
+  6. 
+\f3\b Link to guide
+\f0\b0 : Click "\uc0\u55357 \u56538  Full algorithm details available in guide"\
+\
+  
+\f3\b Expected Result
+\f0\b0 : Complete understanding of AI system architecture\
+\
+  ---\
+  
+\f3\b \uc0\u55358 \u56810  Quick Smoke Tests (2 minutes each):
+\f0\b0 \
+\
+  
+\f3\b Test A
+\f0\b0 : Intelligence page loads as default \uc0\u10003 
+\f3\b Test B
+\f0\b0 : Algorithm badges appear on all AI insights \uc0\u10003 
+\f3\b Test C
+\f0\b0 : Confidence\
+  indicators show appropriate colors \uc0\u10003 
+\f3\b Test D
+\f0\b0 : Classification demo shows step-by-step reasoning \uc0\u10003 
+\f3\b Test E
+\f0\b0 : User feedback buttons\
+   respond correctly \uc0\u10003 
+\f3\b Test F
+\f0\b0 : Algorithm explanations expand with source details \uc0\u10003 \
+\
+  
+\f3\b \uc0\u55357 \u57000  Edge Case Tests:
+\f0\b0 \
+\
+  
+\f3\b Error Handling
+\f0\b0 : What happens when AI systems fail?
+\f3\b Empty Data
+\f0\b0 : How does UI behave with no workout data?
+\f3\b Low Confidence
+\f0\b0 : Are\
+  uncertain AI predictions clearly marked?
+\f3\b Mobile View
+\f0\b0 : Do algorithm badges and explanations work on small screens?\
+\
+  
+\f3\b \uc0\u55357 \u56522  Success Criteria:
+\f0\b0 \
+\
+  - User immediately recognizes AI-powered interface\
+  - Any AI insight can be traced to source algorithm\
+  - Confidence levels are clear and trustworthy\
+  - User can correct AI when wrong\
+  - Algorithm explanations are understandable\
+  - Overall experience feels transparent, not "black box"\
+\
+  These user journeys test the core Phase 2 innovation: 
+\f3\b complete AI transparency
+\f0\b0  where every insight is explainable and\
+  traceable.\
+\
+}

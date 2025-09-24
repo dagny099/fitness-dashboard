@@ -1,0 +1,25 @@
+name: fitness-notebooks
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.10
+  - jupyter
+  - jupyterlab
+  - ipywidgets
+  - pandas
+  - numpy
+  - scikit-learn
+  - scipy
+  - matplotlib
+  - seaborn
+  - plotly
+  - ipyleaflet
+  - folium
+  - pymysql
+  - sqlalchemy
+  - tqdm
+  - joblib
+  - pip
+  - pip:
+    - ipywidgets>=8.0.0

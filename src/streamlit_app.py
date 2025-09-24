@@ -39,6 +39,7 @@ login_page = st.Page("views/login.py", title="Log in", icon=":material/login:")
 logout_page = st.Page(logout, title="Log out", icon=":material/logout:")
 
 intelligence = st.Page("views/intelligence.py", title="AI Intelligence", icon="🧠", default=True)
+model_management = st.Page("views/model_management.py", title="Model Management", icon="🤖")
 dashboard = st.Page("views/dash.py", title="Monthly View", icon=":material/dashboard:")
 
 calendar = st.Page("views/calendar_more.py", title="Detailed Stats", icon=":material/calendar_month:")
@@ -53,7 +54,7 @@ choco_effect = st.Page("views/choco_effect.py", title="The Choco Effect", icon="
 if st.session_state.logged_in:
     pg = st.navigation(
         {
-            "Intelligence": [intelligence],
+            "Intelligence": [intelligence, model_management],
             "Reports": [dashboard, choco_effect],
             "Calendar": [calendar],
             "Tools": [trends, mapping, query_db, history],

@@ -1,0 +1,94 @@
+{
+  "model_id": "workout_classifier_20250924_163605",
+  "created_at": "2025-09-24T16:36:05.310126",
+  "trained_at": "2025-09-24T16:36:05.355332",
+  "version": "1.0.0",
+  "feature_columns": [
+    "avg_pace",
+    "distance_mi",
+    "duration_min"
+  ],
+  "cluster_to_activity_map": {
+    "1": "real_run",
+    "2": "mixed",
+    "0": "pup_walk"
+  },
+  "activity_type_stats": {
+    "real_run": {
+      "count": 644,
+      "avg_pace": 9.578666599378883,
+      "avg_distance": 4.41684998447205,
+      "avg_duration": 41.53012422360248,
+      "pace_range": [
+        6.43372,
+        17.0076
+      ],
+      "distance_range": [
+        0.209854,
+        8.19369
+      ]
+    },
+    "pup_walk": {
+      "count": 1699,
+      "avg_pace": 23.066592701589173,
+      "avg_distance": 1.997401986815774,
+      "avg_duration": 44.62660388463802,
+      "pace_range": [
+        13.5301,
+        57.3526
+      ],
+      "distance_range": [
+        0.0636626,
+        4.62582
+      ]
+    },
+    "mixed": {
+      "count": 134,
+      "avg_pace": 11.690543134328358,
+      "avg_distance": 9.799212686567163,
+      "avg_duration": 103.58731343283583,
+      "pace_range": [
+        7.17252,
+        50.756
+      ],
+      "distance_range": [
+        3.20258,
+        26.5004
+      ]
+    }
+  },
+  "training_data_info": {
+    "total_workouts": 2554,
+    "date_range": {
+      "start_date": "2011-07-22",
+      "end_date": "2025-08-31",
+      "span_days": 5154
+    },
+    "features_used": [
+      "avg_pace",
+      "distance_mi",
+      "duration_min"
+    ]
+  },
+  "performance_metrics": {
+    "silhouette_score": 0.4835135261619521,
+    "inertia": 3202.887109975058,
+    "training_samples": 2477,
+    "confidence_stats": {
+      "mean": 0.9157129773503413,
+      "median": 0.9277983291966436,
+      "std": 0.06985010459286203,
+      "min": 0.0,
+      "max": 0.9970279527771511
+    },
+    "cluster_distribution": {
+      "0": 1699,
+      "1": 644,
+      "2": 134
+    }
+  },
+  "feature_importance": {},
+  "n_clusters": 3,
+  "random_state": 42,
+  "confidence_threshold": 0.3
+}

@@ -8,6 +8,8 @@ The Fitness Dashboard provides rich, interactive visualizations powered by Plotl
 
 **Purpose**: Showcase AI-driven behavioral transformation analysis through data storytelling
 
+![The Choco Effect Dashboard](../assets/screenshots/pages/choco-effect-dashboard.png)
+
 **Key Visualizations**:
 - **Transformation Timeline**: Interactive dual-axis charts showing workout frequency and pace changes over time
 - **Before/After Comparison**: Statistical cards displaying key performance metrics across different life periods

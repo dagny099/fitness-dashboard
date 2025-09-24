@@ -302,7 +302,7 @@ def create_classification_demo(analysis_data):
         title="Workout Classification Results",
         color_discrete_map={
             'real_run': '#3498db',
-            'choco_adventure': '#e74c3c', 
+            'pup_walk': '#e74c3c', 
             'mixed': '#9b59b6',
             'outlier': '#95a5a6'
         }
@@ -324,7 +324,7 @@ def create_classification_demo(analysis_data):
             # Map activity types to emojis and descriptions
             type_info = {
                 'real_run': ('🏃‍♂️', 'Focused running sessions'),
-                'choco_adventure': ('🐕', 'Dog walking adventures'), 
+                'pup_walk': ('🐕', 'Dog walking adventures'), 
                 'mixed': ('🚶‍♂️', 'Mixed activity sessions'),
                 'outlier': ('🤔', 'Unusual workout patterns')
             }

@@ -1,15 +1,15 @@
 # Quick Start Guide
 
-Get your **Fitness AI Intelligence Platform** running in minutes and discover AI-powered insights from your first login!
+Get your **Fitness Intelligence Platform** running in minutes and discover intelligent insights from your workout data!
 
 ## What You'll Experience
 
-This quick start transforms your fitness data into intelligent insights using:
+This quick start transforms your fitness data into actionable insights:
 
-- 🧠 **AI-powered Intelligence Dashboard** as your primary interface
-- 🤖 **Automatic workout classification** using machine learning
-- 📈 **Statistical trend analysis** with confidence intervals
-- 🔍 **Algorithm transparency** - see exactly how AI works
+- 🧠 **Intelligence Dashboard** as your primary interface
+- 🤖 **Automatic workout categorization** with smart classification
+- 📈 **Trend analysis** with confidence scoring
+- 🔍 **Complete transparency** - understand how insights are generated
 - 📊 **Personalized recommendations** based on your patterns
 
 ## Prerequisites
@@ -18,27 +18,27 @@ This quick start transforms your fitness data into intelligent insights using:
 - ✅ Dependencies installed (see [Installation](installation.md))
 - ✅ MySQL server running locally
 
-## Step 1: Database & AI System Setup
+## Step 1: Database Setup
 
-Initialize your database with AI-ready schema:
+Initialize your database with the required schema:
 
 ```bash
 python scripts/init.py
 ```
 
-This script prepares your system for AI analysis:
+This script prepares your system for intelligent analysis:
 
 - **Creates the `sweat` database** with optimized schema
-- **Sets up the `workout_summary` table** for ML classification
-- **Configures AI services** connection
-- **Initializes algorithm registry** for transparency features
+- **Sets up the `workout_summary` table** for smart classification
+- **Configures intelligence services** connection
+- **Initializes transparency features** for algorithm explainability
 
-!!! success "AI System Ready"
+!!! success "System Ready"
     You should see output confirming:
     ```
     Database 'sweat' created successfully
     Table 'workout_summary' created successfully  
-    AI services initialized
+    Intelligence services initialized
     Current row count: 0
     ```
 
@@ -82,6 +82,8 @@ You'll land directly on the **Intelligence Dashboard** - your AI command center!
 ## Step 4: Discover Your AI Intelligence
 
 ### 🧠 Intelligence Dashboard (Your Landing Page)
+
+![Your Intelligence Dashboard](../assets/screenshots/pages/intelligence-dashboard-full.png)
 
 **First thing you'll see:**
 ```

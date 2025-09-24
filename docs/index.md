@@ -75,6 +75,9 @@ streamlit run src/streamlit_app.py
 
 Visit `http://localhost:8501` to access your **Intelligence Dashboard** and start exploring:
 
+![Intelligence Dashboard](assets/screenshots/pages/intelligence-dashboard-full.png)
+
+**Key Features:**
 - **Daily Intelligence Brief** with AI-generated insights
 - **Interactive Workout Classification** with algorithm transparency
 - **Performance Trend Analysis** with confidence intervals

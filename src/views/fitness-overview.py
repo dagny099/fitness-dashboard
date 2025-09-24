@@ -1,8 +1,8 @@
-from src.utils.utilities import execute_query, get_db_connection
-from src.utils.session_manager import SessionManager
-from src.services.database_service import DatabaseService
-from src.config.database import DatabaseConfig
-from src.config.app import STYLE_CONFIG
+from utils.utilities import execute_query, get_db_connection
+from utils.session_manager import SessionManager
+from services.database_service import DatabaseService
+from config.database import DatabaseConfig
+from config.app import STYLE_CONFIG
 import streamlit as st
 import plotly.express as px
 import pandas as pd

@@ -6,8 +6,8 @@ import numpy as np
 from typing import List, Dict, Any, Optional, Tuple
 from contextlib import contextmanager
 
-from src.config.database import DatabaseConfig, TABLE_SCHEMA
-from src.config.logging_config import logger
+from config.database import DatabaseConfig, TABLE_SCHEMA
+from config.logging_config import logger
 
 
 class DatabaseService:

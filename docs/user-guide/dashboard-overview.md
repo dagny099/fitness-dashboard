@@ -6,6 +6,8 @@ The Fitness AI Intelligence Platform provides an **intelligence-first interface*
 
 When you launch the application at `http://localhost:8501`, you land directly on the **Intelligence Dashboard** - your AI-powered fitness command center.
 
+![Intelligence Dashboard Overview](../assets/screenshots/pages/intelligence-dashboard-full.png)
+
 ### 🧠 Your Fitness Intelligence Header
 
 The header immediately communicates AI value:
@@ -24,6 +26,8 @@ Last updated: 2 minutes ago | 87% classification confidence
 ### 📊 Daily Intelligence Brief Cards
 
 The core of the intelligence-first interface - three dynamic AI insight cards:
+
+![Intelligence Brief Cards](../assets/screenshots/components/intelligence-brief-cards.png)
 
 #### **🎯 Focus Area Today**
 AI determines your current training priority based on comprehensive analysis:
@@ -69,6 +73,8 @@ AI-powered anomaly detection for performance monitoring:
 
 Complete AI explainability integrated throughout the interface:
 
+![Algorithm Transparency Sidebar](../assets/screenshots/components/algorithm-transparency-sidebar.png)
+
 #### **Active AI Systems List**
 - 🤖 K-means Classification
 - 📈 Linear Regression Trends  
@@ -94,11 +100,13 @@ Each algorithm includes:
 
 Interactive demonstration of machine learning classification:
 
+![AI Classification Demo](../assets/screenshots/components/ai-classification-demo.png)
+
 - **Live workout categorization** with real data
 - **Step-by-step AI reasoning** displayed visually
 - **Classification categories** explained:
   - **real_run**: Focused running (8-12 min/mile)
-  - **choco_adventure**: Walking activities (20-28 min/mile) 
+  - **choco_adventure**: Walking activities (20-28 min/mile)
   - **mixed**: Combined activities
   - **outlier**: Unusual patterns requiring attention
 - **Algorithm transparency** showing decision process

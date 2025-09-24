@@ -10,6 +10,8 @@ The Fitness Overview section provides a powerful SQL query interface for advance
 2. **Navigate** to "📊 Fitness Overview" in the sidebar
 3. **Find** the SQL query text area and execute button
 
+![SQL Query Interface](../assets/screenshots/pages/sql-query-interface.png)
+
 ### Basic Query Structure
 
 The interface connects to your `workout_summary` table with the following schema:

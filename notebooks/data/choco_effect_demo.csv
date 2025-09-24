@@ -1,0 +1,26 @@
+workout_id,workout_date,activity_type,kcal_burned,distance_mi,duration_sec,avg_pace,max_pace,steps,phase
+1,2018-03-15,Running,420,3.1,1950,10:29,8:45,3980,pre_choco
+2,2018-04-22,Running,385,2.9,1800,10:20,8:52,3720,pre_choco
+3,2018-06-10,Running,405,3.0,1890,10:30,8:38,3850,pre_choco
+4,2018-08-05,Running,440,3.3,1980,10:00,8:25,4230,pre_choco
+5,2018-10-18,Running,395,2.8,1740,10:22,8:48,3590,pre_choco
+6,2019-01-12,Running,415,3.2,1920,10:00,8:30,4110,pre_choco
+7,2019-03-28,Running,380,2.7,1680,10:22,8:55,3460,pre_choco
+8,2019-05-16,Running,425,3.1,1890,10:09,8:22,3970,pre_choco
+9,2019-07-04,Running,400,2.9,1830,10:31,8:48,3720,pre_choco
+10,2019-09-20,Running,450,3.4,2040,10:00,8:18,4350,pre_choco
+11,2021-01-15,Walking,245,3.5,3300,15:42,13:45,4460,post_choco
+12,2021-02-28,Walking,275,4.2,4050,16:04,14:15,5340,post_choco
+13,2021-04-10,Walking,230,3.1,2940,15:48,14:01,3950,post_choco
+14,2021-05-25,Walking,285,4.0,3750,15:37,14:22,5080,post_choco
+15,2021-07-08,Walking,265,3.8,3600,15:47,13:55,4840,post_choco
+16,2021-08-22,Walking,295,4.3,4020,15:35,13:48,5460,post_choco
+17,2021-10-14,Walking,250,3.6,3420,15:50,14:10,4580,post_choco
+18,2021-11-30,Walking,280,4.1,3870,15:44,14:05,5210,post_choco
+19,2022-01-18,Walking,270,3.9,3690,15:46,14:18,4960,post_choco
+20,2022-03-05,Walking,310,4.5,4200,15:33,13:52,5720,post_choco
+21,2020-06-15,Mixed Activity,320,2.9,2250,12:55,8:20,3740,transition
+22,2020-08-03,Mixed Activity,350,3.4,2580,12:40,9:15,4320,transition
+23,2020-09-18,Mixed Activity,375,3.7,2760,12:25,8:45,4710,transition
+24,2020-11-07,Mixed Activity,395,4.1,3150,12:48,9:30,5200,transition
+25,2020-12-22,Mixed Activity,340,3.2,2460,12:50,8:55,4080,transition

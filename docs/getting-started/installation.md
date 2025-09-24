@@ -157,7 +157,7 @@ python -c "import pymysql; print('PyMySQL installed successfully')"
 
 # AI/ML dependencies  
 python -c "import scipy; print('SciPy version:', scipy.__version__)"
-python -c "import scikit-learn; print('Scikit-learn version:', scikit-learn.__version__)"
+python -c "import sklearn; print('Scikit-learn version:', sklearn.__version__)"
 python -c "import plotly; print('Plotly version:', plotly.__version__)"
 ```
 
