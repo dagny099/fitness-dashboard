@@ -12,11 +12,12 @@ Pre-requisites:
 """
 import sys
 import os
-# Add project root to Python path -- This lets the "src" folder to be found below
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, project_root)
+from pathlib import Path
 
-from src.utils.utilities import execute_query, insert_data, clean_data, enrich_data
+# Add src to path
+sys.path.append(str(Path(__file__).parent.parent / "src"))
+
+from utils.utilities import execute_query, insert_data, clean_data, enrich_data
 import os
 import toml
 import platform
