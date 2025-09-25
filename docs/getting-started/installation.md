@@ -10,12 +10,12 @@ Before you begin, ensure you have the following installed:
 - **Git**: For cloning the repository  
 - **MySQL**: Local database server (for development)
 
-### AI/ML Dependencies
+### Required Libraries
 
 The application includes advanced analytics features requiring:
 
 - **scipy**: Statistical analysis and scientific computing
-- **scikit-learn**: Machine learning algorithms for workout classification
+- **scikit-learn**: Algorithms for automatic workout classification
 - **plotly**: Interactive visualizations and charts
 
 These are automatically installed with Poetry but may require additional system dependencies on some platforms.

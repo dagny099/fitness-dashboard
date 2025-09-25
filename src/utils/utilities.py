@@ -71,19 +71,27 @@ def enrich_data(df: pd.DataFrame) -> pd.DataFrame:
 # Custom date parsing function
 def parse_date(date_string: str) -> Optional[datetime]:
     """Function to parse date strings in various formats"""
+    # Handle MapMyRun month format inconsistencies
+    month_corrections = {
+        'Sept.': 'Sep.',    # MapMyRun exports September as "Sept." vs Python's "Sep."
+        'March ': 'Mar. ',  # Handle full month names that should be abbreviated
+    }
+    for incorrect, correct in month_corrections.items():
+        date_string = date_string.replace(incorrect, correct)
+
     date_formats = [
-        '%b. %d, %Y',  # Aug. 1, 2024
+        '%b. %d, %Y',  # Aug. 1, 2024 / Sep. 1, 2024
         '%d-%b-%y',    # 31-Jul-24
         '%d-%b-%Y',    # 31-Jul-2024
         '%B %d, %Y',   # July 31, 2024
         '%d-%m-%y',    # 20-06-23
         '%Y-%m-%d'     # 2024-08-01 (in case you have any in this format)
-    ]   
+    ]
     for fmt in date_formats:
         try:
             return datetime.strptime(date_string, fmt)
         except ValueError:
-            pass    
+            pass
     return None
 
         

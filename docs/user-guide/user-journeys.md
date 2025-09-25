@@ -1,358 +1,182 @@
-# User Journeys with AI Features
-
-This guide provides complete user journey documentation for discovering, understanding, and mastering the AI features of the Fitness Intelligence Platform. Each journey is designed for different user personas and technical comfort levels.
-
-## Journey Overview
-
-The AI-first platform supports multiple user paths:
-
-- **🆕 New User Discovery**: First-time exploration of AI features
-- **🧠 Algorithm Understanding**: Learning how AI systems work  
-- **🔄 Feedback & Improvement**: Contributing to AI enhancement
-- **📈 Advanced Analytics**: Leveraging AI for deep insights
-- **🛠️ Technical Deep Dive**: Understanding implementation details
-
----
-
-## Journey 1: New User AI Discovery 🆕
-
-**User Profile**: First-time visitor, no prior AI experience  
-**Goal**: Understand AI value and build initial trust  
-**Duration**: 5-10 minutes  
-
-### Step-by-Step Journey
-
-#### **Landing & First Impression** (30 seconds)
-```mermaid
-stateDiagram-v2
-    [*] --> Login: User visits app
-    Login --> Intelligence: Clicks "Log In"
-    Intelligence --> Impressed: Sees AI header
-    Impressed --> Curious: "Your AI discovered 4 key insights"
-```
-
-**What the user sees:**
-- Clean, professional login interface
-- No overwhelming technical jargon
-- Clear "AI Intelligence" navigation item
-
-**User thoughts:** *"This looks professional and mentions AI insights"*
-
-#### **AI Value Discovery** (2 minutes)
-```mermaid
-journey
-    title New User AI Discovery
-    section Intelligence Dashboard
-      See AI Header: 4: User
-      Read Intelligence Brief: 5: User
-      Notice Focus Area: 4: User
-      Explore Trending: 4: User
-      Check Performance Alerts: 3: User
-```
-
-**What the user sees:**
-- **Intelligence Header**: "Your AI analyzed 2,409 workouts and discovered 4 key insights"
-- **Focus Area Card**: Clear recommendation with explanation
-- **Trending Card**: Performance trends with confidence scoring
-- **Alerts Card**: "All systems normal" with algorithm transparency
-
-**User thoughts:** *"This AI actually gives me useful information I can act on"*
-
-#### **Trust Building Through Transparency** (3 minutes)
-```mermaid
-flowchart TD
-    Curious[User Curious About AI] --> Badge[Clicks Algorithm Badge 🤖]
-    Badge --> Card[Explanation Card Opens]
-    Card --> Understanding[Reads Plain English Explanation]
-    Understanding --> Source[Sees Source Code Reference]
-    Source --> Trust[Trust Built Through Transparency]
-    Trust --> Exploration[Continues Exploring AI Features]
-```
-
-**What the user sees:**
-- **Algorithm badges** throughout the interface
-- **Expandable explanation cards** with clear descriptions
-- **Source code references** showing complete transparency
-- **Confidence scores** with visual indicators
-
-**User thoughts:** *"I can actually understand how this AI works - it's not a black box"*
-
-#### **Initial Engagement** (5 minutes)
-- User scrolls through Intelligence Dashboard
-- Explores algorithm transparency sidebar
-- Reads active AI systems list
-- Clicks expandable algorithm details
-- Sees AI classification demo
-
-**Conversion Point**: User bookmarks or returns to app
-
----
-
-## Journey 2: Algorithm Understanding 🧠
-
-**User Profile**: Curious user who wants to understand AI methodology  
-**Goal**: Comprehensive understanding of AI systems  
-**Duration**: 15-20 minutes
-
-### Learning Path
-
-#### **AI System Overview** (5 minutes)
-```mermaid
-graph LR
-    Start[Algorithm Transparency Sidebar] --> List[Active AI Systems List]
-    List --> K[🤖 K-means Classification]
-    List --> L[📈 Linear Regression] 
-    List --> A[🔍 Anomaly Detection]
-    List --> C[📊 Consistency Analysis]
-    List --> F[🔮 Forecasting]
-    
-    K --> Detail[Detailed Explanations]
-    L --> Detail
-    A --> Detail
-    C --> Detail
-    F --> Detail
-```
-
-**Learning Experience:**
-- **Progressive disclosure** from simple to complex
-- **Interactive exploration** of each AI system
-- **Visual confidence indicators** for all algorithms
-- **Plain English explanations** accessible to all users
-
-#### **Deep Dive Exploration** (10 minutes)
-```mermaid
-sequenceDiagram
-    participant User
-    participant UI as Interface
-    participant Algo as Algorithm System
-    participant Code as Source Code
-    
-    User->>UI: Clicks algorithm badge
-    UI->>User: Shows explanation card
-    User->>UI: Clicks source code reference
-    UI->>Code: Opens file location
-    Code->>User: Shows exact implementation
-    User->>UI: Returns with understanding
-    UI->>Algo: User explores parameters
-    Algo->>User: Shows configuration details
-```
-
-**Deep Understanding Elements:**
-- **File paths and line numbers** for exact traceability
-- **Algorithm parameters** with explanations
-- **Performance metrics** showing accuracy rates
-- **Technical implementation details** for advanced users
-
-#### **Confidence Building** (5 minutes)
-User develops understanding of:
-- **How algorithms make decisions**
-- **Why confidence scores vary**
-- **What transparency features mean**
-- **How to interpret AI recommendations**
-
-**Outcome**: User trusts AI recommendations and uses them regularly
-
----
-
-## Journey 3: Feedback & Improvement Loop 🔄
-
-**User Profile**: Engaged user who notices AI improvements  
-**Goal**: Contribute to AI system enhancement  
-**Duration**: Ongoing relationship
-
-### Feedback Workflow
-
-#### **Issue Detection** (1 minute)
-```mermaid
-flowchart TD
-    Using[User Using AI Features] --> Notice[Notices Incorrect Classification]
-    Notice --> Compare[Compares to Personal Knowledge]
-    Compare --> Decide[Decides to Provide Feedback]
-```
-
-**Example Scenario:**
-- User sees workout classified as "real_run"
-- Knows it was actually a walking session
-- Wants to help improve AI accuracy
-
-#### **Feedback Submission** (2 minutes)
-```mermaid
-stateDiagram-v2
-    [*] --> Feedback: Click feedback button
-    Feedback --> Correction: Provide correct classification
-    Correction --> Explanation: Optional explanation
-    Explanation --> Submit: Submit feedback
-    Submit --> Confirmation: See confirmation message
-    Confirmation --> [*]: Continue using app
-```
-
-**User Experience:**
-- **Easy feedback mechanisms** integrated throughout UI
-- **Clear correction options** for misclassifications
-- **Optional explanation** for improvement context
-- **Immediate confirmation** showing feedback received
-
-#### **Impact Visibility** (Ongoing)
-```mermaid
-timeline
-    title Feedback Impact Over Time
-    
-    Day 1    : User submits feedback
-             : Sees confirmation message
-    
-    Week 1   : Algorithm Registry updated
-             : Performance metrics reflect feedback
-    
-    Month 1  : Algorithm improvements deployed
-             : User sees better classifications
-    
-    Quarter 1: User receives feedback impact report
-             : "Your feedback helped improve accuracy by 3%"
-```
-
-**Long-term Engagement:**
-- **Performance improvements** visible to user
-- **Accuracy metrics** updated with user contributions
-- **Impact reports** showing how feedback helps
-- **Community contribution** recognition
-
----
-
-## Journey 4: Advanced Analytics Deep Dive 📈
-
-**User Profile**: Data-driven user seeking comprehensive insights  
-**Goal**: Leverage AI for advanced fitness analysis  
-**Duration**: 30+ minutes per session
-
-### Advanced Usage Patterns
-
-#### **Multi-Algorithm Analysis** (10 minutes)
-```mermaid
-graph TB
-    subgraph "Intelligence Dashboard"
-        IB[Intelligence Brief Cards]
-        AT[Algorithm Transparency]
-        AC[AI Classification Demo]
-    end
-    
-    subgraph "Traditional Views Enhanced"
-        TV[Trends Analysis + AI]
-        MV[Monthly View + AI Annotations]  
-        CE[Choco Effect + ML Insights]
-    end
-    
-    subgraph "Advanced Tools"
-        SQL[SQL Queries + AI Suggestions]
-        WH[Workout History + Classifications]
-        MAP[Mapping + Smart Insights]
-    end
-    
-    IB --> TV
-    AT --> SQL
-    AC --> WH
-    TV --> MAP
-```
-
-**Advanced User Workflow:**
-1. **Start with Intelligence Dashboard** for overview insights
-2. **Deep dive into Trends** with AI-enhanced analysis
-3. **Use SQL interface** with AI query suggestions
-4. **Explore Choco Effect** for behavioral insights
-5. **Combine multiple AI systems** for comprehensive analysis
-
-#### **Cross-Algorithm Insights** (15 minutes)
-Advanced users learn to:
-- **Correlate AI insights** from multiple algorithms
-- **Understand algorithm limitations** and strengths
-- **Combine statistical and ML approaches** for robust analysis
-- **Use confidence scoring** for decision weighting
-
-#### **Power User Features** (10 minutes)
-- **Algorithm performance monitoring**
-- **Technical parameter exploration**
-- **Source code verification**
-- **Feedback impact tracking**
-
----
-
-## Journey 5: Technical Deep Dive 🛠️
-
-**User Profile**: Developer, data scientist, or technical stakeholder  
-**Goal**: Understand implementation for contribution or integration  
-**Duration**: 60+ minutes
-
-### Technical Exploration Path
-
-#### **Architecture Understanding** (20 minutes)
-```mermaid
-graph LR
-    Start[Technical User] --> Arch[Reviews Architecture Docs]
-    Arch --> Code[Examines Source Code]
-    Code --> Tests[Studies Test Suite]
-    Tests --> Perf[Analyzes Performance Metrics]
-    Perf --> Contribute[Considers Contributions]
-```
-
-**Technical Resources:**
-- **[AI Architecture Flow](../assets/diagrams/ai-architecture-flow.md)**: System design
-- **[ML Classification Workflow](../assets/diagrams/ml-classification-workflow.md)**: Algorithm details
-- **[Algorithm Transparency System](../assets/diagrams/algorithm-transparency-system.md)**: Implementation
-
-#### **Code Investigation** (25 minutes)
-Technical users explore:
-- **`src/services/intelligence_service.py`**: Core AI orchestration
-- **`src/utils/statistics.py`**: Statistical analysis engine
-- **`src/utils/consistency_analyzer.py`**: Multi-dimensional scoring
-- **Test suites**: 200+ comprehensive test methods
-
-#### **Integration Possibilities** (15 minutes)
-- **API endpoints** for external integration
-- **Algorithm extension points** for new AI features
-- **Data pipeline interfaces** for additional data sources
-- **Performance optimization opportunities**
-
----
-
-## Cross-Journey Success Metrics
-
-### **Trust Building Indicators**
-- **Time spent** exploring algorithm transparency features
-- **Frequency** of algorithm badge clicks
-- **Feedback submission** rates and quality
-- **Return usage** patterns showing sustained engagement
-
-### **Learning Progression Markers**
-- **Progressive disclosure usage** (surface → intermediate → deep)
-- **Multi-algorithm exploration** across different AI systems
-- **Source code reference** clicks for technical verification
-- **Advanced feature adoption** rates
-
-### **Engagement Quality Metrics**
-- **AI recommendation** adoption rates
-- **Correction accuracy** in user feedback
-- **Cross-feature usage** combining multiple AI insights
-- **Community contribution** to algorithm improvement
-
----
-
-## Journey Optimization Guidelines
-
-### **Design Principles**
-1. **Progressive Disclosure**: Start simple, allow depth exploration
-2. **Trust Through Transparency**: Show how AI works, don't hide complexity
-3. **Immediate Value**: Provide useful insights from first interaction
-4. **Feedback Integration**: Make user input valuable for AI improvement
-
-### **Accessibility Considerations**
-- **Multiple explanation levels** for different technical backgrounds
-- **Visual indicators** supplemented with text descriptions
-- **Keyboard navigation** for all AI exploration features
-- **Screen reader support** for algorithm transparency elements
-
-### **Personalization Opportunities**
-- **Adaptive complexity** based on user exploration patterns
-- **Personalized AI explanations** matching user technical level
-- **Custom algorithm preferences** for different user workflows
-- **Progressive feature introduction** based on usage maturity
-
-These user journeys ensure that every type of user - from AI newcomer to technical expert - can successfully discover, understand, trust, and leverage the AI capabilities of the Fitness Intelligence Platform.
+# Common Tasks
+
+This guide shows you how to accomplish typical tasks with your Fitness Dashboard. Each section includes step-by-step instructions for the most common things users want to do.
+
+## Getting Started Tasks
+
+### View Your Workout Summary
+
+**What you want**: A quick overview of your recent fitness activity.
+
+**How to do it**:
+1. Open the dashboard (main page)
+2. Look at the summary cards at the top
+3. Check the "Focus Area" card for personalized suggestions
+4. Review the "Trending" card to see if your performance is improving
+
+### Import New Workout Data
+
+**What you want**: Add recent workouts from your fitness app.
+
+**How to do it**:
+1. Export your data from your fitness app (MapMyRun, etc.) as CSV
+2. Replace the file `src/user2632022_workout_history.csv` with your new data
+3. Run `python src/update_db.py` in your terminal
+4. Refresh the dashboard to see updated analysis
+
+### Fix Incorrect Workout Classifications
+
+**What you want**: Correct workouts that were categorized wrong (e.g., a walk labeled as a run).
+
+**How to do it**:
+1. Go to the **Model Management** page
+2. Look for the "Classification Review" section
+3. Find the incorrect classification
+4. Use the correction tools to fix the category
+5. Click "Retrain Model" to improve future classifications
+
+## Analysis Tasks
+
+### Compare Different Time Periods
+
+**What you want**: See how your performance has changed over months or years.
+
+**How to do it**:
+1. Go to the **Trends** page
+2. Use the date range picker to select your first period (e.g., "January 2023")
+3. Note the statistics
+4. Change the date range to your second period (e.g., "January 2024")
+5. Compare the numbers to see your progress
+
+### Find Your Best/Worst Workouts
+
+**What you want**: Identify your fastest runs, longest walks, or most unusual workouts.
+
+**How to do it**:
+1. Go to the **Custom Queries** page
+2. Use the pre-built query templates, or
+3. Write a custom query like:
+   ```sql
+   SELECT * FROM workout_summary
+   WHERE activity_type = 'real_run'
+   ORDER BY avg_pace_min_mi LIMIT 10;
+   ```
+4. Click "Run Query" to see results
+
+### Analyze Workout Patterns
+
+**What you want**: Understand when you exercise most, which activities you prefer, etc.
+
+**How to do it**:
+1. Go to the **Charts & Visualizations** page
+2. Look at the activity distribution charts
+3. Check the time-of-day patterns
+4. Review the monthly/seasonal trends
+5. Use filters to focus on specific workout types
+
+## Data Management Tasks
+
+### Clean Up Bad Data
+
+**What you want**: Remove or fix workouts with obviously wrong information.
+
+**How to do it**:
+1. Go to **Custom Queries**
+2. Look for extreme outliers:
+   ```sql
+   SELECT * FROM workout_summary
+   WHERE avg_pace_min_mi > 60 OR avg_pace_min_mi < 4
+   OR distance_mi > 50 OR distance_mi < 0.1;
+   ```
+3. Review the results and decide which to delete or correct
+4. Use the dashboard's editing features or manually edit your CSV file
+5. Re-import if you made changes to the source file
+
+### Export Your Analysis
+
+**What you want**: Save insights or data to share with others or keep as records.
+
+**How to do it**:
+1. Take screenshots of interesting charts or insights
+2. Use the **Custom Queries** page to export specific data sets
+3. Copy and paste query results into spreadsheets
+4. Use your browser's print function to save pages as PDFs
+
+### Set Up Regular Data Updates
+
+**What you want**: Keep your dashboard updated with minimal effort.
+
+**How to do it**:
+1. Set a recurring reminder (weekly/monthly) to export data from your fitness app
+2. Create a simple script or batch file to run the import command
+3. Check the Model Management page periodically to retrain when needed
+4. Bookmark the dashboard for easy access
+
+## Troubleshooting Tasks
+
+### Dashboard Shows No Data
+
+**What you want**: Fix an empty or blank dashboard.
+
+**How to do it**:
+1. Check if you've imported any workout data
+2. Run `python src/update_db.py` to ensure data is imported
+3. Verify the CSV file is in the correct location and format
+4. Check the terminal for any error messages during import
+5. Try the demo mode first to ensure the dashboard works
+
+### Improve Classification Accuracy
+
+**What you want**: Get better automatic workout categorization.
+
+**How to do it**:
+1. Go to **Model Management**
+2. Review classifications with low confidence scores
+3. Correct obvious mistakes using the feedback tools
+4. Ensure your workout data includes consistent pace, distance, and duration
+5. Retrain the model after making corrections
+6. Import more varied workout data if classifications seem too generic
+
+### Speed Up Slow Performance
+
+**What you want**: Make the dashboard load and analyze faster.
+
+**How to do it**:
+1. Check how much data you have - very large datasets (10,000+ workouts) may be slow
+2. Use date filters to focus on smaller time periods
+3. Clear your browser cache
+4. Restart the dashboard application
+5. Consider using a more powerful computer for very large datasets
+
+## Advanced Tasks
+
+### Create Custom Analysis
+
+**What you want**: Answer specific questions about your fitness data.
+
+**How to do it**:
+1. Think about what question you want to answer
+2. Go to **Custom Queries**
+3. Write SQL queries to get the specific data you need
+4. Experiment with different filters and groupings
+5. Save successful queries for future use
+
+### Track Specific Goals
+
+**What you want**: Monitor progress toward particular fitness objectives.
+
+**How to do it**:
+1. Define your goal clearly (e.g., "run 3 times per week")
+2. Use the **Trends** page to see relevant patterns
+3. Create custom queries to track specific metrics
+4. Set up regular check-ins (weekly/monthly) to review progress
+5. Adjust your approach based on what the data shows
+
+## Getting Help
+
+If you're stuck on a task:
+- Check the **[Troubleshooting Guide](../reference/troubleshooting.md)**
+- Look at the **[Dashboard Overview](dashboard-overview.md)** for interface explanations
+- Submit questions on **[GitHub Issues](https://github.com/dagny/fitness-dashboard/issues)**
+
+Remember: The dashboard is designed to help you understand your fitness patterns. Focus on insights that help you make better decisions about your health and exercise routine.

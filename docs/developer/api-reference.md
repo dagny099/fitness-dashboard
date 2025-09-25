@@ -1,6 +1,6 @@
 # API Reference
 
-This document provides detailed information about the internal APIs and functions available in the Fitness Dashboard codebase, including AI/ML services and statistical analysis utilities.
+This document provides detailed information about the internal APIs and functions available in the Fitness Dashboard codebase, including analytics services and statistical analysis utilities.
 
 ## Core Services
 

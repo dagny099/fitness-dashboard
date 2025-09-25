@@ -1,5 +1,5 @@
-site_name: Fitness AI Intelligence Platform
-site_description: An AI-powered fitness intelligence platform that transforms workout data into actionable insights through machine learning, algorithm transparency, and intelligent automation.
+site_name: Fitness Dashboard User Guide
+site_description: A comprehensive guide to understanding and using the Fitness Dashboard for analyzing your workout data, tracking trends, and discovering patterns in your fitness journey.
 site_author: Barbara Hidalgo
 site_url: https://workouts.barbhs.com
 
@@ -57,11 +57,19 @@ exclude_docs: |
   assets/diagrams/developer-workflow.md
   assets/diagrams/ml-pipeline-detailed.md
   assets/diagrams/user-journey-ai-features.md
+  assets/diagrams/ai-architecture-flow.md
+  assets/diagrams/ml-classification-workflow.md
+  assets/diagrams/algorithm-transparency-system.md
   features/
   guides/
   interactive/
+  ai/overview.md
+  ai/intelligence-dashboard.md
+  ai/ml-classification.md
+  ai/user-feedback.md
   developer/ai-services.md
   developer/testing.md
+  developer/contributing.md
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -92,32 +100,24 @@ nav:
     - Installation: getting-started/installation.md
     - Quick Start: getting-started/quick-start.md
     - Database Setup: getting-started/database-setup.md
-    - First AI Insights: getting-started/first-ai-insights.md
-  - AI Intelligence:
-    - Overview: ai/overview.md
-    - Intelligence Dashboard: ai/intelligence-dashboard.md
-    - Algorithm Transparency: ai/algorithm-transparency.md
-    - ML Classification: ai/ml-classification.md
-    - User Feedback: ai/user-feedback.md
+    - Your First Insights: getting-started/first-ai-insights.md
   - User Guide:
-    - Dashboard Overview: user-guide/dashboard-overview.md
-    - User Journeys: user-guide/user-journeys.md
-    - Data Import: user-guide/data-import.md
-    - Visualization Features: user-guide/visualizations.md
-    - SQL Query Interface: user-guide/sql-queries.md
-  - Developer Guide:
-    - Architecture: developer/architecture.md
+    - Understanding the Dashboard: user-guide/dashboard-overview.md
+    - Quick Reference: user-guide/quick-reference.md
+    - Common Tasks: user-guide/user-journeys.md
+    - Importing Your Data: user-guide/data-import.md
+    - Model Management: user-guide/model-management.md
+    - Charts & Visualizations: user-guide/visualizations.md
+    - Custom Queries: user-guide/sql-queries.md
+  - Advanced:
+    - How the Analysis Works: ai/algorithm-transparency.md
+    - Technical Architecture: developer/architecture.md
     - API Reference: developer/api-reference.md
-    - Contributing: developer/contributing.md
-  - Deployment:
-    - Local Development: deployment/local-development.md
-    - Production Setup: deployment/production.md
   - Reference:
     - Database Schema: reference/database-schema.md
     - Troubleshooting: reference/troubleshooting.md
-    - AI Architecture: assets/diagrams/ai-architecture-flow.md
-    - ML Classification: assets/diagrams/ml-classification-workflow.md
-    - Algorithm Transparency: assets/diagrams/algorithm-transparency-system.md
+    - Local Development: deployment/local-development.md
+    - Production Setup: deployment/production.md
 
 extra:
   social:

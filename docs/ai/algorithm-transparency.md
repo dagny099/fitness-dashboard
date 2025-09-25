@@ -1,50 +1,50 @@
-# Algorithm Transparency Guide
+# How the Analysis Works
 
-*Complete reference for understanding AI insights and their underlying algorithms*
+*Technical reference for understanding how the dashboard analyzes your workout data*
 
 ## Overview
 
-This guide provides complete transparency into the AI algorithms powering fitness insights. Every AI-generated recommendation, classification, or prediction can be traced to specific algorithms and code implementations.
+This guide explains the algorithms and methods used to analyze your fitness data. Every recommendation, classification, or trend analysis can be traced to specific algorithms and code implementations.
 
-Unlike "black box" AI systems, the Fitness AI Intelligence Platform ensures every insight is fully explainable and traceable to its source.
+The dashboard is designed to be transparent - you can see exactly how every insight was calculated and why specific conclusions were reached.
 
 ## Transparency Philosophy
 
 ### Complete Traceability
 
-**Every AI insight includes:**
-- **Algorithm name** and type (e.g., "K-means ML Classification")
+**Every analysis includes:**
+- **Method name** and type (e.g., "K-means Classification")
 - **Source file** with exact path (e.g., `src/services/intelligence_service.py`)
-- **Method name** and line numbers (e.g., `classify_workout_types()`, lines 75-186)
+- **Function name** and line numbers (e.g., `classify_workout_types()`, lines 75-186)
 - **Confidence score** with visual indicators (0-100%)
 - **Parameter values** used in the calculation
 
 ### Interactive Explanations
 
-**Progressive Disclosure:**
-- **Simple badges** showing algorithm type
+**Progressive Detail Levels:**
+- **Simple badges** showing analysis type
 - **Expandable cards** with detailed explanations
 - **Source code references** with direct file links
 - **Parameter exploration** with configuration details
 
-## Algorithm Categories
+## Analysis Methods
 
-### 1. Machine Learning Classification
+### 1. Workout Classification
 
-#### **Workout Type Classification**
-- **Algorithm:** K-means Clustering
+#### **Automatic Workout Categorization**
+- **Method:** K-means Clustering
 - **File:** `src/services/intelligence_service.py`
-- **Method:** `classify_workout_types()`
+- **Function:** `classify_workout_types()`
 - **Lines:** 75-186
 
 **What it does:**
-- Automatically categorizes workouts into: `real_run`, `choco_adventure`, `mixed`, `outlier`
+- Automatically categorizes workouts into: `real_run`, `walking`, `mixed`, `outlier`
 - Uses pace, distance, and duration as features
-- Applies standardization and 3-cluster K-means
+- Applies standardization and 3-cluster analysis
 
 **Key Parameters:**
-- `n_clusters=3` (fast, medium, slow pace groups)
-- `random_state=42` (reproducible results)
+- `n_clusters=3` (groups workouts by pace: fast, medium, slow)
+- `random_state=42` (ensures consistent results across runs)
 - Outlier threshold: pace >60 min/mile or distance >50 miles
 
 **UI Indicators:**

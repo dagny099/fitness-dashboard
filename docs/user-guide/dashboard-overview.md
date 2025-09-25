@@ -1,257 +1,224 @@
-# Dashboard Overview
+# Understanding the Dashboard
 
-The Fitness AI Intelligence Platform provides an **intelligence-first interface** where AI-generated insights take center stage. This guide covers the primary Intelligence Dashboard and traditional data views.
+This guide explains the main interface and how to use the different views available in your Fitness Dashboard.
 
-## Intelligence Dashboard (Default Landing)
+## Main Dashboard
 
-When you launch the application at `http://localhost:8501`, you land directly on the **Intelligence Dashboard** - your AI-powered fitness command center.
+When you open the application at `http://localhost:8501`, you'll see your main dashboard with personalized insights about your workouts.
 
 ![Intelligence Dashboard Overview](../assets/screenshots/pages/intelligence-dashboard-full.png)
 
-### 🧠 Your Fitness Intelligence Header
+## What You'll See
 
-The header immediately communicates AI value:
+### Header Summary
+The top of the page shows a summary of your data:
 
 ```
-🧠 Your AI analyzed 2,409 workouts and discovered 4 key insights
-Last updated: 2 minutes ago | 87% classification confidence
+🧠 Your dashboard analyzed 2,409 workouts and found 4 key insights
+Last updated: 2 minutes ago | Analysis confidence: 87%
 ```
 
-**Key Elements:**
-- **AI-generated insights count** - Shows immediate AI value  
-- **Real-time analysis status** - Builds trust through transparency
-- **Classification confidence** - Demonstrates AI accuracy
-- **Workout volume analyzed** - Shows comprehensive analysis
+This tells you:
+- **How many workouts** have been analyzed
+- **When the analysis was last updated**
+- **How confident** the system is about its classifications
+- **How many insights** were found in your recent data
 
-### 📊 Daily Intelligence Brief Cards
+### Main Insight Cards
 
-The core of the intelligence-first interface - three dynamic AI insight cards:
+The dashboard shows three main cards with insights about your workouts:
 
 ![Intelligence Brief Cards](../assets/screenshots/components/intelligence-brief-cards.png)
 
-#### **🎯 Focus Area Today**
-AI determines your current training priority based on comprehensive analysis:
+#### **🎯 Focus Area**
+Based on your workout patterns, the system suggests what to work on:
 
-- **Consistency Building** (Score < 50): Establish regular workout patterns
-- **Adding Frequency** (Score 50-75): Increase workout frequency  
-- **Optimizing Performance** (Score > 75): Fine-tune training for results
+- **Building Consistency** (if you have irregular workout patterns): Focus on establishing a regular schedule
+- **Adding Frequency** (if you're consistent but infrequent): Try to work out more often
+- **Optimizing Performance** (if you're consistent and frequent): Focus on improving your times or distances
 
-**Example Display:**
+**Example:**
 ```
 🎯 FOCUS AREA: Building Consistency
 📊 Current score: 42/100
-🤖 AI recommends: Establish regular workout schedule
-   Algorithm: Multi-dimensional Consistency Analysis
+💡 Suggestion: Try to establish a regular workout schedule
+   Based on: Pattern analysis of your workout frequency
    Confidence: 85%
 ```
 
-#### **📈 Trending This Week**  
-Statistical trend analysis with confidence intervals:
+#### **📈 Trending**
+Shows how your performance is changing over time:
 
-- **Performance metrics** automatically analyzed
-- **Trend direction** determined (ascending/descending/stable)
-- **Statistical confidence** from p-value calculations
-- **Algorithm transparency** with expandable explanations
+- **Improving trends** - metrics that are getting better
+- **Declining trends** - metrics that may need attention
+- **Stable patterns** - metrics that are staying consistent
 
-**Example Display:**
+**Example:**
 ```
 📈 TRENDING: Calorie Burn Improving
-📊 +12.5% increase over 30 days  
-📈 Linear Regression Analysis
-   Confidence: 91% (p-value: 0.09)
+📊 +12.5% increase over 30 days
+💡 Based on: Statistical analysis of your recent workouts
+   Confidence: 91%
 ```
 
-#### **⚠️ Performance Alerts**
-AI-powered anomaly detection for performance monitoring:
+#### **⚠️ Alerts**
+Highlights anything unusual in your recent workouts:
 
-- **All systems normal** when patterns are consistent
-- **Performance alerts** when anomalies detected
-- **Algorithm explanations** showing detection methodology
-- **Statistical outlier analysis** with confidence scoring
+- **All normal** - when your patterns are consistent
+- **Unusual patterns** - when something looks different from your typical workouts
+- **Data quality issues** - when there might be problems with imported data
 
-### 🔬 Algorithm Transparency Sidebar
+**Example:**
+```
+⚠️ Unusual pattern detected
+📊 Recent pace much slower than typical
+💡 Based on: Comparison with your workout history
+```
 
-Complete AI explainability integrated throughout the interface:
+### Understanding How It Works
+
+If you're curious about how the analysis works, the dashboard includes explanations:
 
 ![Algorithm Transparency Sidebar](../assets/screenshots/components/algorithm-transparency-sidebar.png)
 
-#### **Active AI Systems List**
-- 🤖 K-means Classification
-- 📈 Linear Regression Trends  
-- 🔍 Statistical Anomaly Detection
-- 📊 Multi-dimensional Consistency
-- 🔮 Performance Forecasting
+#### **"How was this calculated?" Links**
+Throughout the dashboard, you'll see links that explain:
+- **What analysis was used** - in simple terms
+- **How confident** the system is in its conclusions
+- **What the results mean** for your workouts
+- **How to improve** the accuracy if needed
 
-#### **Algorithm Explorer**
-Interactive dropdown allowing users to:
-- **Select any AI system** for detailed explanation
-- **See implementation details** (file paths, line numbers)
-- **Understand parameters** and configuration
-- **Access source code references**
-
-#### **Expandable Algorithm Cards**
-Each algorithm includes:
-- **📖 Description** in plain English
-- **📁 Implementation** with exact file references  
-- **⚙️ Algorithm Type** and methodology
-- **📊 Confidence scoring** and performance metrics
-
-### 🤖 AI Classification in Action
-
-Interactive demonstration of machine learning classification:
+#### **Workout Categorization Demo**
+There's an interactive section that shows how workouts get categorized:
 
 ![AI Classification Demo](../assets/screenshots/components/ai-classification-demo.png)
 
-- **Live workout categorization** with real data
-- **Step-by-step AI reasoning** displayed visually
-- **Classification categories** explained:
-  - **real_run**: Focused running (8-12 min/mile)
-  - **choco_adventure**: Walking activities (20-28 min/mile)
-  - **mixed**: Combined activities
-  - **outlier**: Unusual patterns requiring attention
-- **Algorithm transparency** showing decision process
+**Workout Types:**
+- **Real Runs**: Focused running sessions (typically 8-12 min/mile pace)
+- **Walking/Hiking**: Leisurely activities (typically 20-28 min/mile pace)
+- **Mixed Activities**: Combined running and walking
+- **Outliers**: Unusual workouts that don't fit typical patterns
 
-### 🎯 Personalized AI Recommendations
+You can click on any workout to see why it was categorized the way it was.
 
-AI-generated suggestions based on analysis:
-- **Training recommendations** tailored to current focus area
-- **Performance optimization tips** from trend analysis
-- **Consistency improvement strategies** from behavioral patterns
-- **Goal achievement guidance** with probability forecasting
+### Personalized Suggestions
 
-## Traditional Data Views
+Based on your workout patterns, the dashboard may suggest:
+- **Training focus areas** based on your current consistency and frequency
+- **Performance improvements** based on trend analysis
+- **Schedule adjustments** to help build better habits
+- **Data quality improvements** to get better insights
 
-While AI insights are primary, traditional views remain accessible:
+## Dashboard Navigation Map
 
-### Navigation Menu Structure
+Here's how all the different sections connect and what each one offers:
 
-#### **Intelligence (Primary)**
-- **🧠 AI Intelligence**: Default landing page with intelligence-first interface
+```mermaid
+mindmap
+  root((🏠 Main<br/>Dashboard))
+    📊 Monthly View
+      📅 Calendar Display
+      📈 Monthly Stats
+      📋 Recent Workouts
+      🎯 Activity Breakdown
 
-#### **Reports (Secondary)**  
-- **📊 Monthly View**: Traditional monthly overview and statistics
-- **🐕 The Choco Effect**: AI-powered behavioral transformation dashboard
+    📈 Trends Analysis
+      📊 Performance Charts
+      📉 Statistical Trends
+      🔮 Forecasting
+      📏 Time Comparisons
 
-#### **Calendar**
-- **📅 Detailed Stats**: Calendar view with AI-enhanced statistics
+    🛠️ Model Management
+      🤖 Classification Control
+      📊 Accuracy Metrics
+      🔧 Retraining Tools
+      ✏️ Correction Interface
 
-#### **Tools**
-- **📈 Trends**: Statistical analysis with AI trend detection  
-- **🗺️ Mapping**: Geographic visualization with smart insights
-- **🔍 SQL Query**: Database interface enhanced with AI query suggestions
-- **📋 Workout History**: Classified workout data with AI insights
+    🔍 Data Explorer
+      💾 SQL Query Interface
+      🗂️ Custom Filters
+      📤 Export Tools
+      📋 Raw Data Table
 
-### Monthly Dashboard (Traditional View)
+    🐕 The Choco Effect
+      📊 Behavior Analysis
+      📈 Pattern Changes
+      🔄 Transformation View
+      📉 Before/After Stats
 
-When accessing the Monthly View, you'll find:
-
-- **Monthly activity charts** with AI annotations
-- **Key metrics summaries** enhanced with trend indicators
-- **Activity breakdowns** with ML classification insights
-- **Recent workouts table** showing AI categorization
-
-## AI-Enhanced User Experience
-
-### Progressive AI Discovery
-
-The interface uses **progressive disclosure** for AI features:
-
-1. **Surface Level**: AI badges and confidence scores visible immediately
-2. **Intermediate**: Expandable explanation cards for curious users  
-3. **Deep Level**: Source code references and technical implementation
-4. **Expert Level**: Parameter exploration and algorithm customization
-
-### Trust Building Elements
-
-#### **Complete Transparency**
-- Every AI insight includes **algorithm badge** showing source
-- **Confidence scores** (0-100%) with visual indicators
-- **Source code references** with file paths and line numbers
-- **Performance metrics** updated in real-time
-
-#### **User Feedback Integration**
-- **Correction mechanisms** for misclassifications
-- **Improvement suggestions** collection
-- **Accuracy tracking** with user feedback incorporation
-- **Algorithm learning** from user corrections
-
-### Interactive AI Features
-
-#### **Algorithm Badges** 🏷️
-Clickable visual indicators throughout the interface:
-- **🤖 ML Classification** - Machine learning categorization
-- **📈 Statistical Analysis** - Trend and forecasting  
-- **🔍 Anomaly Detection** - Outlier identification
-- **📊 Consistency Analysis** - Pattern recognition
-
-#### **Explanation Cards** 📖
-Expandable detailed explanations:
-- **How was this calculated?** - Step-by-step AI reasoning
-- **Algorithm details** - Technical implementation information
-- **Confidence explanation** - What confidence scores mean
-- **User feedback** - Correction and improvement options
-
-#### **Transparency Trail** 🛤️
-Complete audit trail from insight to implementation:
-```
-AI Insight → Algorithm Badge → Explanation Card → Source Code → User Feedback
+    📖 Quick Reference
+      ⚡ Common Commands
+      🔧 Troubleshooting
+      📋 SQL Examples
+      🎯 Task Guides
 ```
 
-## User Journey Workflows
+Each section serves different analysis needs - from quick daily insights to deep custom analysis. The main dashboard ties everything together with personalized recommendations.
 
-### **New User Discovery**
-1. **Land on Intelligence Dashboard** - Immediate AI value proposition
-2. **See AI-generated insights** - Build trust through useful information
-3. **Explore algorithm transparency** - Understand how AI works
-4. **Provide feedback** - Become part of AI improvement process
+*[Explore the full interface map](../assets/diagrams/dashboard-navigation.md) with detailed feature breakdowns.*
 
-### **Daily Usage Pattern**
-1. **Check Intelligence Brief** - Start with personalized AI insights
-2. **Review focus area recommendation** - Understand priority actions
-3. **Explore trending analysis** - See performance patterns
-4. **Act on AI recommendations** - Apply insights to training
+## Other Dashboard Views
 
-### **Deep Exploration**
-1. **Click algorithm badges** - Understand AI methodology  
-2. **Read explanation cards** - Learn implementation details
-3. **Explore source code** - Technical verification for advanced users
-4. **Provide corrections** - Contribute to AI improvement
+Besides the main dashboard, you can access different views using the navigation menu:
 
-## Accessibility & Usability
+### **Monthly View**
+Shows your workout data organized by month:
+- Monthly statistics and summaries
+- Calendar view of your workouts
+- Activity breakdowns by type
+- Recent workout history
 
-### **Multi-Audience Design**
-- **Casual Users**: Simple badges and confidence indicators
-- **Curious Users**: Expandable explanation cards
-- **Technical Users**: Source code references and implementation details
-- **Expert Users**: Parameter exploration and feedback mechanisms
+### **Trends Analysis**
+Detailed charts and graphs showing:
+- Performance trends over time
+- Statistical analysis of your progress
+- Comparisons between different time periods
+- Forecasting based on your patterns
 
-### **Mobile Optimization**
-- **Touch-friendly** AI exploration elements
-- **Responsive design** maintaining AI-first approach
-- **Simplified mobile views** prioritizing key AI insights
-- **Gesture support** for algorithm transparency exploration
+### **Data Explorer**
+Advanced tools for custom analysis:
+- SQL query interface for detailed data exploration
+- Custom date ranges and filters
+- Export options for your data
+- Raw workout data table with all imported information
 
-## Performance & Reliability
+### **The Choco Effect**
+A specialized view that:
+- Analyzes behavior changes over time
+- Shows how your workout patterns have evolved
+- Highlights significant transformations in your fitness journey
 
-### **AI System Performance**
-- **<5 seconds** classification for 1K+ workouts
-- **Real-time** intelligence brief generation
-- **<3 seconds** algorithm transparency loading
-- **High availability** with graceful degradation
+### **Workout History**
+Simple table view showing:
+- All your imported workouts
+- Categorization results
+- Basic statistics for each workout
+- Links to map data (if available)
 
-### **Trust Indicators**
-- **87% classification accuracy** prominently displayed
-- **Real-time confidence scoring** for all AI insights
-- **Performance metrics** updated continuously
-- **User feedback integration** showing AI improvement
+## Getting Help
+
+### **Understanding Results**
+If you see results that don't make sense:
+- Click the "How was this calculated?" links for explanations
+- Check the confidence scores - low confidence may indicate uncertain results
+- Review your imported data for any obvious errors
+
+### **Improving Accuracy**
+You can help improve the analysis by:
+- **Correcting misclassifications** when you see them
+- **Providing feedback** through the interface
+- **Ensuring data quality** in your imports
+- **Using consistent activity naming** when exporting from your fitness app
+
+### **Common Questions**
+- **"Why is this workout categorized wrong?"** - Click on the workout to see the reasoning, and use the correction feature if needed
+- **"Why don't I see any trends?"** - You may need more workout data (typically 10+ workouts) for meaningful trend analysis
+- **"What does the confidence score mean?"** - It shows how certain the system is about its analysis (higher is better)
 
 ## Next Steps
 
-Now that you understand the intelligence-first interface:
-
-1. **[First AI Insights](../getting-started/first-ai-insights.md)**: Get your first AI insights
-2. **[User Journeys](user-journeys.md)**: Explore detailed user workflows  
-3. **[Data Import](data-import.md)**: Add your workout data for AI analysis
-4. **[AI Features Deep Dive](../ai/overview.md)**: Comprehensive AI system overview
-
-The Intelligence Dashboard transforms fitness data analysis from manual interpretation to AI-powered insights, putting intelligent recommendations at the center of your fitness journey.
+Now that you understand the main dashboard:
+- **[Import your data](data-import.md)** to see personalized insights
+- **[Learn about common tasks](user-journeys.md)** to get the most from the dashboard
+- **[Explore visualization features](visualizations.md)** for deeper analysis
+- **[Try custom queries](sql-queries.md)** for advanced data exploration

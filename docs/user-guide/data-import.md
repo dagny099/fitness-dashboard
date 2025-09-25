@@ -44,6 +44,43 @@ The dashboard can be adapted for other platforms with similar data structures:
 - **Apple Health**: Health app data export
 - **Google Fit**: Takeout data export
 
+## How Data Import Works
+
+Understanding the complete journey from your fitness app to dashboard insights:
+
+```mermaid
+flowchart TD
+    A[📱 Export CSV from<br/>MapMyRun] --> B{📋 Data Validation}
+
+    B -->|✅ Valid| C[💾 Store in Database<br/>workout_summary table]
+    B -->|❌ Invalid| D[🚨 Show Error<br/>& Validation Tips]
+
+    C --> E[🔍 Analyze Features<br/>Pace, Distance, Duration]
+    E --> F{🤖 Classification Process}
+
+    F --> G[🏃 Real Run<br/>8-12 min/mile]
+    F --> H[🚶 Walking<br/>20-28 min/mile]
+    F --> I[🔄 Mixed Activity<br/>Variable pace]
+    F --> J[⚠️ Outlier<br/>Unusual data]
+
+    G --> K[📊 Available in Dashboard<br/>Charts, Trends, Insights]
+    H --> K
+    I --> K
+    J --> K
+
+    style A fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    style B fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    style C fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    style D fill:#ffebee,stroke:#d32f2f,stroke-width:2px
+    style E fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style F fill:#e0f2f1,stroke:#00695c,stroke-width:2px
+    style K fill:#e1f5fe,stroke:#0277bd,stroke-width:3px
+```
+
+Your data flows through validation, analysis, and classification before appearing in your dashboard. Each step ensures data quality and meaningful categorization.
+
+*[View larger version](../assets/diagrams/data-import-flow.md) for detailed technical information.*
+
 ## Import Process
 
 ### Step 1: Prepare Your Data File

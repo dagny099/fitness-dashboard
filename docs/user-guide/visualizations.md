@@ -1,32 +1,26 @@
-# Visualization Features
+# Charts & Visualizations
 
-The Fitness Dashboard provides rich, interactive visualizations powered by Plotly and AI-driven insights to help you understand your fitness data, track progress, and discover behavioral patterns.
+The Fitness Dashboard provides interactive charts and graphs to help you understand your fitness data, track progress, and discover patterns in your workout history.
 
 ## Chart Types Overview
 
 ### The Choco Effect Dashboard
 
-**Purpose**: Showcase AI-driven behavioral transformation analysis through data storytelling
+**Purpose**: Analyze how your workout patterns have changed over time
 
 ![The Choco Effect Dashboard](../assets/screenshots/pages/choco-effect-dashboard.png)
 
-**Key Visualizations**:
-- **Transformation Timeline**: Interactive dual-axis charts showing workout frequency and pace changes over time
-- **Before/After Comparison**: Statistical cards displaying key performance metrics across different life periods
-- **ML Classification Demo**: Pie charts and sample tables demonstrating automated workout categorization
-- **Behavioral Pattern Analysis**: Visual representation of the dramatic lifestyle change captured in fitness data
+**What you'll see**:
+- **Timeline Charts**: How your workout frequency and pace have changed over time
+- **Before/After Comparison**: Statistics comparing different periods of your fitness journey
+- **Activity Breakdown**: Pie charts showing the mix of different workout types
+- **Pattern Analysis**: Visual representation of significant changes in your exercise habits
 
-**AI Features**:
-- **Smart Timeline Markers**: Automatically identifies significant behavioral change points
-- **Classification Confidence**: ML confidence scores for workout type predictions
-- **Statistical Significance**: Trend analysis with confidence intervals and p-values
-- **Automated Insights**: AI-generated explanations of pattern changes and their implications
-
-**Interview Showcase Elements**:
-- Data science methodology demonstration
-- Machine learning model performance visualization
-- Statistical analysis with confidence metrics
-- Professional portfolio-quality presentation
+**Key Features**:
+- **Automatic Period Detection**: Identifies major changes in your workout patterns
+- **Confidence Indicators**: Shows how certain the system is about pattern classifications
+- **Statistical Analysis**: Trend analysis with confidence intervals
+- **Interactive Exploration**: Click and zoom to explore different time periods
 
 ### Time Series Charts
 
