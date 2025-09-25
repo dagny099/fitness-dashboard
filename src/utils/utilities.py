@@ -6,7 +6,14 @@ import re
 import toml
 from typing import Dict, List, Any, Optional, Union, Tuple
 
-from src.config.logging_config import logger
+import sys
+import os
+from pathlib import Path
+
+# Add src to path
+sys.path.append(str(Path(__file__).parent.parent / "src"))
+
+from config.logging_config import logger
 
 # Function to setup connectivity
 def get_db_connection(dbconfig: Optional[Dict[str, Any]] = None) -> pymysql.Connection:
