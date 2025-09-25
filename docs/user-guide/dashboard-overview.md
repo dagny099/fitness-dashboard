@@ -155,8 +155,6 @@ mindmap
 
 Each section serves different analysis needs - from quick daily insights to deep custom analysis. The main dashboard ties everything together with personalized recommendations.
 
-*[Explore the full interface map](../assets/diagrams/dashboard-navigation.md) with detailed feature breakdowns.*
-
 ## Other Dashboard Views
 
 Besides the main dashboard, you can access different views using the navigation menu:

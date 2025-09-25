@@ -115,8 +115,6 @@ flowchart TD
 
 This decision tree shows why workouts get specific categories and confidence levels. Understanding this helps you provide better feedback for improvements.
 
-*[View detailed technical diagram](../assets/diagrams/classification-algorithm.md) for implementation specifics.*
-
 ## Troubleshooting
 
 ### **Model training fails**

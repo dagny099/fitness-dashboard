@@ -79,8 +79,6 @@ flowchart TD
 
 Your data flows through validation, analysis, and classification before appearing in your dashboard. Each step ensures data quality and meaningful categorization.
 
-*[View larger version](../assets/diagrams/data-import-flow.md) for detailed technical information.*
-
 ## Import Process
 
 ### Step 1: Prepare Your Data File
