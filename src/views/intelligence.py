@@ -100,35 +100,57 @@ def render_algorithm_tooltip(algorithm_type):
     algo = ALGORITHM_INFO[algorithm_type]
     return f"🔍 Algorithm: {algo['name']}\\n📁 File: {algo['file']}\\n💡 {algo['description']}"
 
-def render_fitness_dashboard_header():
-    """Render clean dashboard header with just title and today's date"""
+def render_fitness_dashboard_header(total_workouts=0, earliest_date=None, latest_date=None):
+    """Render clean dashboard header with title, today's date, and total dataset stats"""
     from datetime import datetime
 
     today_str = datetime.now().strftime('%B %d, %Y')
+
+    # Format dataset info for right side
+    dataset_count = f"Total dataset: {total_workouts:,} workouts" if total_workouts > 0 else ""
+
+    dataset_range = ""
+    if earliest_date and latest_date:
+        earliest_str = earliest_date.strftime('%m/%d/%Y') if hasattr(earliest_date, 'strftime') else str(earliest_date)[:10]
+        latest_str = latest_date.strftime('%m/%d/%Y') if hasattr(latest_date, 'strftime') else str(latest_date)[:10]
+        dataset_range = f"From {earliest_str} to {latest_str}"
 
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 padding: 25px; border-radius: 15px; color: white; margin-bottom: 30px;
                 box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); position: relative;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <h1 style="margin: 0; font-size: 2.5rem;">🏃‍♀️ Fitness Dashboard</h1>
-            <div style="font-size: 1.1rem; opacity: 0.9;">
-                Today is {today_str}
+            <div style="text-align: right; margin-top: 5px;">
+                <div style="font-size: 1.1rem; opacity: 0.9; margin-bottom: 12px;">
+                    Today is {today_str}
+                </div>
+                <div style="font-size: 0.9rem; opacity: 0.8; margin-top: 3px;">
+                    {dataset_count}
+                </div>
+                <div style="font-size: 0.85rem; opacity: 0.75; margin-top: 3px;">
+                    {dataset_range}
+                </div>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-def render_time_period_selector():
-    """Render time period selector and return selected period"""
-    col_selector, col_spacer = st.columns([2, 3])
-    with col_selector:
-        period_options = {
-            '7d': 'Last 7 days',
-            '30d': 'Last 30 days',
-            '90d': 'Last 3 months',
-            '365d': 'Last year'
-        }
+def render_time_period_selector_and_filter_info(brief):
+    """Render time period selector and filter info in a single row with matching heights"""
+    from datetime import datetime, timedelta
+
+    period_options = {
+        '7d': 'Last 7 days',
+        '30d': 'Last 30 days',
+        '90d': 'Last 3 months',
+        '365d': 'Last year'
+    }
+
+    # Create single row layout: dropdown (1 part) + filter info (3 parts)
+    col_dropdown, col_filter = st.columns([1, 3])
+
+    with col_dropdown:
         selected_period = st.selectbox(
             "Analysis timeframe:",
             options=list(period_options.keys()),
@@ -136,79 +158,67 @@ def render_time_period_selector():
             index=1,  # Default to 30d
             key="intelligence_period"
         )
-    return selected_period, period_options
 
-def render_filter_info_container(brief, time_period, period_options):
-    """Render dynamic filter information container that updates with dropdown changes"""
-    from datetime import datetime
+    with col_filter:
+        # Add blank line for spacing to align filter summary with dropdown bottom
+        st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
-    # Get actual date range from intelligence brief if available
-    date_range = brief.get('date_range', {}) if brief else {}
-    start_date = date_range.get('start_date')
-    end_date = date_range.get('end_date')
+        # Get actual date range from intelligence brief if available
+        date_range = brief.get('date_range', {}) if brief else {}
+        start_date = date_range.get('start_date')
+        end_date = date_range.get('end_date')
 
-    # Fallback to calculated dates if not in brief
-    if not start_date or not end_date:
-        from datetime import timedelta
-        today = datetime.now()
-        days_map = {'7d': 7, '30d': 30, '90d': 90, '365d': 365}
-        days_back = days_map.get(time_period, 30)
-        end_date = today
-        start_date = today - timedelta(days=days_back)
-    else:
-        # Parse dates from brief
-        start_date = datetime.fromisoformat(start_date) if isinstance(start_date, str) else start_date
-        end_date = datetime.fromisoformat(end_date) if isinstance(end_date, str) else end_date
+        # Fallback to calculated dates if not in brief
+        if not start_date or not end_date:
+            today = datetime.now()
+            days_map = {'7d': 7, '30d': 30, '90d': 90, '365d': 365}
+            days_back = days_map.get(selected_period, 30)
+            end_date = today
+            start_date = today - timedelta(days=days_back)
+        else:
+            # Parse dates from brief
+            start_date = datetime.fromisoformat(start_date) if isinstance(start_date, str) else start_date
+            end_date = datetime.fromisoformat(end_date) if isinstance(end_date, str) else end_date
 
-    # Format dates
-    start_str = start_date.strftime('%m/%d/%y')
-    end_str = end_date.strftime('%m/%d/%y')
+        # Format dates
+        start_str = start_date.strftime('%m/%d/%y')
+        end_str = end_date.strftime('%m/%d/%y')
 
-    # Get workout counts
-    total_workouts = brief.get('total_workouts_analyzed', 0) if brief else 0
-    recent_workouts = brief.get('recent_workouts_analyzed', 0) if brief else 0
+        # Get workout count
+        recent_workouts = brief.get('recent_workouts_analyzed', 0) if brief else 0
 
-    # Get period display name
-    period_name = period_options.get(time_period, f'{time_period} period')
+        # Get period display name
+        period_name = period_options.get(selected_period, f'{selected_period} period')
 
-    st.markdown(f"""
-    <div style="background: #f8f9fa; padding: 12px 20px; border-radius: 8px;
-                margin-bottom: 20px; border-left: 4px solid #667eea;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-            <div style="font-size: 0.95rem; color: #495057;">
-                <strong>Filtering workouts:</strong> {start_str} to {end_str}
-            </div>
-            <div style="font-size: 0.95rem; color: #495057;">
-                <strong>Period:</strong> {period_name}
-            </div>
-            <div style="font-size: 0.95rem; color: #495057;">
-                <strong>Found:</strong> {recent_workouts:,} workouts
-            </div>
-            <div style="font-size: 0.9rem; color: #6c757d;">
-                Total dataset: {total_workouts:,} workouts
+        # Render with theme-aware semi-transparent purple background
+        st.markdown(f"""
+        <div style="background: rgba(102, 126, 234, 0.1);
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    border-left: 4px solid #667eea;
+                    display: flex;
+                    align-items: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; width: 100%;">
+                <div style="font-size: 0.95rem;">
+                    <strong>Filtering workouts:</strong> {start_str} to {end_str}
+                </div>
+                <div style="font-size: 0.95rem;">
+                    <strong>Period:</strong> {period_name}
+                </div>
+                <div style="font-size: 0.95rem;">
+                    <strong>Found:</strong> {recent_workouts:,} workouts
+                </div>
             </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+
+    return selected_period, period_options
 
 def render_data_visibility_expander(brief, time_period):
     """Render expandable section showing the actual workout data being analyzed"""
     with st.expander("📊 View Selected Data", expanded=True):
-        # Get the summary data
+        # Get the summary data (needed for warning at end)
         total_workouts = brief.get('recent_workouts_analyzed', 0)
-
-        # Show basic stats about the selected data
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Workouts Analyzed", total_workouts)
-        with col2:
-            period_text = time_period.replace('d', ' days').replace('365 days', '1 year')
-            st.metric("Time Period", period_text)
-        with col3:
-            # Calculate meaningful workout frequency
-            days_in_period = int(time_period.replace('d', '')) if 'd' in time_period else 365
-            workouts_per_week = (total_workouts / days_in_period) * 7 if days_in_period > 0 else 0
-            st.metric("Avg Workouts/Week", f"{workouts_per_week:.1f}")
 
         # Show workout breakdown by type if available
         classification_data = brief.get('classification_intelligence', {})
@@ -245,66 +255,98 @@ def render_data_visibility_expander(brief, time_period):
             return
 
         if not classified_df.empty:
-            # Be more flexible with available columns to prevent empty dataframes
-            required_columns = ['workout_date']  # Only workout_date is truly required
-            optional_columns = ['distance_mi', 'duration_sec', 'kcal_burned', 'avg_pace']
-
-            # Start with required columns
-            available_columns = [col for col in required_columns if col in classified_df.columns]
-
-            # Add optional columns that exist
-            available_columns.extend([col for col in optional_columns if col in classified_df.columns])
-
-            if not available_columns:
-                st.error("No suitable columns found in workout data")
-                return
-
-            display_df = classified_df[available_columns].copy()
+            # Create display dataframe with specific column order
+            display_df = classified_df.copy()
 
             # Add classification if available
             if 'predicted_activity_type' in classified_df.columns:
-                display_df['ML Classification'] = classified_df['predicted_activity_type']
+                display_df['classification'] = classified_df['predicted_activity_type']
             else:
                 # Add a fallback classification based on available data
                 if 'avg_pace' in display_df.columns:
-                    display_df['ML Classification'] = display_df['avg_pace'].apply(
+                    display_df['classification'] = display_df['avg_pace'].apply(
                         lambda x: 'real_run' if pd.notna(x) and x <= 12 else 'pup_walk' if pd.notna(x) else 'unknown'
                     )
                 else:
-                    display_df['ML Classification'] = 'unknown'
+                    display_df['classification'] = 'unknown'
 
-            # Format for better display
+            # Format columns
             if 'workout_date' in display_df.columns:
                 display_df['Date'] = pd.to_datetime(display_df['workout_date']).dt.strftime('%m/%d/%y')
-                display_df = display_df.drop('workout_date', axis=1)
 
             if 'duration_sec' in display_df.columns:
                 display_df['Duration'] = display_df['duration_sec'].apply(
                     lambda x: f"{int(x//3600)}h {int((x%3600)//60)}m" if pd.notna(x) else "N/A"
                 )
-                display_df = display_df.drop('duration_sec', axis=1)
 
             # Round numeric columns
-            numeric_columns = ['distance_mi', 'kcal_burned', 'avg_pace']
-            for col in numeric_columns:
-                if col in display_df.columns:
-                    display_df[col] = display_df[col].round(1)
+            if 'distance_mi' in display_df.columns:
+                display_df['Distance (Mi)'] = display_df['distance_mi'].round(1)
 
-            # Rename columns for better display
-            column_rename = {
-                'distance_mi': 'Distance (mi)',
-                'kcal_burned': 'Calories',
-                'avg_pace': 'Avg Pace (min/mi)'
-            }
-            display_df = display_df.rename(columns=column_rename)
+            if 'avg_pace' in display_df.columns:
+                display_df['Pace (min/mi)'] = display_df['avg_pace'].round(1)
+
+            if 'kcal_burned' in display_df.columns:
+                display_df['Calories'] = display_df['kcal_burned'].round(0).astype(int)
+
+            # Format ML Classification with proper display names
+            display_df['ML Classification'] = display_df['classification'].apply(
+                lambda x: {
+                    'real_run': 'Run',
+                    'pup_walk': 'Walk',
+                    'mixed': 'Mixed',
+                    'outlier': 'Outlier',
+                    'unknown': 'Unknown'
+                }.get(x, x)
+            )
+
+            # Select and order columns: Date, Duration, Distance (Mi), Pace (min/mi), Calories, ML Classification
+            final_columns = []
+            if 'Date' in display_df.columns:
+                final_columns.append('Date')
+            if 'Duration' in display_df.columns:
+                final_columns.append('Duration')
+            if 'Distance (Mi)' in display_df.columns:
+                final_columns.append('Distance (Mi)')
+            if 'Pace (min/mi)' in display_df.columns:
+                final_columns.append('Pace (min/mi)')
+            if 'Calories' in display_df.columns:
+                final_columns.append('Calories')
+            if 'ML Classification' in display_df.columns:
+                final_columns.append('ML Classification')
+            # Keep classification column for styling
+            if 'classification' in display_df.columns:
+                final_columns.append('classification')
+
+            display_df = display_df[final_columns]
 
             # Sort by date (most recent first)
             if 'Date' in display_df.columns:
                 display_df = display_df.sort_values('Date', ascending=False)
 
-            # Display the table
+            # Apply color styling based on classification (use actual classification values)
+            # Create styling function that uses the classification column
+            def color_rows(row):
+                # Get classification from the full dataframe using the row name (index)
+                classification = display_df.loc[row.name, 'classification'] if row.name in display_df.index else 'unknown'
+
+                if classification == 'real_run':
+                    color = '#1f77b4'  # Blue for runs
+                elif classification == 'pup_walk' or classification == 'mixed':
+                    color = '#2ca02c'  # Green for walks and mixed
+                elif classification == 'outlier':
+                    color = '#d62728'  # Red for outliers
+                else:
+                    color = '#7f7f7f'  # Gray for unknown
+                return [f'color: {color}'] * len(row)
+
+            # Remove classification column before styling (styling function will look it up)
+            display_cols = [col for col in final_columns if col != 'classification']
+            styled_df = display_df[display_cols].style.apply(color_rows, axis=1)
+
+            # Display the table with styling
             st.dataframe(
-                display_df,
+                styled_df,
                 use_container_width=True,
                 hide_index=True,
                 height=300
@@ -434,40 +476,81 @@ def render_concrete_metrics_cards(brief, time_period):
 
     st.subheader("📊 Period Summary")
 
-    # First row: 4 numerical metrics
+    # Calculate averages
+    avg_duration = metrics['total_hours'] * 60 + metrics['total_minutes']  # in minutes
+    avg_duration_per_workout = avg_duration / metrics['total_workouts'] if metrics['total_workouts'] > 0 else 0
+    avg_distance_per_workout = metrics['total_distance'] / metrics['total_workouts'] if metrics['total_workouts'] > 0 else 0
+    avg_calories_per_workout = metrics['total_calories'] / metrics['total_workouts'] if metrics['total_workouts'] > 0 else 0
+
+    # Row 1: Avg Workouts/Week and averages per workout
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
+        # Calculate workout frequency
+        days_in_period = int(time_period.replace('d', '')) if 'd' in time_period else 365
+        workouts_per_week = (metrics['total_workouts'] / days_in_period) * 7 if days_in_period > 0 else 0
+        st.metric(
+            label="📈 Avg Workouts/Week",
+            value=f"{workouts_per_week:.1f}",
+            help="Average workouts per week in this period"
+        )
+
+    with col2:
+        st.metric(
+            label="🏃 Avg Distance/Workout",
+            value=f"{avg_distance_per_workout:.1f} mi",
+            help="Average distance per workout"
+        )
+
+    with col3:
+        st.metric(
+            label="⏱️ Avg Duration/Workout",
+            value=f"{int(avg_duration_per_workout)}m",
+            help="Average duration per workout"
+        )
+
+    with col4:
+        st.metric(
+            label="🔥 Avg Calories/Workout",
+            value=f"{int(avg_calories_per_workout)}",
+            help="Average calories per workout"
+        )
+
+    # Row 2: Total workouts count and totals
+    col5, col6, col7, col8 = st.columns(4)
+
+    with col5:
         st.metric(
             label="📊 Workouts",
             value=metrics['total_workouts'],
             help="Total number of workouts in this period"
         )
 
-    with col2:
+    with col6:
         st.metric(
-            label="🏃 Distance",
+            label="🏃 Total Distance",
             value=f"{metrics['total_distance']:.1f} mi",
             help="Total distance covered"
         )
 
-    with col3:
+    with col7:
         duration_text = f"{metrics['total_hours']}h {metrics['total_minutes']}m"
         st.metric(
-            label="⏱️ Duration",
+            label="⏱️ Total Duration",
             value=duration_text,
             help="Total workout time"
         )
 
-    with col4:
+    with col8:
         st.metric(
-            label="🔥 Calories",
+            label="🔥 Total Calories",
             value=f"{metrics['total_calories']:,}",
             help="Total calories burned"
         )
 
-    # Second row: Activity Mix (use more space to prevent cutoff)
-    col_activity, col_spacer = st.columns([3, 2])
+    # Row 3: Activity Mix (3 columns wide for better display)
+    col_activity, col_spacer1, col_spacer2, col_spacer3 = st.columns([3, 1, 1, 1])
+
     with col_activity:
         # Activity mix display with more concise formatting
         if metrics['total_workouts'] > 0:
@@ -1524,7 +1607,7 @@ def render_algorithm_transparency_sidebar():
 
 def main():
     """Main intelligence dashboard application"""
-    
+
     # Custom CSS for intelligence dashboard
     st.markdown("""
     <style>
@@ -1536,7 +1619,7 @@ def main():
         border: 1px solid #e0e0e0;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    
+
     .algorithm-badge {
         display: inline-block;
         padding: 4px 8px;
@@ -1546,28 +1629,46 @@ def main():
         color: #666;
         margin: 5px 0;
     }
-    
+
     .confidence-high { background: linear-gradient(135deg, #27ae60, #2ecc71); }
     .confidence-medium { background: linear-gradient(135deg, #f39c12, #f1c40f); }
     .confidence-low { background: linear-gradient(135deg, #e74c3c, #ec7063); }
     </style>
     """, unsafe_allow_html=True)
-    
-    # Render clean header (no dynamic content)
-    render_fitness_dashboard_header()
 
-    # Time period selector
-    selected_period, period_options = render_time_period_selector()
+    # Get total dataset stats for header (static, calculated once)
+    from services.database_service import DatabaseService
+    from datetime import datetime
 
-    # Load intelligence data based on selected period
-    brief, summary = load_intelligence_data(selected_period)
+    try:
+        db = DatabaseService()
+        query = 'SELECT COUNT(*) as total, MIN(workout_date) as earliest, MAX(workout_date) as latest FROM workout_summary'
+        results = db.execute_query(query)
+        total_workouts = results[0]['total']
+        earliest_date = results[0]['earliest']
+        latest_date = results[0]['latest']
+    except Exception as e:
+        st.error(f"Failed to load dataset stats: {e}")
+        total_workouts = 0
+        earliest_date = None
+        latest_date = None
+
+    # Render header with total dataset stats
+    render_fitness_dashboard_header(total_workouts, earliest_date, latest_date)
+
+    # Load initial intelligence data (using default 30d period)
+    brief, summary = load_intelligence_data('30d')
 
     if not brief:
         st.error("Failed to load intelligence data. Please check your database connection.")
         return
 
-    # Dynamic filter info container (updates with dropdown selection)
-    render_filter_info_container(brief, selected_period, period_options)
+    # Combined time period selector and filter info (single row)
+    selected_period, period_options = render_time_period_selector_and_filter_info(brief)
+
+    # Reload intelligence data if period changed
+    if selected_period != '30d':
+        brief, summary = load_intelligence_data(selected_period)
 
     # Concrete metrics cards - above the fold
     render_concrete_metrics_cards(brief, selected_period)
