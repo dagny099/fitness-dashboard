@@ -268,7 +268,7 @@ class FitnessIntelligenceService:
             brief['anomaly_intelligence'] = self._analyze_anomaly_intelligence(recent_df)
             brief['predictive_intelligence'] = self._analyze_predictive_intelligence(df)
             brief['recommendations'] = self._generate_ai_recommendations(recent_df, df)
-            brief['key_insights'] = self._generate_key_insights(recent_df, df)
+            brief['key_insights'] = self._generate_key_insights(recent_df, df, days_lookback)
             
             return brief
         
@@ -469,7 +469,7 @@ class FitnessIntelligenceService:
             
             if consistency_score < 50:
                 recommendations.append(
-                    "🎯 Focus Priority: Your consistency score is low. "
+                    "🎯 Focus Priority: My consistency score is low. "
                     "Target 3 workouts per week for 2 weeks to build momentum."
                 )
             elif consistency_score < 75:
@@ -479,7 +479,7 @@ class FitnessIntelligenceService:
                 )
             else:
                 recommendations.append(
-                    "🔥 Maintain Excellence: Your consistency is in the top tier. "
+                    "🔥 Maintain Excellence: My consistency is in the top tier. "
                     "Focus on performance optimization within current routine."
                 )
             
@@ -502,7 +502,7 @@ class FitnessIntelligenceService:
             if 'best_day_for_calories' in timing_data:
                 best_day = timing_data['best_day_for_calories']
                 recommendations.append(
-                    f"📅 Timing Intelligence: Your best performance day is {best_day}. "
+                    f"📅 Timing Intelligence: My best performance day is {best_day}. "
                     f"Schedule challenging workouts then for optimal results."
                 )
             
@@ -516,14 +516,14 @@ class FitnessIntelligenceService:
                     )
                 elif len(activity_counts) >= 3:
                     recommendations.append(
-                        "💪 Great Variety: Your diverse activity mix is optimal for "
+                        "💪 Great Variety: My diverse activity mix is optimal for "
                         "balanced fitness and sustained motivation."
                     )
             
             # Ensure we always have at least one recommendation
             if not recommendations:
                 recommendations.append(
-                    "📊 Data Collection Phase: Building your fitness intelligence profile. "
+                    "📊 Data Collection Phase: Building my fitness intelligence profile. "
                     "Continue consistent tracking for personalized insights."
                 )
             
@@ -532,29 +532,28 @@ class FitnessIntelligenceService:
         except Exception as e:
             return [f"Error generating recommendations: {str(e)}"]
     
-    def _generate_key_insights(self, recent_df: pd.DataFrame, 
-                             full_df: pd.DataFrame) -> List[str]:
+    def _generate_key_insights(self, recent_df: pd.DataFrame,
+                             full_df: pd.DataFrame,
+                             days_lookback: int = 30) -> List[str]:
         """Generate key insights from the analysis."""
         try:
             insights = []
-            
+
             # Performance insights
             if 'kcal_burned' in recent_df.columns and len(recent_df) >= 5:
                 recent_avg = recent_df['kcal_burned'].mean()
                 historical_avg = full_df['kcal_burned'].mean()
-                
+
                 change_pct = ((recent_avg - historical_avg) / historical_avg * 100) if historical_avg > 0 else 0
-                
+
                 if abs(change_pct) > 10:
-                    direction = "higher" if change_pct > 0 else "lower"
+                    direction = "up" if change_pct > 0 else "down"
                     insights.append(
-                        f"📊 Performance Shift: Recent calorie burn is {abs(change_pct):.1f}% "
-                        f"{direction} than your historical average"
+                        f"📊 Performance Shift: Recent calories {direction} {abs(change_pct):.1f}% vs historical avg"
                     )
-            
-            # Frequency insights
-            recent_days = (recent_df['workout_date'].max() - recent_df['workout_date'].min()).days + 1
-            recent_frequency = len(recent_df) / (recent_days / 7) if recent_days > 0 else 0
+
+            # Frequency insights - use actual days_lookback for consistency
+            recent_frequency = (len(recent_df) / days_lookback) * 7 if days_lookback > 0 else 0
             
             if recent_frequency >= 4:
                 insights.append(f"🔥 High Activity: You're averaging {recent_frequency:.1f} workouts per week")

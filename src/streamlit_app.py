@@ -40,9 +40,9 @@ logout_page = st.Page(logout, title="Log out", icon=":material/logout:")
 
 intelligence = st.Page("views/intelligence.py", title="AI Intelligence", icon="🧠", default=True)
 model_management = st.Page("views/model_management.py", title="Model Management", icon="🤖")
-dashboard = st.Page("views/dash.py", title="Monthly View", icon=":material/dashboard:")
 
 calendar = st.Page("views/calendar_more.py", title="Detailed Stats", icon=":material/calendar_month:")
+dashboard_monthly = st.Page("views/dash.py", title="Monthly View", icon=":material/dashboard:")
 
 # bugs = st.Page("tools/bugs.py", title="Trends", icon=":material/data_exploration:")
 trends = st.Page("views/tools/trends.py", title="Trends", icon=":material/data_exploration:")
@@ -55,8 +55,8 @@ if st.session_state.logged_in:
     pg = st.navigation(
         {
             "Intelligence": [intelligence, model_management],
-            "Reports": [dashboard, choco_effect],
-            "Calendar": [calendar],
+            "Calendar": [dashboard_monthly, calendar],
+            "Reports": [choco_effect],
             "Tools": [trends, mapping, query_db, history],
             "Account": [logout_page],
         }
@@ -66,12 +66,12 @@ else:
 
 st.set_page_config(
     page_title="Fitness Dashboard",
-    page_icon=":material/dashboard:",
+    page_icon="📊",
     layout="wide",
     # initial_sidebar_state="collapsed",
     menu_items={
-        "Get help": "https://www.streamlit.io/", 
-        "Report a bug": "mailto:dagny099@gmail.com", 
+        "Get help": "https://www.streamlit.io/",
+        "Report a bug": "mailto:dagny099@gmail.com",
     }
 )
 

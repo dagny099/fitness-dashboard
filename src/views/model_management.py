@@ -43,9 +43,6 @@ def render_model_management_header():
                     Control and monitor your ML classification models
                 </p>
             </div>
-            <div style="font-size: 1.1rem; opacity: 0.9;">
-                {datetime.now().strftime('%B %d, %Y')}
-            </div>
         </div>
     </div>
     """, unsafe_allow_html=True)

@@ -303,7 +303,7 @@ c1, c2, c3 = st.columns([2, 1, 1])
 # with c1:
 #     st.markdown("#### 📆 Select a Month to View Your Calendar: ")
 with c2:
-    selected_date = st.date_input("PICK ANY DATE IN THE MONTH you're interested in", value=date(2025, 4, 20)) #, label_visibility="collapsed")
+    selected_date = st.date_input("PICK ANY DATE IN THE MONTH you're interested in", value=datetime.now().date()) #, label_visibility="collapsed")
 
 
 # ---------------------
@@ -405,12 +405,12 @@ with details_tab:
     except ValueError:
         default_month_index = len(months) - 1 if months else 0
     selected_month_idx = col2.selectbox("Select Month", options=months, index=default_month_index)
-    detail_selected_month = months.index(selected_month_idx) 
-    
+    detail_selected_month = int(selected_month_idx)  # Convert string to int directly
+
     # 3. Filter by year & month
     month_df = df[
         (df["workout_date"].dt.year == detail_selected_year) &
-        (df["workout_date"].dt.month == detail_selected_month + 1)
+        (df["workout_date"].dt.month == detail_selected_month)
     ].copy()
     month_df["week_number"] = (month_df["workout_date"].dt.day - 1) // 7 + 1
 

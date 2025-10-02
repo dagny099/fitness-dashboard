@@ -574,7 +574,8 @@ class ModelManager:
             # Apply classifications to clean indices
             for i, idx in enumerate(clean_indices):
                 cluster = predicted_clusters[i]
-                activity_type = self.current_model.cluster_to_activity_map.get(cluster, 'unknown')
+                # FIX: Convert cluster to string for JSON-loaded dict keys
+                activity_type = self.current_model.cluster_to_activity_map.get(str(cluster), 'unknown')
                 confidence = confidences[i]
 
                 result_df.loc[idx, 'predicted_activity_type'] = activity_type
