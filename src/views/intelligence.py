@@ -886,38 +886,38 @@ def render_kmeans_scatter_plot(brief, time_period):
                 showlegend=True
             ))
 
-        # Calculate the centroid (average position) for each activity type in the data
-        # This ensures we show a center for ALL activity types, not just K-means clusters
-        activity_centers = {}
-        for activity_type in all_classified_df['predicted_activity_type'].unique():
-            if activity_type != 'outlier':  # Skip outliers for center calculation
-                type_data = all_classified_df[all_classified_df['predicted_activity_type'] == activity_type]
-                if not type_data.empty:
-                    avg_pace = type_data['avg_pace'].mean()
-                    avg_distance = type_data['distance_mi'].mean()
-                    activity_centers[activity_type] = (avg_pace, avg_distance)
+        # Add cluster centers for the 2 PRIMARY activity types only (Runs and Walks)
+        # This shows the main K-means separation between running and walking activities
+        primary_types = ['real_run', 'pup_walk']
 
-        # Add cluster centers as large stars for each activity type
-        for activity_type, (pace, distance) in activity_centers.items():
-            cluster_color = color_map.get(activity_type, '#999999')
+        for activity_type in primary_types:
+            type_data = all_classified_df[all_classified_df['predicted_activity_type'] == activity_type]
 
-            fig.add_trace(go.Scatter(
-                x=[pace],  # avg_pace (X-axis)
-                y=[distance],  # distance_mi (Y-axis)
-                mode='markers+text',
-                name=f'⭐ {activity_type.replace("_", " ").title()} Center',
-                marker=dict(
-                    symbol='star',
-                    size=25,
-                    color=cluster_color,
-                    line=dict(width=3, color='gold')
-                ),
-                text=[f"  {activity_type.replace('_', ' ').title()}"],
-                textposition='middle right',
-                textfont=dict(size=11, color=cluster_color, family='Arial Black'),
-                hovertemplate=f'<b>{activity_type.replace("_", " ").title()} Center</b><br>Pace: {pace:.1f} min/mi<br>Distance: {distance:.2f} mi<extra></extra>',
-                showlegend=True
-            ))
+            if not type_data.empty:
+                avg_pace = type_data['avg_pace'].mean()
+                avg_distance = type_data['distance_mi'].mean()
+                cluster_color = color_map.get(activity_type, '#999999')
+
+                # Use simple naming without emoji redundancy
+                display_name = "Run Center" if activity_type == 'real_run' else "Walk Center"
+
+                fig.add_trace(go.Scatter(
+                    x=[avg_pace],  # avg_pace (X-axis)
+                    y=[avg_distance],  # distance_mi (Y-axis)
+                    mode='markers+text',
+                    name=f'⭐ {display_name}',
+                    marker=dict(
+                        symbol='star',
+                        size=28,
+                        color=cluster_color,
+                        line=dict(width=3, color='gold')
+                    ),
+                    text=[display_name.replace(' Center', '')],
+                    textposition='top center',
+                    textfont=dict(size=12, color=cluster_color, family='Arial Black'),
+                    hovertemplate=f'<b>{display_name}</b><br>Pace: {avg_pace:.1f} min/mi<br>Distance: {avg_distance:.2f} mi<extra></extra>',
+                    showlegend=True
+                ))
 
         # Update layout with clean white background and optimal scaling
         fig.update_layout(
