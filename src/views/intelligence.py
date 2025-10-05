@@ -664,114 +664,236 @@ def render_performance_analysis_section(brief, time_period):
         runs_df = classified_df[classified_df['predicted_activity_type'] == 'real_run'] if 'predicted_activity_type' in classified_df.columns else pd.DataFrame()
         walks_df = classified_df[classified_df['predicted_activity_type'].isin(['pup_walk', 'mixed'])] if 'predicted_activity_type' in classified_df.columns else pd.DataFrame()
 
-        # Create two columns: insights on left, visualization on right
-        col_insights, col_visual = st.columns([3, 2])
+        # Get previous period data for comparison
+        previous_start = start_date - timedelta(days=days_lookback)
+        previous_period_df = df[(df['workout_date'] >= previous_start) & (df['workout_date'] < start_date)].copy()
 
-        with col_insights:
-            st.markdown("**📊 Key Performance Insights**")
+        if not previous_period_df.empty:
+            previous_classified_df = intelligence_service.classify_workout_types(previous_period_df)
+            prev_runs_df = previous_classified_df[previous_classified_df['predicted_activity_type'] == 'real_run'] if 'predicted_activity_type' in previous_classified_df.columns else pd.DataFrame()
+            prev_walks_df = previous_classified_df[previous_classified_df['predicted_activity_type'].isin(['pup_walk', 'mixed'])] if 'predicted_activity_type' in previous_classified_df.columns else pd.DataFrame()
+        else:
+            prev_runs_df = pd.DataFrame()
+            prev_walks_df = pd.DataFrame()
 
-            # Data source clarity
-            total_workouts = len(classified_df)
-            runs_count = len(runs_df)
-            walks_count = len(walks_df)
+        # Render colored performance cards
+        period_name = {'7d': 'Last 7 days', '30d': 'Last 30 days', '90d': 'Last 3 months', '365d': 'Last year'}.get(time_period, time_period)
+        st.markdown(f"**{period_name} Performance by Activity Type**")
 
-            st.markdown(f"*Analyzing {total_workouts} workouts: {runs_count} Runs, {walks_count} Walks*")
+        col1, col2 = st.columns(2)
 
-            # Performance metrics for different activity types
+        # BLUE CARD: Runs Performance
+        with col1:
             if not runs_df.empty:
-                runs_avg_pace = runs_df['avg_pace'].mean() if 'avg_pace' in runs_df.columns else 0
-                runs_avg_distance = runs_df['distance_mi'].mean() if 'distance_mi' in runs_df.columns else 0
-                st.metric(
-                    label="🏃 Runs Performance",
-                    value=f"{runs_avg_pace:.1f} min/mile avg",
-                    delta=f"{runs_avg_distance:.1f} mi avg distance",
-                    help="Average pace and distance for classified running workouts"
-                )
+                # Calculate current period stats
+                run_count = len(runs_df)
+                run_distance = runs_df['distance_mi'].sum() if 'distance_mi' in runs_df.columns else 0
+                run_avg_distance = runs_df['distance_mi'].mean() if 'distance_mi' in runs_df.columns else 0
+                run_avg_pace = runs_df['avg_pace'].mean() if 'avg_pace' in runs_df.columns else 0
+                run_pace_range = f"{runs_df['avg_pace'].min():.1f}-{runs_df['avg_pace'].max():.1f}" if 'avg_pace' in runs_df.columns and len(runs_df) > 1 else "N/A"
+                run_total_duration = runs_df['duration_sec'].sum() / 3600 if 'duration_sec' in runs_df.columns else 0
+                run_avg_duration = runs_df['duration_sec'].mean() / 60 if 'duration_sec' in runs_df.columns else 0
+                run_total_calories = runs_df['kcal_burned'].sum() if 'kcal_burned' in runs_df.columns else 0
+                run_avg_calories = runs_df['kcal_burned'].mean() if 'kcal_burned' in runs_df.columns else 0
 
+                # Calculate previous period comparison
+                prev_run_count = len(prev_runs_df) if not prev_runs_df.empty else 0
+                prev_run_avg_pace = prev_runs_df['avg_pace'].mean() if not prev_runs_df.empty and 'avg_pace' in prev_runs_df.columns else None
+                prev_run_avg_distance = prev_runs_df['distance_mi'].mean() if not prev_runs_df.empty and 'distance_mi' in prev_runs_df.columns else None
+
+                count_delta = run_count - prev_run_count if prev_run_count > 0 else 0
+                pace_delta = (run_avg_pace - prev_run_avg_pace) if prev_run_avg_pace else None
+                distance_delta = (run_avg_distance - prev_run_avg_distance) if prev_run_avg_distance else None
+
+                st.markdown(f"""
+                <div style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                            border-left: 5px solid #1976d2; padding: 20px; border-radius: 10px; margin-bottom: 15px;">
+                    <h3 style="color: #1976d2; margin: 0 0 15px 0;">🏃 Run Performance</h3>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                        <div>
+                            <div style="font-size: 0.85rem; color: #666;">Count</div>
+                            <div style="font-size: 1.3rem; font-weight: bold; color: #1976d2;">{run_count}</div>
+                            <div style="font-size: 0.75rem; color: {'#27ae60' if count_delta > 0 else '#e74c3c' if count_delta < 0 else '#666'};">
+                                {'+' if count_delta > 0 else ''}{count_delta} vs previous
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: #666;">Total Distance</div>
+                            <div style="font-size: 1.3rem; font-weight: bold; color: #1976d2;">{run_distance:.1f} mi</div>
+                            <div style="font-size: 0.75rem; color: #666;">Avg: {run_avg_distance:.1f} mi</div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                        <div>
+                            <div style="font-size: 0.85rem; color: #666;">Avg Pace</div>
+                            <div style="font-size: 1.3rem; font-weight: bold; color: #1976d2;">{run_avg_pace:.1f} min/mi</div>
+                            <div style="font-size: 0.75rem; color: {'#27ae60' if pace_delta and pace_delta < 0 else '#e74c3c' if pace_delta and pace_delta > 0 else '#666'};">
+                                {f"{pace_delta:+.1f} min/mi" if pace_delta else "No comparison"}
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: #666;">Pace Range</div>
+                            <div style="font-size: 1.1rem; font-weight: bold; color: #1976d2;">{run_pace_range} min/mi</div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <div style="font-size: 0.85rem; color: #666;">Total Duration</div>
+                            <div style="font-size: 1.1rem; font-weight: bold; color: #1976d2;">{run_total_duration:.1f}h</div>
+                            <div style="font-size: 0.75rem; color: #666;">Avg: {run_avg_duration:.0f} min</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: #666;">Total Calories</div>
+                            <div style="font-size: 1.1rem; font-weight: bold; color: #1976d2;">{run_total_calories:,.0f}</div>
+                            <div style="font-size: 0.75rem; color: #666;">Avg: {run_avg_calories:.0f}</div>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.info("🏃 No runs in this period")
+
+        # GREEN CARD: Walks Performance
+        with col2:
             if not walks_df.empty:
-                walks_avg_pace = walks_df['avg_pace'].mean() if 'avg_pace' in walks_df.columns else 0
-                walks_avg_distance = walks_df['distance_mi'].mean() if 'distance_mi' in walks_df.columns else 0
-                st.metric(
-                    label="🚶 Walks Performance",
-                    value=f"{walks_avg_pace:.1f} min/mile avg",
-                    delta=f"{walks_avg_distance:.1f} mi avg distance",
-                    help="Average pace and distance for classified walking activities"
+                # Calculate current period stats
+                walk_count = len(walks_df)
+                walk_distance = walks_df['distance_mi'].sum() if 'distance_mi' in walks_df.columns else 0
+                walk_avg_distance = walks_df['distance_mi'].mean() if 'distance_mi' in walks_df.columns else 0
+                walk_avg_pace = walks_df['avg_pace'].mean() if 'avg_pace' in walks_df.columns else 0
+                walk_pace_range = f"{walks_df['avg_pace'].min():.1f}-{walks_df['avg_pace'].max():.1f}" if 'avg_pace' in walks_df.columns and len(walks_df) > 1 else "N/A"
+                walk_total_duration = walks_df['duration_sec'].sum() / 3600 if 'duration_sec' in walks_df.columns else 0
+                walk_avg_duration = walks_df['duration_sec'].mean() / 60 if 'duration_sec' in walks_df.columns else 0
+                walk_total_calories = walks_df['kcal_burned'].sum() if 'kcal_burned' in walks_df.columns else 0
+                walk_avg_calories = walks_df['kcal_burned'].mean() if 'kcal_burned' in walks_df.columns else 0
+
+                # Calculate previous period comparison
+                prev_walk_count = len(prev_walks_df) if not prev_walks_df.empty else 0
+                prev_walk_avg_pace = prev_walks_df['avg_pace'].mean() if not prev_walks_df.empty and 'avg_pace' in prev_walks_df.columns else None
+                prev_walk_avg_distance = prev_walks_df['distance_mi'].mean() if not prev_walks_df.empty and 'distance_mi' in prev_walks_df.columns else None
+
+                count_delta = walk_count - prev_walk_count if prev_walk_count > 0 else 0
+                pace_delta = (walk_avg_pace - prev_walk_avg_pace) if prev_walk_avg_pace else None
+                distance_delta = (walk_avg_distance - prev_walk_avg_distance) if prev_walk_avg_distance else None
+
+                st.markdown(f"""
+                <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+                            border-left: 5px solid #388e3c; padding: 20px; border-radius: 10px; margin-bottom: 15px;">
+                    <h3 style="color: #388e3c; margin: 0 0 15px 0;">🚶 Walk Performance</h3>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                        <div>
+                            <div style="font-size: 0.85rem; color: #666;">Count</div>
+                            <div style="font-size: 1.3rem; font-weight: bold; color: #388e3c;">{walk_count}</div>
+                            <div style="font-size: 0.75rem; color: {'#27ae60' if count_delta > 0 else '#e74c3c' if count_delta < 0 else '#666'};">
+                                {'+' if count_delta > 0 else ''}{count_delta} vs previous
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: #666;">Total Distance</div>
+                            <div style="font-size: 1.3rem; font-weight: bold; color: #388e3c;">{walk_distance:.1f} mi</div>
+                            <div style="font-size: 0.75rem; color: #666;">Avg: {walk_avg_distance:.1f} mi</div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                        <div>
+                            <div style="font-size: 0.85rem; color: #666;">Avg Pace</div>
+                            <div style="font-size: 1.3rem; font-weight: bold; color: #388e3c;">{walk_avg_pace:.1f} min/mi</div>
+                            <div style="font-size: 0.75rem; color: {'#27ae60' if pace_delta and pace_delta < 0 else '#e74c3c' if pace_delta and pace_delta > 0 else '#666'};">
+                                {f"{pace_delta:+.1f} min/mi" if pace_delta else "No comparison"}
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: #666;">Pace Range</div>
+                            <div style="font-size: 1.1rem; font-weight: bold; color: #388e3c;">{walk_pace_range} min/mi</div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <div style="font-size: 0.85rem; color: #666;">Total Duration</div>
+                            <div style="font-size: 1.1rem; font-weight: bold; color: #388e3c;">{walk_total_duration:.1f}h</div>
+                            <div style="font-size: 0.75rem; color: #666;">Avg: {walk_avg_duration:.0f} min</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: #666;">Total Calories</div>
+                            <div style="font-size: 1.1rem; font-weight: bold; color: #388e3c;">{walk_total_calories:,.0f}</div>
+                            <div style="font-size: 0.75rem; color: #666;">Avg: {walk_avg_calories:.0f}</div>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.info("🚶 No walks in this period")
+
+        # Keep the visualization below the cards
+        st.markdown("**📈 Performance Trends**")
+
+        # Create performance trend chart
+        try:
+            import plotly.express as px
+            import plotly.graph_objects as go
+
+            # Prepare data for visualization
+            chart_df = classified_df.copy()
+            chart_df['workout_date'] = pd.to_datetime(chart_df['workout_date'])
+            chart_df = chart_df.sort_values('workout_date')
+
+            # Create trend chart showing distance over time, colored by activity type
+            if 'distance_mi' in chart_df.columns and 'predicted_activity_type' in chart_df.columns:
+                fig = px.scatter(
+                    chart_df,
+                    x='workout_date',
+                    y='distance_mi',
+                    color='predicted_activity_type',
+                    title='Distance Trends Over Time',
+                    labels={
+                        'workout_date': 'Date',
+                        'distance_mi': 'Distance (mi)',
+                        'predicted_activity_type': 'Activity Type'
+                    },
+                    color_discrete_map={
+                        'real_run': '#1f77b4',
+                        'pup_walk': '#2ca02c',
+                        'mixed': '#ff7f0e',
+                        'outlier': '#d62728'
+                    }
                 )
 
-            # Combined performance trends
-            if 'distance_mi' in classified_df.columns:
-                total_distance = classified_df['distance_mi'].sum()
-                avg_distance = classified_df['distance_mi'].mean()
-                st.metric(
-                    label="📏 Combined Performance",
-                    value=f"{total_distance:.1f} mi total",
-                    delta=f"{avg_distance:.1f} mi avg per workout"
-                )
-
-        with col_visual:
-            st.markdown("**📈 Performance Trends**")
-
-            # Create performance trend chart
-            try:
-                import plotly.express as px
-                import plotly.graph_objects as go
-
-                # Prepare data for visualization
-                chart_df = classified_df.copy()
-                chart_df['workout_date'] = pd.to_datetime(chart_df['workout_date'])
-                chart_df = chart_df.sort_values('workout_date')
-
-                # Create trend chart showing distance over time, colored by activity type
-                if 'distance_mi' in chart_df.columns and 'predicted_activity_type' in chart_df.columns:
-                    fig = px.scatter(
-                        chart_df,
-                        x='workout_date',
-                        y='distance_mi',
-                        color='predicted_activity_type',
-                        title='Distance Trends Over Time',
-                        labels={
-                            'workout_date': 'Date',
-                            'distance_mi': 'Distance (mi)',
-                            'predicted_activity_type': 'Activity Type'
-                        },
-                        color_discrete_map={
-                            'real_run': '#1f77b4',
-                            'pup_walk': '#2ca02c',
-                            'mixed': '#ff7f0e',
-                            'outlier': '#d62728'
-                        }
+                # Add trend lines
+                if not runs_df.empty and 'distance_mi' in runs_df.columns:
+                    runs_df_sorted = runs_df.sort_values('workout_date')
+                    fig.add_scatter(
+                        x=runs_df_sorted['workout_date'],
+                        y=runs_df_sorted['distance_mi'].rolling(window=3, center=True).mean(),
+                        mode='lines',
+                        name='Runs Trend',
+                        line=dict(color='#1f77b4', dash='dash')
                     )
 
-                    # Add trend lines
-                    if not runs_df.empty and 'distance_mi' in runs_df.columns:
-                        runs_df_sorted = runs_df.sort_values('workout_date')
-                        fig.add_scatter(
-                            x=runs_df_sorted['workout_date'],
-                            y=runs_df_sorted['distance_mi'].rolling(window=3, center=True).mean(),
-                            mode='lines',
-                            name='Runs Trend',
-                            line=dict(color='#1f77b4', dash='dash')
-                        )
+                if not walks_df.empty and 'distance_mi' in walks_df.columns:
+                    walks_df_sorted = walks_df.sort_values('workout_date')
+                    fig.add_scatter(
+                        x=walks_df_sorted['workout_date'],
+                        y=walks_df_sorted['distance_mi'].rolling(window=3, center=True).mean(),
+                        mode='lines',
+                        name='Walks Trend',
+                        line=dict(color='#2ca02c', dash='dash')
+                    )
 
-                    if not walks_df.empty and 'distance_mi' in walks_df.columns:
-                        walks_df_sorted = walks_df.sort_values('workout_date')
-                        fig.add_scatter(
-                            x=walks_df_sorted['workout_date'],
-                            y=walks_df_sorted['distance_mi'].rolling(window=3, center=True).mean(),
-                            mode='lines',
-                            name='Walks Trend',
-                            line=dict(color='#2ca02c', dash='dash')
-                        )
+                fig.update_layout(height=300, margin=dict(l=0, r=0, t=30, b=0))
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("Distance data not available for visualization")
 
-                    fig.update_layout(height=300, margin=dict(l=0, r=0, t=30, b=0))
-                    st.plotly_chart(fig, use_container_width=True)
-                else:
-                    st.info("Distance data not available for visualization")
-
-            except ImportError:
-                st.info("Install plotly for interactive charts: `pip install plotly`")
-            except Exception as e:
-                st.info(f"Chart unavailable: {str(e)}")
+        except ImportError:
+            st.info("Install plotly for interactive charts: `pip install plotly`")
+        except Exception as e:
+            st.info(f"Chart unavailable: {str(e)}")
 
     except Exception as e:
         st.error(f"Error in performance analysis: {str(e)}")
