@@ -753,7 +753,7 @@ def render_personalized_goals_section(brief, time_period):
         # RUN FREQUENCY GOAL
         with col_freq:
             avg_gap = tracker.calculate_avg_days_between_runs(start_date, end_date)
-            days_since = tracker.days_since_last_run()
+            days_since = tracker.calculate_days_since_last_run()
 
             # Determine if meeting frequency goal
             if avg_gap > 0:
