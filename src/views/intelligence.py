@@ -825,16 +825,21 @@ def render_kmeans_scatter_plot(brief, time_period):
             'outlier': '#d32f2f'    # Red
         }
 
-        # Create figure with cream background
+        # Calculate optimal axis ranges for maximum cluster separation
+        pace_min = all_classified_df['avg_pace'].quantile(0.05)
+        pace_max = all_classified_df['avg_pace'].quantile(0.95)
+        pace_padding = (pace_max - pace_min) * 0.15
+
+        dist_min = max(0, all_classified_df['distance_mi'].quantile(0.05) - 0.5)
+        dist_max = all_classified_df['distance_mi'].quantile(0.95)
+        dist_padding = (dist_max - dist_min) * 0.15
+
+        # Create figure with clean white background
         fig = go.Figure()
 
-        # Add scatter points for each activity type (ALL workouts)
-        for activity_type in all_classified_df['predicted_activity_type'].unique():
-            type_df = all_classified_df[all_classified_df['predicted_activity_type'] == activity_type]
-
-            # Separate current period from historical
-            current_type_df = type_df[type_df['in_current_period']]
-            historical_type_df = type_df[~type_df['in_current_period']]
+        # Add scatter points - single trace per activity type with opacity for period distinction
+        for activity_type in sorted(all_classified_df['predicted_activity_type'].unique()):
+            type_df = all_classified_df[all_classified_df['predicted_activity_type'] == activity_type].copy()
 
             # Determine marker style
             if activity_type == 'outlier':
@@ -846,138 +851,121 @@ def render_kmeans_scatter_plot(brief, time_period):
 
             base_color = color_map.get(activity_type, '#999999')
 
-            # Add HISTORICAL workouts (open markers with borders)
-            if not historical_type_df.empty:
-                hover_text_hist = []
-                for idx, row in historical_type_df.iterrows():
-                    hover_text_hist.append(
-                        f"Date: {row['workout_date'].strftime('%Y-%m-%d')}<br>"
-                        f"Type: {activity_type}<br>"
-                        f"Distance: {row['distance_mi']:.2f} mi<br>"
-                        f"Pace: {row['avg_pace']:.1f} min/mi<br>"
-                        f"Duration: {row['duration_sec']/60:.0f} min<br>"
-                        f"Calories: {row.get('kcal_burned', 0):.0f}<br>"
-                        f"<i>(Historical)</i>"
-                    )
+            # Create opacity array: solid for current period, faded for historical
+            opacity_values = type_df['in_current_period'].map({True: 1.0, False: 0.3}).tolist()
 
-                fig.add_trace(go.Scatter(
-                    x=historical_type_df['distance_mi'],
-                    y=historical_type_df['avg_pace'],
-                    mode='markers',
-                    name=f'{activity_type.replace("_", " ").title()} (Historical)',
-                    marker=dict(
-                        color='rgba(255,255,255,0)',  # Transparent fill
-                        size=marker_size,
-                        symbol=marker_symbol,
-                        line=dict(width=2, color=base_color)
-                    ),
-                    text=hover_text_hist,
-                    hovertemplate='%{text}<extra></extra>',
-                    showlegend=True,
-                    legendgroup=activity_type
-                ))
+            # Prepare hover text
+            hover_text = []
+            for idx, row in type_df.iterrows():
+                period_label = "Current Period" if row['in_current_period'] else "Historical"
+                hover_text.append(
+                    f"<b>{period_label}</b><br>"
+                    f"Date: {row['workout_date'].strftime('%Y-%m-%d')}<br>"
+                    f"Type: {activity_type.replace('_', ' ').title()}<br>"
+                    f"Pace: {row['avg_pace']:.1f} min/mi<br>"
+                    f"Distance: {row['distance_mi']:.2f} mi<br>"
+                    f"Duration: {row['duration_sec']/60:.0f} min<br>"
+                    f"Calories: {row.get('kcal_burned', 0):.0f}"
+                )
 
-            # Add CURRENT PERIOD workouts (filled markers)
-            if not current_type_df.empty:
-                hover_text_curr = []
-                for idx, row in current_type_df.iterrows():
-                    hover_text_curr.append(
-                        f"Date: {row['workout_date'].strftime('%Y-%m-%d')}<br>"
-                        f"Type: {activity_type}<br>"
-                        f"Distance: {row['distance_mi']:.2f} mi<br>"
-                        f"Pace: {row['avg_pace']:.1f} min/mi<br>"
-                        f"Duration: {row['duration_sec']/60:.0f} min<br>"
-                        f"Calories: {row.get('kcal_burned', 0):.0f}<br>"
-                        f"<b>(Current Period)</b>"
-                    )
+            # Single trace per activity type
+            fig.add_trace(go.Scatter(
+                x=type_df['avg_pace'],
+                y=type_df['distance_mi'],
+                mode='markers',
+                name=activity_type.replace('_', ' ').title(),
+                marker=dict(
+                    color=base_color,
+                    size=marker_size,
+                    symbol=marker_symbol,
+                    opacity=opacity_values,
+                    line=dict(width=0.5, color='white')
+                ),
+                text=hover_text,
+                hovertemplate='%{text}<extra></extra>',
+                showlegend=True
+            ))
 
-                fig.add_trace(go.Scatter(
-                    x=current_type_df['distance_mi'],
-                    y=current_type_df['avg_pace'],
-                    mode='markers',
-                    name=f'{activity_type.replace("_", " ").title()} (Current)',
-                    marker=dict(
-                        color=base_color,
-                        size=marker_size,
-                        symbol=marker_symbol,
-                        line=dict(width=1, color='white')
-                    ),
-                    text=hover_text_curr,
-                    hovertemplate='%{text}<extra></extra>',
-                    showlegend=True,
-                    legendgroup=activity_type
-                ))
-
-        # Add cluster centers as stars
+        # Add cluster centers as large stars
         for i, center in enumerate(cluster_centers):
             cluster_type = cluster_to_type.get(i, f'Cluster {i}')
             cluster_color = color_map.get(cluster_type, '#999999')
 
             fig.add_trace(go.Scatter(
-                x=[center[1]],  # distance_mi
-                y=[center[0]],  # avg_pace
+                x=[center[0]],  # avg_pace (X-axis)
+                y=[center[1]],  # distance_mi (Y-axis)
                 mode='markers+text',
-                name=f'{cluster_type.replace("_", " ").title()} Center',
+                name=f'⭐ {cluster_type.replace("_", " ").title()} Center',
                 marker=dict(
                     symbol='star',
-                    size=20,
+                    size=25,
                     color=cluster_color,
-                    line=dict(width=2, color='gold')
+                    line=dict(width=3, color='gold')
                 ),
-                text=[cluster_type.replace('_', ' ').title()],
-                textposition='top center',
-                textfont=dict(size=12, color=cluster_color, family='Arial Black'),
-                hovertemplate=f'<b>{cluster_type.replace("_", " ").title()} Center</b><br>Pace: {center[0]:.1f} min/mi<br>Distance: {center[1]:.2f} mi<extra></extra>'
+                text=[f"  {cluster_type.replace('_', ' ').title()}"],
+                textposition='middle right',
+                textfont=dict(size=11, color=cluster_color, family='Arial Black'),
+                hovertemplate=f'<b>{cluster_type.replace("_", " ").title()} Center</b><br>Pace: {center[0]:.1f} min/mi<br>Distance: {center[1]:.2f} mi<extra></extra>',
+                showlegend=True
             ))
 
-        # Update layout with cream background and clean design
+        # Update layout with clean white background and optimal scaling
         fig.update_layout(
-            plot_bgcolor='#faf9f6',  # Cream background
-            paper_bgcolor='#faf9f6',
+            plot_bgcolor='#ffffff',  # Clean white background
+            paper_bgcolor='#ffffff',
             xaxis=dict(
-                title='Distance (miles)',
-                gridcolor='#e0e0e0',
-                showgrid=True,
-                zeroline=False
-            ),
-            yaxis=dict(
-                title='Pace (min/mile)',
+                title='<b>Average Pace (min/mile)</b>',
+                titlefont=dict(size=14),
                 gridcolor='#e0e0e0',
                 showgrid=True,
                 zeroline=False,
-                autorange='reversed'  # Lower pace (faster) at top
+                range=[pace_min - pace_padding, pace_max + pace_padding],
+                autorange=False  # Use explicit range for optimal separation
+            ),
+            yaxis=dict(
+                title='<b>Distance (miles)</b>',
+                titlefont=dict(size=14),
+                gridcolor='#e0e0e0',
+                showgrid=True,
+                zeroline=False,
+                range=[dist_min, dist_max + dist_padding],
+                autorange=False  # Use explicit range for optimal separation
             ),
             legend=dict(
                 orientation='h',
                 yanchor='bottom',
-                y=-0.2,
+                y=-0.25,
                 xanchor='center',
                 x=0.5,
-                bgcolor='rgba(255,255,255,0.8)',
-                bordercolor='#e0e0e0',
-                borderwidth=1
+                bgcolor='rgba(255,255,255,0.95)',
+                bordercolor='#cccccc',
+                borderwidth=1,
+                font=dict(size=11)
             ),
             hovermode='closest',
-            height=500,
-            margin=dict(l=60, r=20, t=40, b=80)
+            height=550,
+            margin=dict(l=70, r=30, t=50, b=100),
+            font=dict(size=12)
         )
 
         st.plotly_chart(fig, use_container_width=True)
 
-        # Explanation text
+        # Explanation text with legend note
         st.markdown("""
         #### 📖 How to Read This Chart
 
-        - **Filled dots**: Workouts in the current selected period
-        - **Open circles**: Historical workouts (all-time data for context)
-        - **Stars (⭐)**: K-means cluster centers calculated from ALL workout data - the AI groups workouts near each star
-        - **Colors** indicate workout type by the K-means algorithm:
+        **K-means Clustering Visualization** - This shows how the AI separates your workouts into groups based on pace and distance patterns.
+
+        - **Axes**: Pace (X) vs Distance (Y) - the two dimensions K-means uses for clustering
+        - **Opacity**: Solid markers = current period, Faded markers = historical data
+        - **Stars (⭐)**: Cluster centers calculated from ALL workouts - the AI groups workouts near each star
+        - **Colors** indicate workout type assigned by K-means:
           - 🔵 **Blue**: Runs (faster pace, moderate distance)
           - 🟢 **Green**: Walks (slower pace, varied distance)
           - 🟠 **Orange**: Mixed activities (between runs and walks)
           - ❌ **Red X**: Outliers (unusual workouts that don't fit patterns)
 
-        💡 **Key Insight**: The AI uses K-means clustering on pace AND distance together (not pace alone) to classify workouts. Cluster centers represent the "typical" workout for each category based on your complete history. Filled dots show current period, open circles show historical context.
+        💡 **Key Insight**: K-means clustering uses both pace AND distance together to classify workouts. The chart is scaled to maximize visual separation between clusters, making it easy to see how your workouts naturally group into distinct activity types.
         """)
 
     except Exception as e:
