@@ -1444,7 +1444,12 @@ def render_consistency_analysis_section(brief, time_period):
         col_frequency, col_streaks = st.columns(2)
 
         with col_frequency:
-            st.markdown("### 📊 Frequency & Patterns")
+            # Container with background for better visibility
+            st.markdown("""
+            <div style="background: rgba(25, 118, 210, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #1976d2; margin-bottom: 15px;">
+                <h4 style="margin: 0; color: #90caf9;">📊 Frequency & Patterns</h4>
+            </div>
+            """, unsafe_allow_html=True)
 
             # Calculate frequency metrics
             run_count = len(runs_df)
@@ -1457,51 +1462,80 @@ def render_consistency_analysis_section(brief, time_period):
             prev_run_freq = (prev_run_count / days_lookback) * 7 if days_lookback > 0 else 0
             prev_walk_freq = (prev_walk_count / days_lookback) * 7 if days_lookback > 0 else 0
 
-            # Display frequency with comparisons
-            st.markdown('<h4 style="color: #1976d2;">🏃 Run Frequency</h4>', unsafe_allow_html=True)
+            # Run frequency in styled container
+            st.markdown("""
+            <div style="background: rgba(25, 118, 210, 0.08); padding: 10px; border-radius: 6px; margin: 10px 0;">
+                <p style="margin: 0; color: #90caf9; font-weight: 600;">🏃 Run Frequency</p>
+            </div>
+            """, unsafe_allow_html=True)
+
             run_freq_delta = run_freq - prev_run_freq if prev_run_freq > 0 else 0
             st.metric("Runs per Week", f"{run_freq:.1f}",
                      delta=f"{run_freq_delta:+.1f} vs prev" if prev_run_count > 0 else None,
                      help=f"{run_count} runs in last {days_lookback} days")
 
-            st.markdown('<h4 style="color: #388e3c;">🚶 Walk Frequency</h4>', unsafe_allow_html=True)
+            # Walk frequency in styled container
+            st.markdown("""
+            <div style="background: rgba(56, 142, 60, 0.08); padding: 10px; border-radius: 6px; margin: 10px 0;">
+                <p style="margin: 0; color: #81c784; font-weight: 600;">🚶 Walk Frequency</p>
+            </div>
+            """, unsafe_allow_html=True)
+
             walk_freq_delta = walk_freq - prev_walk_freq if prev_walk_freq > 0 else 0
             st.metric("Walks per Week", f"{walk_freq:.1f}",
                      delta=f"{walk_freq_delta:+.1f} vs prev" if prev_walk_count > 0 else None,
                      help=f"{walk_count} walks in last {days_lookback} days")
 
-            # Day-of-week heatmap
-            st.markdown("**📅 Day-of-Week Distribution**")
+            # Day-of-week heatmap with better styling
+            st.markdown("""
+            <div style="background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 6px; margin: 15px 0;">
+                <p style="margin: 0 0 10px 0; color: #e0e0e0; font-weight: 600;">📅 Day-of-Week Distribution</p>
+            </div>
+            """, unsafe_allow_html=True)
 
             period_df['day_of_week'] = period_df['workout_date'].dt.day_name()
             day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
             day_counts = period_df['day_of_week'].value_counts().reindex(day_order, fill_value=0)
 
-            # Find peak workout days
+            # Find peak workout days with better styling
             if day_counts.max() > 0:
                 peak_days = day_counts[day_counts == day_counts.max()].index.tolist()
                 peak_days_str = ", ".join(peak_days)
-                st.info(f"🔥 Peak workout days: **{peak_days_str}** ({int(day_counts.max())} workouts)")
+                st.markdown(f"""
+                <div style="background: rgba(255, 152, 0, 0.15); padding: 10px; border-radius: 6px; border-left: 3px solid #ff9800;">
+                    <p style="margin: 0; color: #ffb74d;">🔥 Peak: <strong>{peak_days_str}</strong> ({int(day_counts.max())} workouts)</p>
+                </div>
+                """, unsafe_allow_html=True)
 
-            # Simple visual heatmap using emojis
-            heatmap_display = []
+            # Enhanced visual heatmap
+            heatmap_html = []
             for day in day_order:
                 count = day_counts.get(day, 0)
                 if count == 0:
+                    color = "#424242"
                     emoji = "⚪"
                 elif count <= 2:
+                    color = "#fdd835"
                     emoji = "🟡"
                 elif count <= 4:
+                    color = "#ff9800"
                     emoji = "🟠"
                 else:
+                    color = "#e53935"
                     emoji = "🔴"
-                heatmap_display.append(f"{day[:3]}: {emoji}")
 
-            st.markdown(" | ".join(heatmap_display))
+                heatmap_html.append(f'<span style="display: inline-block; margin: 2px 4px; padding: 4px 8px; background: {color}20; border-radius: 4px; color: {color}; font-weight: 500;">{day[:3]}: {emoji}</span>')
+
+            st.markdown(f'<div style="margin: 10px 0;">{"".join(heatmap_html)}</div>', unsafe_allow_html=True)
             st.caption("⚪ None | 🟡 1-2 | 🟠 3-4 | 🔴 5+")
 
         with col_streaks:
-            st.markdown("### 🔥 Streaks & Gaps")
+            # Container with background for better visibility
+            st.markdown("""
+            <div style="background: rgba(229, 57, 53, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #e53935; margin-bottom: 15px;">
+                <h4 style="margin: 0; color: #ef5350;">🔥 Streaks & Gaps</h4>
+            </div>
+            """, unsafe_allow_html=True)
 
             # Calculate streaks and gaps
             if not period_df.empty:
@@ -1529,9 +1563,17 @@ def render_consistency_analysis_section(brief, time_period):
                             else:
                                 break
 
-                    st.metric("Current Streak",
-                             f"{current_streak} days 🔥" if current_streak > 0 else "No active streak",
-                             help="Consecutive days with at least one workout")
+                    # Current Streak with visual emphasis
+                    if current_streak > 0:
+                        st.markdown(f"""
+                        <div style="background: rgba(76, 175, 80, 0.15); padding: 12px; border-radius: 6px; border-left: 3px solid #4caf50; margin: 10px 0;">
+                            <p style="margin: 0; color: #81c784; font-size: 0.9rem;">Current Streak</p>
+                            <p style="margin: 5px 0 0 0; color: #a5d6a7; font-size: 1.5rem; font-weight: 600;">{current_streak} days 🔥</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    else:
+                        st.metric("Current Streak", "No active streak",
+                                 help="Consecutive days with at least one workout")
 
                     # Longest streak in period
                     longest_streak = 1
@@ -1564,17 +1606,36 @@ def render_consistency_analysis_section(brief, time_period):
                         st.metric("Avg Rest Days", f"{avg_gap:.1f} days",
                                  help="Average rest days between workouts")
                     else:
-                        st.info("No rest days - working out every day!")
+                        st.markdown("""
+                        <div style="background: rgba(76, 175, 80, 0.15); padding: 10px; border-radius: 6px; text-align: center;">
+                            <p style="margin: 0; color: #81c784;">💪 No rest days - working out every day!</p>
+                        </div>
+                        """, unsafe_allow_html=True)
 
-                    # Workout vs Rest day ratio
+                    # Workout vs Rest day ratio with visual emphasis
                     workout_days = len(sorted_dates)
                     total_days = days_lookback
                     rest_days = total_days - workout_days
                     workout_pct = (workout_days / total_days) * 100
 
-                    st.metric("Active Days", f"{workout_days}/{total_days}",
-                             delta=f"{workout_pct:.0f}% of period",
-                             help="Days with at least one workout")
+                    # Visual color based on activity percentage
+                    if workout_pct >= 70:
+                        pct_color = "#4caf50"
+                        pct_bg = "rgba(76, 175, 80, 0.15)"
+                    elif workout_pct >= 50:
+                        pct_color = "#ff9800"
+                        pct_bg = "rgba(255, 152, 0, 0.15)"
+                    else:
+                        pct_color = "#f44336"
+                        pct_bg = "rgba(244, 67, 54, 0.15)"
+
+                    st.markdown(f"""
+                    <div style="background: {pct_bg}; padding: 12px; border-radius: 6px; margin: 10px 0;">
+                        <p style="margin: 0; color: #e0e0e0; font-size: 0.9rem;">Active Days</p>
+                        <p style="margin: 5px 0 0 0; color: {pct_color}; font-size: 1.3rem; font-weight: 600;">{workout_days}/{total_days}</p>
+                        <p style="margin: 5px 0 0 0; color: {pct_color}; font-size: 1.1rem;">↗ {workout_pct:.0f}% of period</p>
+                    </div>
+                    """, unsafe_allow_html=True)
 
     except Exception as e:
         st.error(f"Error in consistency analysis: {str(e)}")
