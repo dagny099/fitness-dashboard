@@ -886,9 +886,16 @@ def render_kmeans_scatter_plot(brief, time_period):
                 showlegend=True
             ))
 
-        # Add cluster centers as large stars
+        # Add cluster centers as large stars (deduplicated by activity type)
+        added_center_types = set()
         for i, center in enumerate(cluster_centers):
             cluster_type = cluster_to_type.get(i, f'Cluster {i}')
+
+            # Skip if we've already added a center for this activity type
+            if cluster_type in added_center_types:
+                continue
+
+            added_center_types.add(cluster_type)
             cluster_color = color_map.get(cluster_type, '#999999')
 
             fig.add_trace(go.Scatter(
