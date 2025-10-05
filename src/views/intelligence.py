@@ -886,33 +886,36 @@ def render_kmeans_scatter_plot(brief, time_period):
                 showlegend=True
             ))
 
-        # Add cluster centers as large stars (deduplicated by activity type)
-        added_center_types = set()
-        for i, center in enumerate(cluster_centers):
-            cluster_type = cluster_to_type.get(i, f'Cluster {i}')
+        # Calculate the centroid (average position) for each activity type in the data
+        # This ensures we show a center for ALL activity types, not just K-means clusters
+        activity_centers = {}
+        for activity_type in all_classified_df['predicted_activity_type'].unique():
+            if activity_type != 'outlier':  # Skip outliers for center calculation
+                type_data = all_classified_df[all_classified_df['predicted_activity_type'] == activity_type]
+                if not type_data.empty:
+                    avg_pace = type_data['avg_pace'].mean()
+                    avg_distance = type_data['distance_mi'].mean()
+                    activity_centers[activity_type] = (avg_pace, avg_distance)
 
-            # Skip if we've already added a center for this activity type
-            if cluster_type in added_center_types:
-                continue
-
-            added_center_types.add(cluster_type)
-            cluster_color = color_map.get(cluster_type, '#999999')
+        # Add cluster centers as large stars for each activity type
+        for activity_type, (pace, distance) in activity_centers.items():
+            cluster_color = color_map.get(activity_type, '#999999')
 
             fig.add_trace(go.Scatter(
-                x=[center[0]],  # avg_pace (X-axis)
-                y=[center[1]],  # distance_mi (Y-axis)
+                x=[pace],  # avg_pace (X-axis)
+                y=[distance],  # distance_mi (Y-axis)
                 mode='markers+text',
-                name=f'⭐ {cluster_type.replace("_", " ").title()} Center',
+                name=f'⭐ {activity_type.replace("_", " ").title()} Center',
                 marker=dict(
                     symbol='star',
                     size=25,
                     color=cluster_color,
                     line=dict(width=3, color='gold')
                 ),
-                text=[f"  {cluster_type.replace('_', ' ').title()}"],
+                text=[f"  {activity_type.replace('_', ' ').title()}"],
                 textposition='middle right',
                 textfont=dict(size=11, color=cluster_color, family='Arial Black'),
-                hovertemplate=f'<b>{cluster_type.replace("_", " ").title()} Center</b><br>Pace: {center[0]:.1f} min/mi<br>Distance: {center[1]:.2f} mi<extra></extra>',
+                hovertemplate=f'<b>{activity_type.replace("_", " ").title()} Center</b><br>Pace: {pace:.1f} min/mi<br>Distance: {distance:.2f} mi<extra></extra>',
                 showlegend=True
             ))
 
