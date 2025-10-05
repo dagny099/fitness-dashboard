@@ -625,8 +625,6 @@ def render_intelligence_brief_cards(brief, time_period='30d'):
 
 def render_performance_analysis_section(brief, time_period):
     """Render comprehensive Performance Analysis section with insights and visualizations"""
-    st.subheader("🏃 Performance Analysis")
-
     performance_data = brief.get('performance_intelligence', {})
 
     # Get actual workout data for visualization
@@ -677,9 +675,6 @@ def render_performance_analysis_section(brief, time_period):
             prev_walks_df = pd.DataFrame()
 
         # Render performance cards using Streamlit native components
-        period_name = {'7d': 'Last 7 days', '30d': 'Last 30 days', '90d': 'Last 3 months', '365d': 'Last year'}.get(time_period, time_period)
-        st.markdown(f"**{period_name} Performance by Activity Type**")
-
         col1, col2 = st.columns(2)
 
         # RUN PERFORMANCE CARD (native Streamlit)
