@@ -775,42 +775,47 @@ def render_kmeans_scatter_plot(brief, time_period):
         if df['workout_date'].dtype == 'object':
             df['workout_date'] = pd.to_datetime(df['workout_date'])
 
-        # Classify ALL workouts
+        # Classify ALL workouts to get the true clustering
         all_classified_df = intelligence_service.classify_workout_types(df)
 
         if 'predicted_activity_type' not in all_classified_df.columns:
             st.warning("Classification data not available.")
             return
 
-        # Mark workouts in current period
+        # Mark workouts in current period for visualization
         all_classified_df['in_current_period'] = all_classified_df['workout_date'] >= start_date
 
-        # Prepare data for clustering visualization (use current period for cluster centers)
-        period_df = all_classified_df[all_classified_df['in_current_period']].copy()
-        non_outliers = period_df[period_df['predicted_activity_type'] != 'outlier'].copy()
+        # Prepare data for K-means clustering (use ALL non-outlier data)
+        non_outliers_all = all_classified_df[all_classified_df['predicted_activity_type'] != 'outlier'].copy()
 
-        if len(non_outliers) < 2:
-            st.warning("Not enough data in current period for clustering visualization.")
+        if len(non_outliers_all) < 2:
+            st.warning("Not enough data for clustering visualization.")
             return
 
-        # Prepare features for K-means
-        X = non_outliers[['avg_pace', 'distance_mi']].values
+        # Prepare features for K-means on ALL data
+        X_all = non_outliers_all[['avg_pace', 'distance_mi']].values
 
-        # Determine optimal number of clusters (2 or 3)
-        unique_types = non_outliers['predicted_activity_type'].nunique()
+        # Determine optimal number of clusters based on unique activity types
+        unique_types = non_outliers_all['predicted_activity_type'].nunique()
         n_clusters = min(unique_types, 3)
 
-        # Fit K-means
+        # Fit K-means on ALL data to get true cluster centers
         kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-        cluster_labels = kmeans.fit_predict(X)
+        cluster_labels_all = kmeans.fit_predict(X_all)
         cluster_centers = kmeans.cluster_centers_
 
-        # Map cluster labels to activity types
+        # Assign cluster labels to the dataframe for mapping
+        non_outliers_all['cluster_label'] = cluster_labels_all
+
+        # Map cluster labels to activity types based on most common type in each cluster
         cluster_to_type = {}
         for i in range(n_clusters):
-            cluster_workouts = non_outliers.iloc[cluster_labels == i]
-            most_common_type = cluster_workouts['predicted_activity_type'].mode()[0] if len(cluster_workouts) > 0 else f'Cluster {i}'
-            cluster_to_type[i] = most_common_type
+            cluster_workouts = non_outliers_all[non_outliers_all['cluster_label'] == i]
+            if len(cluster_workouts) > 0:
+                most_common_type = cluster_workouts['predicted_activity_type'].mode()[0]
+                cluster_to_type[i] = most_common_type
+            else:
+                cluster_to_type[i] = f'Cluster {i}'
 
         # Color mapping
         color_map = {
@@ -965,14 +970,14 @@ def render_kmeans_scatter_plot(brief, time_period):
 
         - **Filled dots**: Workouts in the current selected period
         - **Open circles**: Historical workouts (all-time data for context)
-        - **Stars (⭐)**: Cluster centers based on current period - the AI groups workouts near each star
+        - **Stars (⭐)**: K-means cluster centers calculated from ALL workout data - the AI groups workouts near each star
         - **Colors** indicate workout type by the K-means algorithm:
           - 🔵 **Blue**: Runs (faster pace, moderate distance)
           - 🟢 **Green**: Walks (slower pace, varied distance)
           - 🟠 **Orange**: Mixed activities (between runs and walks)
           - ❌ **Red X**: Outliers (unusual workouts that don't fit patterns)
 
-        💡 **Key Insight**: The AI doesn't just look at pace alone - it considers both pace AND distance together to make smart classifications. Historical data (open circles) shows your complete workout history, while filled dots highlight the current analysis period.
+        💡 **Key Insight**: The AI uses K-means clustering on pace AND distance together (not pace alone) to classify workouts. Cluster centers represent the "typical" workout for each category based on your complete history. Filled dots show current period, open circles show historical context.
         """)
 
     except Exception as e:
