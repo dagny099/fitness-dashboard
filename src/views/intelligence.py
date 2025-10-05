@@ -747,6 +747,200 @@ def determine_outlier_reason(workout, all_workouts):
 
     return " | ".join(reasons)
 
+def render_kmeans_scatter_plot(brief, time_period):
+    """Render beautiful K-means scatter plot with cream background explaining the classification model"""
+    from services.intelligence_service import FitnessIntelligenceService
+    from datetime import datetime, timedelta
+    import pandas as pd
+    import plotly.graph_objects as go
+    from sklearn.cluster import KMeans
+    import numpy as np
+
+    st.markdown("## 🤖 K-means Clustering Visualization")
+    st.markdown("*Understanding how the AI separates Runs from Walks*")
+
+    try:
+        # Load workout data
+        intelligence_service = FitnessIntelligenceService()
+        df = intelligence_service._load_workout_data()
+
+        if df.empty:
+            st.info("No workout data available for visualization.")
+            return
+
+        # Filter by time period
+        days_map = {'7d': 7, '30d': 30, '90d': 90, '365d': 365}
+        days_lookback = days_map.get(time_period, 30)
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days_lookback)
+
+        if df['workout_date'].dtype == 'object':
+            df['workout_date'] = pd.to_datetime(df['workout_date'])
+
+        period_df = df[df['workout_date'] >= start_date].copy()
+
+        if period_df.empty:
+            st.info("No workouts found in the selected time period.")
+            return
+
+        # Get classified data with cluster assignments
+        classified_df = intelligence_service.classify_workout_types(period_df)
+
+        if 'predicted_activity_type' not in classified_df.columns:
+            st.warning("Classification data not available.")
+            return
+
+        # Prepare data for clustering visualization
+        # Filter out outliers for cluster center calculation
+        non_outliers = classified_df[classified_df['predicted_activity_type'] != 'outlier'].copy()
+
+        if len(non_outliers) < 2:
+            st.warning("Not enough data for clustering visualization.")
+            return
+
+        # Prepare features for K-means
+        X = non_outliers[['avg_pace', 'distance_mi']].values
+
+        # Determine optimal number of clusters (2 or 3)
+        unique_types = non_outliers['predicted_activity_type'].nunique()
+        n_clusters = min(unique_types, 3)
+
+        # Fit K-means
+        kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+        cluster_labels = kmeans.fit_predict(X)
+        cluster_centers = kmeans.cluster_centers_
+
+        # Map cluster labels to activity types
+        cluster_to_type = {}
+        for i in range(n_clusters):
+            cluster_workouts = non_outliers.iloc[cluster_labels == i]
+            most_common_type = cluster_workouts['predicted_activity_type'].mode()[0] if len(cluster_workouts) > 0 else f'Cluster {i}'
+            cluster_to_type[i] = most_common_type
+
+        # Color mapping
+        color_map = {
+            'real_run': '#1976d2',  # Blue
+            'pup_walk': '#388e3c',  # Green
+            'mixed': '#ff9800',     # Orange
+            'outlier': '#d32f2f'    # Red
+        }
+
+        # Create figure with cream background
+        fig = go.Figure()
+
+        # Add scatter points for each activity type
+        for activity_type in classified_df['predicted_activity_type'].unique():
+            type_df = classified_df[classified_df['predicted_activity_type'] == activity_type]
+
+            # Prepare hover text
+            hover_text = []
+            for idx, row in type_df.iterrows():
+                hover_text.append(
+                    f"Date: {row['workout_date'].strftime('%Y-%m-%d')}<br>"
+                    f"Type: {activity_type}<br>"
+                    f"Distance: {row['distance_mi']:.2f} mi<br>"
+                    f"Pace: {row['avg_pace']:.1f} min/mi<br>"
+                    f"Duration: {row['duration_sec']/60:.0f} min<br>"
+                    f"Calories: {row.get('kcal_burned', 0):.0f}"
+                )
+
+            # Use different markers for outliers
+            if activity_type == 'outlier':
+                marker_symbol = 'x'
+                marker_size = 12
+            else:
+                marker_symbol = 'circle'
+                marker_size = 8
+
+            fig.add_trace(go.Scatter(
+                x=type_df['distance_mi'],
+                y=type_df['avg_pace'],
+                mode='markers',
+                name=activity_type.replace('_', ' ').title(),
+                marker=dict(
+                    color=color_map.get(activity_type, '#999999'),
+                    size=marker_size,
+                    symbol=marker_symbol,
+                    line=dict(width=1, color='white')
+                ),
+                text=hover_text,
+                hovertemplate='%{text}<extra></extra>'
+            ))
+
+        # Add cluster centers as stars
+        for i, center in enumerate(cluster_centers):
+            cluster_type = cluster_to_type.get(i, f'Cluster {i}')
+            cluster_color = color_map.get(cluster_type, '#999999')
+
+            fig.add_trace(go.Scatter(
+                x=[center[1]],  # distance_mi
+                y=[center[0]],  # avg_pace
+                mode='markers+text',
+                name=f'{cluster_type.replace("_", " ").title()} Center',
+                marker=dict(
+                    symbol='star',
+                    size=20,
+                    color=cluster_color,
+                    line=dict(width=2, color='gold')
+                ),
+                text=[cluster_type.replace('_', ' ').title()],
+                textposition='top center',
+                textfont=dict(size=12, color=cluster_color, family='Arial Black'),
+                hovertemplate=f'<b>{cluster_type.replace("_", " ").title()} Center</b><br>Pace: {center[0]:.1f} min/mi<br>Distance: {center[1]:.2f} mi<extra></extra>'
+            ))
+
+        # Update layout with cream background and clean design
+        fig.update_layout(
+            plot_bgcolor='#faf9f6',  # Cream background
+            paper_bgcolor='#faf9f6',
+            xaxis=dict(
+                title='Distance (miles)',
+                gridcolor='#e0e0e0',
+                showgrid=True,
+                zeroline=False
+            ),
+            yaxis=dict(
+                title='Pace (min/mile)',
+                gridcolor='#e0e0e0',
+                showgrid=True,
+                zeroline=False,
+                autorange='reversed'  # Lower pace (faster) at top
+            ),
+            legend=dict(
+                orientation='h',
+                yanchor='bottom',
+                y=-0.2,
+                xanchor='center',
+                x=0.5,
+                bgcolor='rgba(255,255,255,0.8)',
+                bordercolor='#e0e0e0',
+                borderwidth=1
+            ),
+            hovermode='closest',
+            height=500,
+            margin=dict(l=60, r=20, t=40, b=80)
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Explanation text
+        st.markdown("""
+        #### 📖 How to Read This Chart
+
+        - **Each dot** represents one workout, positioned by its pace (speed) and distance
+        - **Stars (⭐)** show cluster centers - the AI groups workouts near each star
+        - **Colors** indicate the workout type assigned by the K-means algorithm:
+          - 🔵 **Blue**: Runs (faster pace, moderate distance)
+          - 🟢 **Green**: Walks (slower pace, varied distance)
+          - 🟠 **Orange**: Mixed activities (between runs and walks)
+          - ❌ **Red X**: Outliers (unusual workouts that don't fit patterns)
+
+        💡 **Key Insight**: The AI doesn't just look at pace alone - it considers both pace AND distance together to make smart classifications. This is why some slower "runs" might be classified differently than expected - the algorithm sees the full picture!
+        """)
+
+    except Exception as e:
+        st.error(f"Error creating scatter plot: {str(e)}")
+
 def render_personalized_goals_section(brief, time_period):
     """Render Personalized Goals section with goal setting and achievement tracking"""
     from utils.goal_tracker import GoalTracker
@@ -1759,22 +1953,9 @@ def main():
 
     st.markdown("---")
 
-    # AI Recommendations section (will be replaced with Personalized Goals)
-    st.subheader("🎯 Personalized AI Recommendations")
-    
-    recommendations = brief.get('recommendations', [])
-    if recommendations:
-        for i, rec in enumerate(recommendations[:3]):
-            with st.container():
-                col1, col2 = st.columns([3, 1])
-                
-                with col1:
-                    st.markdown(f"**{i+1}. {rec}**")
-                
-                with col2:
-                    if st.button(f"Try This", key=f"rec_{i}"):
-                        st.success("Added to your plan!")
-    
+    # K-means scatter plot visualization (bottom of page)
+    render_kmeans_scatter_plot(brief, selected_period)
+
     # Key insights now appear above the fold
 
     # Footer with technical details
