@@ -631,6 +631,122 @@ def render_intelligence_brief_cards(brief, time_period='30d'):
 
     render_consistency_analysis_section(brief, time_period)
 
+    st.markdown("---")
+
+    render_anomaly_detection_section(brief, time_period)
+
+def render_anomaly_detection_section(brief, time_period):
+    """Render anomaly detection mini-section showing outlier workouts"""
+    from services.intelligence_service import FitnessIntelligenceService
+    from datetime import datetime, timedelta
+    import pandas as pd
+    import numpy as np
+
+    st.markdown("### ⚠️ Anomaly Detection")
+
+    try:
+        # Load workout data
+        intelligence_service = FitnessIntelligenceService()
+        df = intelligence_service._load_workout_data()
+
+        if df.empty:
+            st.info("No workout data available for anomaly detection.")
+            return
+
+        # Filter by time period
+        days_map = {'7d': 7, '30d': 30, '90d': 90, '365d': 365}
+        days_lookback = days_map.get(time_period, 30)
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days_lookback)
+
+        if df['workout_date'].dtype == 'object':
+            df['workout_date'] = pd.to_datetime(df['workout_date'])
+
+        period_df = df[df['workout_date'] >= start_date].copy()
+
+        if period_df.empty:
+            st.info("No workouts found in the selected time period.")
+            return
+
+        # Classify workouts to get outliers
+        classified_df = intelligence_service.classify_workout_types(period_df)
+
+        if 'predicted_activity_type' not in classified_df.columns:
+            st.warning("Classification data not available.")
+            return
+
+        # Find outliers
+        outliers_df = classified_df[classified_df['predicted_activity_type'] == 'outlier'].copy()
+        total_workouts = len(classified_df)
+        outlier_count = len(outliers_df)
+        outlier_pct = (outlier_count / total_workouts * 100) if total_workouts > 0 else 0
+
+        # Summary card
+        if outlier_count > 0:
+            st.warning(f"⚠️ **{outlier_count} outliers detected** ({outlier_pct:.1f}% of workouts in last {days_lookback} days)")
+
+            # Determine outlier reasons
+            outliers_df['reason'] = outliers_df.apply(lambda row: determine_outlier_reason(row, classified_df), axis=1)
+
+            # Create expandable table
+            with st.expander("📋 View Outlier Details", expanded=False):
+                # Format display dataframe
+                display_df = outliers_df[['workout_date', 'activity_type', 'distance_mi', 'avg_pace', 'duration_sec', 'reason']].copy()
+                display_df['workout_date'] = pd.to_datetime(display_df['workout_date']).dt.strftime('%Y-%m-%d')
+                display_df['distance_mi'] = display_df['distance_mi'].round(2)
+                display_df['avg_pace'] = display_df['avg_pace'].round(1)
+                display_df['duration_min'] = (display_df['duration_sec'] / 60).round(0).astype(int)
+                display_df = display_df.drop(columns=['duration_sec'])
+
+                # Rename columns for display
+                display_df.columns = ['Date', 'Type', 'Distance (mi)', 'Pace (min/mi)', 'Duration (min)', 'Outlier Reason']
+
+                st.dataframe(display_df, use_container_width=True, hide_index=True)
+
+                # Add explanation
+                st.caption("💡 Outliers are workouts with extreme values compared to your typical patterns. They may represent exceptional efforts, errors in tracking, or unusual activities.")
+
+        else:
+            st.success(f"✅ **No outliers detected** - All {total_workouts} workouts fall within normal patterns")
+
+    except Exception as e:
+        st.error(f"Error in anomaly detection: {str(e)}")
+
+def determine_outlier_reason(workout, all_workouts):
+    """Determine why a workout is classified as an outlier"""
+    reasons = []
+
+    # Calculate z-scores for key metrics
+    if 'avg_pace' in all_workouts.columns and pd.notna(workout['avg_pace']):
+        pace_mean = all_workouts['avg_pace'].mean()
+        pace_std = all_workouts['avg_pace'].std()
+        if pace_std > 0:
+            pace_z = abs((workout['avg_pace'] - pace_mean) / pace_std)
+            if pace_z > 3:
+                reasons.append(f"Pace >3σ from mean ({workout['avg_pace']:.1f} vs {pace_mean:.1f} min/mi)")
+
+    if 'distance_mi' in all_workouts.columns and pd.notna(workout['distance_mi']):
+        dist_mean = all_workouts['distance_mi'].mean()
+        dist_std = all_workouts['distance_mi'].std()
+        if dist_std > 0:
+            dist_z = abs((workout['distance_mi'] - dist_mean) / dist_std)
+            if dist_z > 3:
+                reasons.append(f"Distance >3σ from mean ({workout['distance_mi']:.1f} vs {dist_mean:.1f} mi)")
+
+        # Check for extreme distance
+        if workout['distance_mi'] > 26.2:  # Marathon distance
+            reasons.append(f"Extreme distance ({workout['distance_mi']:.1f} mi)")
+
+    if 'duration_sec' in all_workouts.columns and pd.notna(workout['duration_sec']):
+        dur_hours = workout['duration_sec'] / 3600
+        if dur_hours > 4:
+            reasons.append(f"Extreme duration ({dur_hours:.1f} hours)")
+
+    if not reasons:
+        reasons.append("Statistical outlier in multi-dimensional analysis")
+
+    return " | ".join(reasons)
+
 def render_personalized_goals_section(brief, time_period):
     """Render Personalized Goals section with goal setting and achievement tracking"""
     from utils.goal_tracker import GoalTracker
