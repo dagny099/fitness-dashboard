@@ -625,6 +625,10 @@ def render_intelligence_brief_cards(brief, time_period='30d'):
 
     st.markdown("---")
 
+    render_performance_trends_section(brief, time_period)
+
+    st.markdown("---")
+
     render_consistency_analysis_section(brief, time_period)
 
 def render_personalized_goals_section(brief, time_period):
@@ -697,11 +701,11 @@ def render_personalized_goals_section(brief, time_period):
         st.markdown("---")
         st.markdown("**Goal Achievement**")
 
-        # Calculate goal achievements
-        col_run, col_walk, col_freq = st.columns(3)
+        # Calculate goal achievements - RUNS adjacent, then WALK
+        col_pace, col_freq, col_walk = st.columns(3)
 
-        # RUN PACE GOAL
-        with col_run:
+        # RUN PACE GOAL (with blue styling)
+        with col_pace:
             pace_result = tracker.count_runs_below_pace(pace_goal, start_date, end_date)
             runs_met = pace_result['runs_below_target']
             total_runs = pace_result['total_runs']
@@ -709,7 +713,7 @@ def render_personalized_goals_section(brief, time_period):
             best_pace = pace_result['best_pace']
 
             with st.container():
-                st.markdown("#### 🏃 Run Pace Achievement")
+                st.markdown('<h4 style="color: #1976d2;">🏃 Run Pace</h4>', unsafe_allow_html=True)
                 st.metric(
                     "Runs Meeting Goal",
                     f"{runs_met}/{total_runs}",
@@ -725,7 +729,45 @@ def render_personalized_goals_section(brief, time_period):
                 if total_runs > 0:
                     st.progress(pace_pct / 100.0)
 
-        # WALK DISTANCE GOAL
+        # RUN FREQUENCY GOAL (with blue styling)
+        with col_freq:
+            avg_gap = tracker.calculate_avg_days_between_runs(start_date, end_date)
+            days_since = tracker.calculate_days_since_last_run()
+
+            # Determine if meeting frequency goal
+            if avg_gap > 0:
+                freq_met = avg_gap <= frequency_goal
+                freq_pct = 100.0 if freq_met else (frequency_goal / avg_gap) * 100
+            else:
+                freq_met = False
+                freq_pct = 0.0
+
+            with st.container():
+                st.markdown('<h4 style="color: #1976d2;">🏃 Run Frequency</h4>', unsafe_allow_html=True)
+
+                if avg_gap > 0:
+                    st.metric(
+                        "Avg Days Between",
+                        f"{avg_gap:.1f} days",
+                        delta="✅ Meeting goal" if freq_met else f"⚠️ Goal: ≤{frequency_goal} days",
+                        delta_color="normal" if freq_met else "off",
+                        help=f"Target: run at least once every {frequency_goal} days"
+                    )
+                else:
+                    st.metric("Avg Days Between", "N/A",
+                             help="Need at least 2 runs to calculate")
+
+                if days_since >= 0:
+                    st.caption(f"🕐 Last run: {days_since} day{'s' if days_since != 1 else ''} ago")
+                else:
+                    st.caption("🕐 No runs found")
+
+                # Progress bar (inverse - lower is better)
+                if avg_gap > 0 and frequency_goal > 0:
+                    progress_val = min(1.0, frequency_goal / avg_gap)
+                    st.progress(progress_val)
+
+        # WALK DISTANCE GOAL (with green styling)
         with col_walk:
             walk_result = tracker.calculate_walk_goal_adherence(distance_goal, start_date, end_date)
             days_met = walk_result['days_met_goal']
@@ -734,7 +776,7 @@ def render_personalized_goals_section(brief, time_period):
             avg_dist = walk_result['avg_distance']
 
             with st.container():
-                st.markdown("#### 🚶 Walk Distance Achievement")
+                st.markdown('<h4 style="color: #388e3c;">🚶 Walk Distance</h4>', unsafe_allow_html=True)
                 st.metric(
                     "Days Meeting Goal",
                     f"{days_met}/{total_walk_days}",
@@ -749,44 +791,6 @@ def render_personalized_goals_section(brief, time_period):
                 # Progress bar
                 if total_walk_days > 0:
                     st.progress(walk_pct / 100.0)
-
-        # RUN FREQUENCY GOAL
-        with col_freq:
-            avg_gap = tracker.calculate_avg_days_between_runs(start_date, end_date)
-            days_since = tracker.calculate_days_since_last_run()
-
-            # Determine if meeting frequency goal
-            if avg_gap > 0:
-                freq_met = avg_gap <= frequency_goal
-                freq_pct = 100.0 if freq_met else (frequency_goal / avg_gap) * 100
-            else:
-                freq_met = False
-                freq_pct = 0.0
-
-            with st.container():
-                st.markdown("#### 📅 Run Frequency Achievement")
-
-                if avg_gap > 0:
-                    st.metric(
-                        "Avg Days Between Runs",
-                        f"{avg_gap:.1f} days",
-                        delta="✅ Meeting goal" if freq_met else f"⚠️ Goal: ≤{frequency_goal} days",
-                        delta_color="normal" if freq_met else "off",
-                        help=f"Target: run at least once every {frequency_goal} days"
-                    )
-                else:
-                    st.metric("Avg Days Between Runs", "N/A",
-                             help="Need at least 2 runs to calculate")
-
-                if days_since >= 0:
-                    st.caption(f"🕐 Last run: {days_since} day{'s' if days_since != 1 else ''} ago")
-                else:
-                    st.caption("🕐 No runs found")
-
-                # Progress bar (inverse - lower is better)
-                if avg_gap > 0 and frequency_goal > 0:
-                    progress_val = min(1.0, frequency_goal / avg_gap)
-                    st.progress(progress_val)
 
     except Exception as e:
         st.error(f"Error in personalized goals: {str(e)}")
@@ -969,8 +973,47 @@ def render_performance_analysis_section(brief, time_period):
             else:
                 st.info("🚶 No walks in this period")
 
-        # Keep the visualization below the cards
-        st.markdown("**📈 Performance Trends**")
+    except Exception as e:
+        st.error(f"Error in performance analysis: {str(e)}")
+
+def render_performance_trends_section(brief, time_period):
+    """Render Performance Trends chart section"""
+    from services.intelligence_service import FitnessIntelligenceService
+    from datetime import datetime, timedelta
+    import pandas as pd
+
+    st.markdown("### 📈 Performance Trends")
+
+    try:
+        # Load workout data
+        intelligence_service = FitnessIntelligenceService()
+        df = intelligence_service._load_workout_data()
+
+        if df.empty:
+            st.info("No workout data available for trends visualization.")
+            return
+
+        # Filter to time period
+        days_map = {'7d': 7, '30d': 30, '90d': 90, '365d': 365}
+        days_lookback = days_map.get(time_period, 30)
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days_lookback)
+
+        if df['workout_date'].dtype == 'object':
+            df['workout_date'] = pd.to_datetime(df['workout_date'])
+
+        period_df = df[df['workout_date'] >= start_date].copy()
+
+        if period_df.empty:
+            st.info("No workouts in selected time period.")
+            return
+
+        # Classify workouts
+        classified_df = intelligence_service.classify_workout_types(period_df)
+
+        # Separate by type for trend lines
+        runs_df = classified_df[classified_df['predicted_activity_type'] == 'real_run'] if 'predicted_activity_type' in classified_df.columns else pd.DataFrame()
+        walks_df = classified_df[classified_df['predicted_activity_type'].isin(['pup_walk', 'mixed'])] if 'predicted_activity_type' in classified_df.columns else pd.DataFrame()
 
         # Create performance trend chart
         try:
@@ -1035,7 +1078,7 @@ def render_performance_analysis_section(brief, time_period):
             st.info(f"Chart unavailable: {str(e)}")
 
     except Exception as e:
-        st.error(f"Error in performance analysis: {str(e)}")
+        st.error(f"Error in performance trends: {str(e)}")
 
 def render_consistency_analysis_section(brief, time_period):
     """Render comprehensive Consistency Analysis section with insights and visualizations"""
