@@ -621,7 +621,175 @@ def render_intelligence_brief_cards(brief, time_period='30d'):
 
     st.markdown("---")
 
+    render_personalized_goals_section(brief, time_period)
+
+    st.markdown("---")
+
     render_consistency_analysis_section(brief, time_period)
+
+def render_personalized_goals_section(brief, time_period):
+    """Render Personalized Goals section with goal setting and achievement tracking"""
+    from utils.goal_tracker import GoalTracker
+    from services.intelligence_service import FitnessIntelligenceService
+    from datetime import datetime, timedelta
+    import pandas as pd
+
+    st.markdown("### 🎯 Personalized Goals")
+
+    try:
+        # Load workout data
+        intelligence_service = FitnessIntelligenceService()
+        df = intelligence_service._load_workout_data()
+
+        if df.empty:
+            st.info("No workout data available for goal tracking.")
+            return
+
+        # Classify workouts
+        classified_df = intelligence_service.classify_workout_types(df)
+
+        # Calculate date range for current period
+        days_map = {'7d': 7, '30d': 30, '90d': 90, '365d': 365}
+        days_lookback = days_map.get(time_period, 30)
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days_lookback)
+
+        # Initialize goal tracker
+        tracker = GoalTracker(classified_df)
+
+        # Goal setting sliders in columns
+        st.markdown("**Set Your Goals**")
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            pace_goal = st.slider(
+                "🏃 Run Pace Goal (min/mi)",
+                min_value=6.0,
+                max_value=12.0,
+                value=9.5,
+                step=0.1,
+                help="Target average pace for runs (lower is faster)",
+                key="pace_goal_slider"
+            )
+
+        with col2:
+            distance_goal = st.slider(
+                "🚶 Walk Distance Goal (mi)",
+                min_value=0.5,
+                max_value=5.0,
+                value=2.0,
+                step=0.1,
+                help="Target minimum distance per walk",
+                key="distance_goal_slider"
+            )
+
+        with col3:
+            frequency_goal = st.slider(
+                "📅 Run Frequency Goal (days)",
+                min_value=1,
+                max_value=14,
+                value=7,
+                step=1,
+                help="Target: run at least once every X days",
+                key="frequency_goal_slider"
+            )
+
+        st.markdown("---")
+        st.markdown("**Goal Achievement**")
+
+        # Calculate goal achievements
+        col_run, col_walk, col_freq = st.columns(3)
+
+        # RUN PACE GOAL
+        with col_run:
+            pace_result = tracker.count_runs_below_pace(pace_goal, start_date, end_date)
+            runs_met = pace_result['runs_below_target']
+            total_runs = pace_result['total_runs']
+            pace_pct = pace_result['pct_below_target']
+            best_pace = pace_result['best_pace']
+
+            with st.container():
+                st.markdown("#### 🏃 Run Pace Achievement")
+                st.metric(
+                    "Runs Meeting Goal",
+                    f"{runs_met}/{total_runs}",
+                    delta=f"{pace_pct:.0f}% achieved",
+                    help=f"Runs with pace < {pace_goal} min/mi"
+                )
+                if best_pace:
+                    st.caption(f"🏆 Best: {best_pace:.1f} min/mi")
+                else:
+                    st.caption("No pace data available")
+
+                # Progress bar
+                if total_runs > 0:
+                    st.progress(pace_pct / 100.0)
+
+        # WALK DISTANCE GOAL
+        with col_walk:
+            walk_result = tracker.calculate_walk_goal_adherence(distance_goal, start_date, end_date)
+            days_met = walk_result['days_met_goal']
+            total_walk_days = walk_result['total_days_with_walks']
+            walk_pct = walk_result['pct_days_met_goal']
+            avg_dist = walk_result['avg_distance']
+
+            with st.container():
+                st.markdown("#### 🚶 Walk Distance Achievement")
+                st.metric(
+                    "Days Meeting Goal",
+                    f"{days_met}/{total_walk_days}",
+                    delta=f"{walk_pct:.0f}% achieved",
+                    help=f"Walk days with distance ≥ {distance_goal} mi"
+                )
+                if avg_dist > 0:
+                    st.caption(f"📊 Avg: {avg_dist:.1f} mi per walk day")
+                else:
+                    st.caption("No distance data available")
+
+                # Progress bar
+                if total_walk_days > 0:
+                    st.progress(walk_pct / 100.0)
+
+        # RUN FREQUENCY GOAL
+        with col_freq:
+            avg_gap = tracker.calculate_avg_days_between_runs(start_date, end_date)
+            days_since = tracker.days_since_last_run()
+
+            # Determine if meeting frequency goal
+            if avg_gap > 0:
+                freq_met = avg_gap <= frequency_goal
+                freq_pct = 100.0 if freq_met else (frequency_goal / avg_gap) * 100
+            else:
+                freq_met = False
+                freq_pct = 0.0
+
+            with st.container():
+                st.markdown("#### 📅 Run Frequency Achievement")
+
+                if avg_gap > 0:
+                    st.metric(
+                        "Avg Days Between Runs",
+                        f"{avg_gap:.1f} days",
+                        delta="✅ Meeting goal" if freq_met else f"⚠️ Goal: ≤{frequency_goal} days",
+                        delta_color="normal" if freq_met else "off",
+                        help=f"Target: run at least once every {frequency_goal} days"
+                    )
+                else:
+                    st.metric("Avg Days Between Runs", "N/A",
+                             help="Need at least 2 runs to calculate")
+
+                if days_since >= 0:
+                    st.caption(f"🕐 Last run: {days_since} day{'s' if days_since != 1 else ''} ago")
+                else:
+                    st.caption("🕐 No runs found")
+
+                # Progress bar (inverse - lower is better)
+                if avg_gap > 0 and frequency_goal > 0:
+                    progress_val = min(1.0, frequency_goal / avg_gap)
+                    st.progress(progress_val)
+
+    except Exception as e:
+        st.error(f"Error in personalized goals: {str(e)}")
 
 def render_performance_analysis_section(brief, time_period):
     """Render comprehensive Performance Analysis section with insights and visualizations"""
