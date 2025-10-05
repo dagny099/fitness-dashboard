@@ -676,13 +676,13 @@ def render_performance_analysis_section(brief, time_period):
             prev_runs_df = pd.DataFrame()
             prev_walks_df = pd.DataFrame()
 
-        # Render colored performance cards
+        # Render performance cards using Streamlit native components
         period_name = {'7d': 'Last 7 days', '30d': 'Last 30 days', '90d': 'Last 3 months', '365d': 'Last year'}.get(time_period, time_period)
         st.markdown(f"**{period_name} Performance by Activity Type**")
 
         col1, col2 = st.columns(2)
 
-        # BLUE CARD: Runs Performance
+        # RUN PERFORMANCE CARD (native Streamlit)
         with col1:
             if not runs_df.empty:
                 # Calculate current period stats
@@ -705,58 +705,46 @@ def render_performance_analysis_section(brief, time_period):
                 pace_delta = (run_avg_pace - prev_run_avg_pace) if prev_run_avg_pace else None
                 distance_delta = (run_avg_distance - prev_run_avg_distance) if prev_run_avg_distance else None
 
-                st.markdown(f"""
-                <div style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-                            border-left: 5px solid #1976d2; padding: 20px; border-radius: 10px; margin-bottom: 15px;">
-                    <h3 style="color: #1976d2; margin: 0 0 15px 0;">🏃 Run Performance</h3>
+                # Native Streamlit container
+                with st.container():
+                    st.markdown("### 🏃 Run Performance")
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                        <div>
-                            <div style="font-size: 0.85rem; color: #666;">Count</div>
-                            <div style="font-size: 1.3rem; font-weight: bold; color: #1976d2;">{run_count}</div>
-                            <div style="font-size: 0.75rem; color: {'#27ae60' if count_delta > 0 else '#e74c3c' if count_delta < 0 else '#666'};">
-                                {'+' if count_delta > 0 else ''}{count_delta} vs previous
-                            </div>
-                        </div>
-                        <div>
-                            <div style="font-size: 0.85rem; color: #666;">Total Distance</div>
-                            <div style="font-size: 1.3rem; font-weight: bold; color: #1976d2;">{run_distance:.1f} mi</div>
-                            <div style="font-size: 0.75rem; color: #666;">Avg: {run_avg_distance:.1f} mi</div>
-                        </div>
-                    </div>
+                    # Row 1: Count and Distance
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        st.metric("Count", run_count,
+                                 delta=f"{count_delta:+d} vs prev" if prev_run_count > 0 else None,
+                                 help="Number of runs in this period")
+                    with c2:
+                        st.metric("Total Distance", f"{run_distance:.1f} mi",
+                                 delta=f"Avg: {run_avg_distance:.1f} mi",
+                                 help="Total and average distance per run")
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                        <div>
-                            <div style="font-size: 0.85rem; color: #666;">Avg Pace</div>
-                            <div style="font-size: 1.3rem; font-weight: bold; color: #1976d2;">{run_avg_pace:.1f} min/mi</div>
-                            <div style="font-size: 0.75rem; color: {'#27ae60' if pace_delta and pace_delta < 0 else '#e74c3c' if pace_delta and pace_delta > 0 else '#666'};">
-                                {f"{pace_delta:+.1f} min/mi" if pace_delta else "No comparison"}
-                            </div>
-                        </div>
-                        <div>
-                            <div style="font-size: 0.85rem; color: #666;">Pace Range</div>
-                            <div style="font-size: 1.1rem; font-weight: bold; color: #1976d2;">{run_pace_range} min/mi</div>
-                        </div>
-                    </div>
+                    # Row 2: Pace (with inverse delta) and Range
+                    c3, c4 = st.columns(2)
+                    with c3:
+                        st.metric("Avg Pace", f"{run_avg_pace:.1f} min/mi",
+                                 delta=f"{pace_delta:.1f} min/mi" if pace_delta else None,
+                                 delta_color="inverse" if pace_delta else "off",
+                                 help="Lower pace is better (faster)")
+                    with c4:
+                        st.metric("Pace Range", f"{run_pace_range} min/mi",
+                                 help="Min-Max pace range")
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div>
-                            <div style="font-size: 0.85rem; color: #666;">Total Duration</div>
-                            <div style="font-size: 1.1rem; font-weight: bold; color: #1976d2;">{run_total_duration:.1f}h</div>
-                            <div style="font-size: 0.75rem; color: #666;">Avg: {run_avg_duration:.0f} min</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 0.85rem; color: #666;">Total Calories</div>
-                            <div style="font-size: 1.1rem; font-weight: bold; color: #1976d2;">{run_total_calories:,.0f}</div>
-                            <div style="font-size: 0.75rem; color: #666;">Avg: {run_avg_calories:.0f}</div>
-                        </div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                    # Row 3: Duration and Calories
+                    c5, c6 = st.columns(2)
+                    with c5:
+                        st.metric("Total Duration", f"{run_total_duration:.1f}h",
+                                 delta=f"Avg: {run_avg_duration:.0f} min")
+                    with c6:
+                        st.metric("Total Calories", f"{run_total_calories:,.0f}",
+                                 delta=f"Avg: {run_avg_calories:.0f}")
+
+                    st.divider()
             else:
                 st.info("🏃 No runs in this period")
 
-        # GREEN CARD: Walks Performance
+        # WALK PERFORMANCE CARD (native Streamlit)
         with col2:
             if not walks_df.empty:
                 # Calculate current period stats
@@ -779,54 +767,42 @@ def render_performance_analysis_section(brief, time_period):
                 pace_delta = (walk_avg_pace - prev_walk_avg_pace) if prev_walk_avg_pace else None
                 distance_delta = (walk_avg_distance - prev_walk_avg_distance) if prev_walk_avg_distance else None
 
-                st.markdown(f"""
-                <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-                            border-left: 5px solid #388e3c; padding: 20px; border-radius: 10px; margin-bottom: 15px;">
-                    <h3 style="color: #388e3c; margin: 0 0 15px 0;">🚶 Walk Performance</h3>
+                # Native Streamlit container
+                with st.container():
+                    st.markdown("### 🚶 Walk Performance")
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                        <div>
-                            <div style="font-size: 0.85rem; color: #666;">Count</div>
-                            <div style="font-size: 1.3rem; font-weight: bold; color: #388e3c;">{walk_count}</div>
-                            <div style="font-size: 0.75rem; color: {'#27ae60' if count_delta > 0 else '#e74c3c' if count_delta < 0 else '#666'};">
-                                {'+' if count_delta > 0 else ''}{count_delta} vs previous
-                            </div>
-                        </div>
-                        <div>
-                            <div style="font-size: 0.85rem; color: #666;">Total Distance</div>
-                            <div style="font-size: 1.3rem; font-weight: bold; color: #388e3c;">{walk_distance:.1f} mi</div>
-                            <div style="font-size: 0.75rem; color: #666;">Avg: {walk_avg_distance:.1f} mi</div>
-                        </div>
-                    </div>
+                    # Row 1: Count and Distance
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        st.metric("Count", walk_count,
+                                 delta=f"{count_delta:+d} vs prev" if prev_walk_count > 0 else None,
+                                 help="Number of walks in this period")
+                    with c2:
+                        st.metric("Total Distance", f"{walk_distance:.1f} mi",
+                                 delta=f"Avg: {walk_avg_distance:.1f} mi",
+                                 help="Total and average distance per walk")
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                        <div>
-                            <div style="font-size: 0.85rem; color: #666;">Avg Pace</div>
-                            <div style="font-size: 1.3rem; font-weight: bold; color: #388e3c;">{walk_avg_pace:.1f} min/mi</div>
-                            <div style="font-size: 0.75rem; color: {'#27ae60' if pace_delta and pace_delta < 0 else '#e74c3c' if pace_delta and pace_delta > 0 else '#666'};">
-                                {f"{pace_delta:+.1f} min/mi" if pace_delta else "No comparison"}
-                            </div>
-                        </div>
-                        <div>
-                            <div style="font-size: 0.85rem; color: #666;">Pace Range</div>
-                            <div style="font-size: 1.1rem; font-weight: bold; color: #388e3c;">{walk_pace_range} min/mi</div>
-                        </div>
-                    </div>
+                    # Row 2: Pace and Range
+                    c3, c4 = st.columns(2)
+                    with c3:
+                        st.metric("Avg Pace", f"{walk_avg_pace:.1f} min/mi",
+                                 delta=f"{pace_delta:.1f} min/mi" if pace_delta else None,
+                                 delta_color="inverse" if pace_delta else "off",
+                                 help="Lower pace is better (faster)")
+                    with c4:
+                        st.metric("Pace Range", f"{walk_pace_range} min/mi",
+                                 help="Min-Max pace range")
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div>
-                            <div style="font-size: 0.85rem; color: #666;">Total Duration</div>
-                            <div style="font-size: 1.1rem; font-weight: bold; color: #388e3c;">{walk_total_duration:.1f}h</div>
-                            <div style="font-size: 0.75rem; color: #666;">Avg: {walk_avg_duration:.0f} min</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 0.85rem; color: #666;">Total Calories</div>
-                            <div style="font-size: 1.1rem; font-weight: bold; color: #388e3c;">{walk_total_calories:,.0f}</div>
-                            <div style="font-size: 0.75rem; color: #666;">Avg: {walk_avg_calories:.0f}</div>
-                        </div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                    # Row 3: Duration and Calories
+                    c5, c6 = st.columns(2)
+                    with c5:
+                        st.metric("Total Duration", f"{walk_total_duration:.1f}h",
+                                 delta=f"Avg: {walk_avg_duration:.0f} min")
+                    with c6:
+                        st.metric("Total Calories", f"{walk_total_calories:,.0f}",
+                                 delta=f"Avg: {walk_avg_calories:.0f}")
+
+                    st.divider()
             else:
                 st.info("🚶 No walks in this period")
 
