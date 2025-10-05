@@ -38,26 +38,23 @@ def logout():
 login_page = st.Page("views/login.py", title="Log in", icon=":material/login:")
 logout_page = st.Page(logout, title="Log out", icon=":material/logout:")
 
+calendar = st.Page("views/calendar_more.py", title="Detailed Stats", icon="📅")
+dashboard_monthly = st.Page("views/dash.py", title="Monthly View", icon="📊")
+
+trends = st.Page("views/tools/trends.py", title="Trends", icon="📈")
+query_db = st.Page("views/fitness-overview.py", title="SQL Query", icon="🔍")
+# mapping = st.Page("views/tools/mapping.py", title="Mapping", icon="🗺️")  # Will return later
 intelligence = st.Page("views/intelligence.py", title="AI Intelligence", icon="🧠", default=True)
+history = st.Page("views/tools/history.py", title="Workout History", icon="📋")
 model_management = st.Page("views/model_management.py", title="Model Management", icon="🤖")
-
-calendar = st.Page("views/calendar_more.py", title="Detailed Stats", icon=":material/calendar_month:")
-dashboard_monthly = st.Page("views/dash.py", title="Monthly View", icon=":material/dashboard:")
-
-# bugs = st.Page("tools/bugs.py", title="Trends", icon=":material/data_exploration:")
-trends = st.Page("views/tools/trends.py", title="Trends", icon=":material/data_exploration:")
-query_db = st.Page("views/fitness-overview.py", title="SQL Query", icon=":material/database_search:")
-mapping = st.Page("views/tools/mapping.py", title="Mapping", icon=":material/add_location:")
-history = st.Page("views/tools/history.py", title="Workout History", icon=":material/table_chart:")
 choco_effect = st.Page("views/choco_effect.py", title="The Choco Effect", icon="🐕")
 
 if st.session_state.logged_in:
     pg = st.navigation(
         {
-            "Intelligence": [intelligence, model_management],
             "Calendar": [dashboard_monthly, calendar],
             "Reports": [choco_effect],
-            "Tools": [trends, mapping, query_db, history],
+            "Tools": [trends, query_db, intelligence, history, model_management],
             "Account": [logout_page],
         }
     )

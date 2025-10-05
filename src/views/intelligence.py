@@ -216,7 +216,7 @@ def render_time_period_selector_and_filter_info(brief):
 
 def render_data_visibility_expander(brief, time_period):
     """Render expandable section showing the actual workout data being analyzed"""
-    with st.expander("📊 View Selected Data", expanded=True):
+    with st.expander("📊 View Selected Data", expanded=False):
         # Get the summary data (needed for warning at end)
         total_workouts = brief.get('recent_workouts_analyzed', 0)
 
@@ -619,17 +619,15 @@ def render_intelligence_brief_cards(brief, time_period='30d'):
     # New analytical sections with insights and visualizations
     render_performance_analysis_section(brief, time_period)
 
-    st.markdown("---")
-
     render_personalized_goals_section(brief, time_period)
 
     st.markdown("---")
 
-    render_performance_trends_section(brief, time_period)
+    render_consistency_analysis_section(brief, time_period)
 
     st.markdown("---")
 
-    render_consistency_analysis_section(brief, time_period)
+    render_performance_trends_section(brief, time_period)
 
     st.markdown("---")
 
@@ -760,7 +758,7 @@ def render_kmeans_scatter_plot(brief, time_period):
     st.markdown("*Understanding how the AI separates Runs from Walks*")
 
     try:
-        # Load workout data
+        # Load ALL workout data
         intelligence_service = FitnessIntelligenceService()
         df = intelligence_service._load_workout_data()
 
@@ -768,7 +766,7 @@ def render_kmeans_scatter_plot(brief, time_period):
             st.info("No workout data available for visualization.")
             return
 
-        # Filter by time period
+        # Determine current period for highlighting
         days_map = {'7d': 7, '30d': 30, '90d': 90, '365d': 365}
         days_lookback = days_map.get(time_period, 30)
         end_date = datetime.now()
@@ -777,25 +775,22 @@ def render_kmeans_scatter_plot(brief, time_period):
         if df['workout_date'].dtype == 'object':
             df['workout_date'] = pd.to_datetime(df['workout_date'])
 
-        period_df = df[df['workout_date'] >= start_date].copy()
+        # Classify ALL workouts
+        all_classified_df = intelligence_service.classify_workout_types(df)
 
-        if period_df.empty:
-            st.info("No workouts found in the selected time period.")
-            return
-
-        # Get classified data with cluster assignments
-        classified_df = intelligence_service.classify_workout_types(period_df)
-
-        if 'predicted_activity_type' not in classified_df.columns:
+        if 'predicted_activity_type' not in all_classified_df.columns:
             st.warning("Classification data not available.")
             return
 
-        # Prepare data for clustering visualization
-        # Filter out outliers for cluster center calculation
-        non_outliers = classified_df[classified_df['predicted_activity_type'] != 'outlier'].copy()
+        # Mark workouts in current period
+        all_classified_df['in_current_period'] = all_classified_df['workout_date'] >= start_date
+
+        # Prepare data for clustering visualization (use current period for cluster centers)
+        period_df = all_classified_df[all_classified_df['in_current_period']].copy()
+        non_outliers = period_df[period_df['predicted_activity_type'] != 'outlier'].copy()
 
         if len(non_outliers) < 2:
-            st.warning("Not enough data for clustering visualization.")
+            st.warning("Not enough data in current period for clustering visualization.")
             return
 
         # Prepare features for K-means
@@ -828,44 +823,85 @@ def render_kmeans_scatter_plot(brief, time_period):
         # Create figure with cream background
         fig = go.Figure()
 
-        # Add scatter points for each activity type
-        for activity_type in classified_df['predicted_activity_type'].unique():
-            type_df = classified_df[classified_df['predicted_activity_type'] == activity_type]
+        # Add scatter points for each activity type (ALL workouts)
+        for activity_type in all_classified_df['predicted_activity_type'].unique():
+            type_df = all_classified_df[all_classified_df['predicted_activity_type'] == activity_type]
 
-            # Prepare hover text
-            hover_text = []
-            for idx, row in type_df.iterrows():
-                hover_text.append(
-                    f"Date: {row['workout_date'].strftime('%Y-%m-%d')}<br>"
-                    f"Type: {activity_type}<br>"
-                    f"Distance: {row['distance_mi']:.2f} mi<br>"
-                    f"Pace: {row['avg_pace']:.1f} min/mi<br>"
-                    f"Duration: {row['duration_sec']/60:.0f} min<br>"
-                    f"Calories: {row.get('kcal_burned', 0):.0f}"
-                )
+            # Separate current period from historical
+            current_type_df = type_df[type_df['in_current_period']]
+            historical_type_df = type_df[~type_df['in_current_period']]
 
-            # Use different markers for outliers
+            # Determine marker style
             if activity_type == 'outlier':
                 marker_symbol = 'x'
-                marker_size = 12
+                marker_size = 10
             else:
                 marker_symbol = 'circle'
-                marker_size = 8
+                marker_size = 9
 
-            fig.add_trace(go.Scatter(
-                x=type_df['distance_mi'],
-                y=type_df['avg_pace'],
-                mode='markers',
-                name=activity_type.replace('_', ' ').title(),
-                marker=dict(
-                    color=color_map.get(activity_type, '#999999'),
-                    size=marker_size,
-                    symbol=marker_symbol,
-                    line=dict(width=1, color='white')
-                ),
-                text=hover_text,
-                hovertemplate='%{text}<extra></extra>'
-            ))
+            base_color = color_map.get(activity_type, '#999999')
+
+            # Add HISTORICAL workouts (open markers with borders)
+            if not historical_type_df.empty:
+                hover_text_hist = []
+                for idx, row in historical_type_df.iterrows():
+                    hover_text_hist.append(
+                        f"Date: {row['workout_date'].strftime('%Y-%m-%d')}<br>"
+                        f"Type: {activity_type}<br>"
+                        f"Distance: {row['distance_mi']:.2f} mi<br>"
+                        f"Pace: {row['avg_pace']:.1f} min/mi<br>"
+                        f"Duration: {row['duration_sec']/60:.0f} min<br>"
+                        f"Calories: {row.get('kcal_burned', 0):.0f}<br>"
+                        f"<i>(Historical)</i>"
+                    )
+
+                fig.add_trace(go.Scatter(
+                    x=historical_type_df['distance_mi'],
+                    y=historical_type_df['avg_pace'],
+                    mode='markers',
+                    name=f'{activity_type.replace("_", " ").title()} (Historical)',
+                    marker=dict(
+                        color='rgba(255,255,255,0)',  # Transparent fill
+                        size=marker_size,
+                        symbol=marker_symbol,
+                        line=dict(width=2, color=base_color)
+                    ),
+                    text=hover_text_hist,
+                    hovertemplate='%{text}<extra></extra>',
+                    showlegend=True,
+                    legendgroup=activity_type
+                ))
+
+            # Add CURRENT PERIOD workouts (filled markers)
+            if not current_type_df.empty:
+                hover_text_curr = []
+                for idx, row in current_type_df.iterrows():
+                    hover_text_curr.append(
+                        f"Date: {row['workout_date'].strftime('%Y-%m-%d')}<br>"
+                        f"Type: {activity_type}<br>"
+                        f"Distance: {row['distance_mi']:.2f} mi<br>"
+                        f"Pace: {row['avg_pace']:.1f} min/mi<br>"
+                        f"Duration: {row['duration_sec']/60:.0f} min<br>"
+                        f"Calories: {row.get('kcal_burned', 0):.0f}<br>"
+                        f"<b>(Current Period)</b>"
+                    )
+
+                fig.add_trace(go.Scatter(
+                    x=current_type_df['distance_mi'],
+                    y=current_type_df['avg_pace'],
+                    mode='markers',
+                    name=f'{activity_type.replace("_", " ").title()} (Current)',
+                    marker=dict(
+                        color=base_color,
+                        size=marker_size,
+                        symbol=marker_symbol,
+                        line=dict(width=1, color='white')
+                    ),
+                    text=hover_text_curr,
+                    hovertemplate='%{text}<extra></extra>',
+                    showlegend=True,
+                    legendgroup=activity_type
+                ))
 
         # Add cluster centers as stars
         for i, center in enumerate(cluster_centers):
@@ -927,15 +963,16 @@ def render_kmeans_scatter_plot(brief, time_period):
         st.markdown("""
         #### 📖 How to Read This Chart
 
-        - **Each dot** represents one workout, positioned by its pace (speed) and distance
-        - **Stars (⭐)** show cluster centers - the AI groups workouts near each star
-        - **Colors** indicate the workout type assigned by the K-means algorithm:
+        - **Filled dots**: Workouts in the current selected period
+        - **Open circles**: Historical workouts (all-time data for context)
+        - **Stars (⭐)**: Cluster centers based on current period - the AI groups workouts near each star
+        - **Colors** indicate workout type by the K-means algorithm:
           - 🔵 **Blue**: Runs (faster pace, moderate distance)
           - 🟢 **Green**: Walks (slower pace, varied distance)
           - 🟠 **Orange**: Mixed activities (between runs and walks)
           - ❌ **Red X**: Outliers (unusual workouts that don't fit patterns)
 
-        💡 **Key Insight**: The AI doesn't just look at pace alone - it considers both pace AND distance together to make smart classifications. This is why some slower "runs" might be classified differently than expected - the algorithm sees the full picture!
+        💡 **Key Insight**: The AI doesn't just look at pace alone - it considers both pace AND distance together to make smart classifications. Historical data (open circles) shows your complete workout history, while filled dots highlight the current analysis period.
         """)
 
     except Exception as e:
