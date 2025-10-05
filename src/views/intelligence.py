@@ -1081,12 +1081,10 @@ def render_performance_trends_section(brief, time_period):
         st.error(f"Error in performance trends: {str(e)}")
 
 def render_consistency_analysis_section(brief, time_period):
-    """Render comprehensive Consistency Analysis section with insights and visualizations"""
+    """Render actionable Consistency Analysis with frequency trends, patterns, streaks, and gaps"""
     st.subheader("🔄 Consistency Analysis")
 
-    consistency_data = brief.get('consistency_intelligence', {})
-
-    # Get actual workout data for visualization
+    # Get actual workout data
     from services.intelligence_service import FitnessIntelligenceService
     intelligence_service = FitnessIntelligenceService()
 
@@ -1099,6 +1097,7 @@ def render_consistency_analysis_section(brief, time_period):
 
         from datetime import datetime, timedelta
         import pandas as pd
+        import numpy as np
 
         days_map = {'7d': 7, '30d': 30, '90d': 90, '365d': 365}
         days_lookback = days_map.get(time_period, 30)
@@ -1114,119 +1113,158 @@ def render_consistency_analysis_section(brief, time_period):
             st.info("No workouts found in the selected time period.")
             return
 
-        # Create two columns: insights on left, visualization on right
-        col_insights, col_visual = st.columns([3, 2])
+        # Classify workouts by type
+        classified_df = intelligence_service.classify_workout_types(period_df)
+        runs_df = classified_df[classified_df['predicted_activity_type'] == 'real_run'] if 'predicted_activity_type' in classified_df.columns else pd.DataFrame()
+        walks_df = classified_df[classified_df['predicted_activity_type'].isin(['pup_walk', 'mixed'])] if 'predicted_activity_type' in classified_df.columns else pd.DataFrame()
 
-        with col_insights:
-            st.markdown("**📊 Consistency Insights**")
+        # Get previous period for comparison
+        previous_start = start_date - timedelta(days=days_lookback)
+        previous_period_df = df[(df['workout_date'] >= previous_start) & (df['workout_date'] < start_date)].copy()
 
-            # Get consistency score
-            consistency_score_data = consistency_data.get('consistency_score', 0)
-            if isinstance(consistency_score_data, dict):
-                consistency_score = consistency_score_data.get('consistency_score', 0)
-            else:
-                consistency_score = consistency_score_data
+        if not previous_period_df.empty:
+            previous_classified_df = intelligence_service.classify_workout_types(previous_period_df)
+            prev_runs_df = previous_classified_df[previous_classified_df['predicted_activity_type'] == 'real_run'] if 'predicted_activity_type' in previous_classified_df.columns else pd.DataFrame()
+            prev_walks_df = previous_classified_df[previous_classified_df['predicted_activity_type'].isin(['pup_walk', 'mixed'])] if 'predicted_activity_type' in previous_classified_df.columns else pd.DataFrame()
+        else:
+            prev_runs_df = pd.DataFrame()
+            prev_walks_df = pd.DataFrame()
 
-            # Data source clarity
-            total_workouts = len(period_df)
-            workout_frequency = (total_workouts / days_lookback) * 7 if days_lookback > 0 else 0
+        # Two-column layout: Frequency & Patterns (left) | Streaks & Gaps (right)
+        col_frequency, col_streaks = st.columns(2)
 
-            st.markdown(f"*Analyzing {total_workouts} workouts over {days_lookback} days*")
+        with col_frequency:
+            st.markdown("### 📊 Frequency & Patterns")
 
-            # Consistency score with breakdown
-            if consistency_score >= 80:
-                level = "Excellent"
-                color = "#27ae60"
-                insight = "Top-tier consistency - excellent rhythm!"
-            elif consistency_score >= 60:
-                level = "Good"
-                color = "#f39c12"
-                insight = "Solid consistency with room for optimization"
-            else:
-                level = "Building"
-                color = "#e74c3c"
-                insight = "Building consistency habits"
+            # Calculate frequency metrics
+            run_count = len(runs_df)
+            walk_count = len(walks_df)
+            run_freq = (run_count / days_lookback) * 7 if days_lookback > 0 else 0
+            walk_freq = (walk_count / days_lookback) * 7 if days_lookback > 0 else 0
 
-            st.metric(
-                label="Overall Consistency Score",
-                value=f"{consistency_score:.0f}/100",
-                delta=f"{level} level",
-                help="Composite score based on frequency, timing patterns, performance stability, and streaks"
-            )
+            prev_run_count = len(prev_runs_df)
+            prev_walk_count = len(prev_walks_df)
+            prev_run_freq = (prev_run_count / days_lookback) * 7 if days_lookback > 0 else 0
+            prev_walk_freq = (prev_walk_count / days_lookback) * 7 if days_lookback > 0 else 0
 
-            st.metric(
-                label="Workout Frequency",
-                value=f"{workout_frequency:.1f}/week",
-                help="Average workouts per week in this period"
-            )
+            # Display frequency with comparisons
+            st.markdown('<h4 style="color: #1976d2;">🏃 Run Frequency</h4>', unsafe_allow_html=True)
+            run_freq_delta = run_freq - prev_run_freq if prev_run_freq > 0 else 0
+            st.metric("Runs per Week", f"{run_freq:.1f}",
+                     delta=f"{run_freq_delta:+.1f} vs prev" if prev_run_count > 0 else None,
+                     help=f"{run_count} runs in last {days_lookback} days")
 
-            # Consistency score breakdown
-            st.markdown(f"""
-            <div style="padding: 10px; background: {color}15; border-radius: 8px; border-left: 3px solid {color}; margin: 10px 0;">
-                <div style="font-size: 0.9rem; color: {color}; font-weight: 600;">🏆 Consistency Breakdown:</div>
-                <div style="font-size: 0.85rem; margin-top: 5px; line-height: 1.4;">
-                    • <strong>Frequency:</strong> How often you work out<br>
-                    • <strong>Timing:</strong> Regular day-of-week patterns<br>
-                    • <strong>Performance:</strong> Stable effort levels<br>
-                    • <strong>Streaks:</strong> Maintaining workout chains
-                </div>
-                <div style="font-style: italic; margin-top: 8px; color: #666;">{insight}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown('<h4 style="color: #388e3c;">🚶 Walk Frequency</h4>', unsafe_allow_html=True)
+            walk_freq_delta = walk_freq - prev_walk_freq if prev_walk_freq > 0 else 0
+            st.metric("Walks per Week", f"{walk_freq:.1f}",
+                     delta=f"{walk_freq_delta:+.1f} vs prev" if prev_walk_count > 0 else None,
+                     help=f"{walk_count} walks in last {days_lookback} days")
 
-        with col_visual:
-            st.markdown("**📅 Workout Rhythm Patterns**")
+            # Day-of-week heatmap
+            st.markdown("**📅 Day-of-Week Distribution**")
 
-            try:
-                import plotly.express as px
-                import plotly.graph_objects as go
+            period_df['day_of_week'] = period_df['workout_date'].dt.day_name()
+            day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            day_counts = period_df['day_of_week'].value_counts().reindex(day_order, fill_value=0)
 
-                # Create workout frequency by day of week
-                period_df['day_of_week'] = period_df['workout_date'].dt.day_name()
-                day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            # Find peak workout days
+            if day_counts.max() > 0:
+                peak_days = day_counts[day_counts == day_counts.max()].index.tolist()
+                peak_days_str = ", ".join(peak_days)
+                st.info(f"🔥 Peak workout days: **{peak_days_str}** ({int(day_counts.max())} workouts)")
 
-                day_counts = period_df['day_of_week'].value_counts().reindex(day_order, fill_value=0)
+            # Simple visual heatmap using emojis
+            heatmap_display = []
+            for day in day_order:
+                count = day_counts.get(day, 0)
+                if count == 0:
+                    emoji = "⚪"
+                elif count <= 2:
+                    emoji = "🟡"
+                elif count <= 4:
+                    emoji = "🟠"
+                else:
+                    emoji = "🔴"
+                heatmap_display.append(f"{day[:3]}: {emoji}")
 
-                # Create bar chart of workouts by day of week
-                fig = px.bar(
-                    x=day_counts.index,
-                    y=day_counts.values,
-                    title='Workouts by Day of Week',
-                    labels={'x': 'Day of Week', 'y': 'Number of Workouts'},
-                    color=day_counts.values,
-                    color_continuous_scale='Blues'
-                )
+            st.markdown(" | ".join(heatmap_display))
+            st.caption("⚪ None | 🟡 1-2 | 🟠 3-4 | 🔴 5+")
 
-                fig.update_layout(
-                    height=250,
-                    margin=dict(l=0, r=0, t=30, b=40),
-                    showlegend=False
-                )
-                fig.update_xaxes(tickangle=45)
-                st.plotly_chart(fig, use_container_width=True)
+        with col_streaks:
+            st.markdown("### 🔥 Streaks & Gaps")
 
-                # Create calendar heatmap if we have enough data
-                if len(period_df) > 5:
-                    st.markdown("**📈 Workout Calendar**")
+            # Calculate streaks and gaps
+            if not period_df.empty:
+                sorted_dates = sorted(period_df['workout_date'].dt.date.unique())
 
-                    # Create a simple workout frequency indicator
-                    period_df['date_only'] = period_df['workout_date'].dt.date
-                    daily_counts = period_df.groupby('date_only').size()
+                # Current streak calculation
+                current_streak = 0
+                today = datetime.now().date()
 
-                    # Show recent workout pattern
-                    recent_days = pd.date_range(start=start_date.date(), end=end_date.date(), freq='D')
-                    workout_pattern = []
-                    for day in recent_days[-14:]:  # Show last 14 days
-                        count = daily_counts.get(day, 0)
-                        workout_pattern.append(f"{'🟢' if count > 0 else '⚪'}")
+                # Check if there's a workout today or yesterday (active streak)
+                if len(sorted_dates) > 0:
+                    last_workout = sorted_dates[-1]
+                    days_since_last = (today - last_workout).days
 
-                    st.markdown(f"**Last 14 days:** {''.join(workout_pattern)}")
-                    st.caption("🟢 = Workout day, ⚪ = Rest day")
+                    if days_since_last <= 1:  # Active streak (today or yesterday)
+                        current_streak = 1
+                        check_date = last_workout - timedelta(days=1)
 
-            except ImportError:
-                st.info("Install plotly for interactive charts")
-            except Exception as e:
-                st.info(f"Visualization unavailable: {str(e)}")
+                        for i in range(len(sorted_dates) - 2, -1, -1):
+                            if sorted_dates[i] == check_date:
+                                current_streak += 1
+                                check_date -= timedelta(days=1)
+                            elif (check_date - sorted_dates[i]).days <= 1:
+                                check_date = sorted_dates[i] - timedelta(days=1)
+                            else:
+                                break
+
+                    st.metric("Current Streak",
+                             f"{current_streak} days 🔥" if current_streak > 0 else "No active streak",
+                             help="Consecutive days with at least one workout")
+
+                    # Longest streak in period
+                    longest_streak = 1
+                    temp_streak = 1
+
+                    for i in range(1, len(sorted_dates)):
+                        gap = (sorted_dates[i] - sorted_dates[i-1]).days
+                        if gap == 1:
+                            temp_streak += 1
+                            longest_streak = max(longest_streak, temp_streak)
+                        else:
+                            temp_streak = 1
+
+                    st.metric("Longest Streak", f"{longest_streak} days",
+                             help=f"Longest consecutive workout streak in last {days_lookback} days")
+
+                    # Gap analysis
+                    gaps = []
+                    for i in range(1, len(sorted_dates)):
+                        gap = (sorted_dates[i] - sorted_dates[i-1]).days - 1
+                        if gap > 0:
+                            gaps.append(gap)
+
+                    if gaps:
+                        longest_gap = max(gaps)
+                        avg_gap = np.mean(gaps)
+
+                        st.metric("Longest Rest Gap", f"{longest_gap} days",
+                                 help="Longest period without a workout")
+                        st.metric("Avg Rest Days", f"{avg_gap:.1f} days",
+                                 help="Average rest days between workouts")
+                    else:
+                        st.info("No rest days - working out every day!")
+
+                    # Workout vs Rest day ratio
+                    workout_days = len(sorted_dates)
+                    total_days = days_lookback
+                    rest_days = total_days - workout_days
+                    workout_pct = (workout_days / total_days) * 100
+
+                    st.metric("Active Days", f"{workout_days}/{total_days}",
+                             delta=f"{workout_pct:.0f}% of period",
+                             help="Days with at least one workout")
 
     except Exception as e:
         st.error(f"Error in consistency analysis: {str(e)}")
