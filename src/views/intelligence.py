@@ -19,6 +19,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from services.intelligence_service import FitnessIntelligenceService
 from services.database_service import DatabaseService
 from utils.consistency_analyzer import ConsistencyAnalyzer
+from ml.model_manager import model_manager
 
 # Page configuration
 # st.set_page_config(
@@ -746,12 +747,11 @@ def determine_outlier_reason(workout, all_workouts):
     return " | ".join(reasons)
 
 def render_kmeans_scatter_plot(brief, time_period):
-    """Render beautiful K-means scatter plot with cream background explaining the classification model"""
+    """Render beautiful K-means scatter plot showing the trained model's cluster centers and workout classifications"""
     from services.intelligence_service import FitnessIntelligenceService
     from datetime import datetime, timedelta
     import pandas as pd
     import plotly.graph_objects as go
-    from sklearn.cluster import KMeans
     import numpy as np
 
     st.markdown("## 🤖 K-means Clustering Visualization")
@@ -775,7 +775,8 @@ def render_kmeans_scatter_plot(brief, time_period):
         if df['workout_date'].dtype == 'object':
             df['workout_date'] = pd.to_datetime(df['workout_date'])
 
-        # Classify ALL workouts to get the true clustering
+        # Classify ALL workouts using the trained model
+        # This ensures consistency between visualization and actual classification
         all_classified_df = intelligence_service.classify_workout_types(df)
 
         if 'predicted_activity_type' not in all_classified_df.columns:
@@ -783,41 +784,29 @@ def render_kmeans_scatter_plot(brief, time_period):
             return
 
         # Mark workouts in current period for visualization
+        # This enables temporal distinction in the scatter plot (filled vs open circles)
         all_classified_df['in_current_period'] = all_classified_df['workout_date'] >= start_date
 
-        # Prepare data for K-means clustering (use ALL non-outlier data)
-        non_outliers_all = all_classified_df[all_classified_df['predicted_activity_type'] != 'outlier'].copy()
-
-        if len(non_outliers_all) < 2:
-            st.warning("Not enough data for clustering visualization.")
+        # Access the trained model to get actual cluster centers
+        # This shows users the TRUE decision boundaries used for classification
+        if not model_manager.is_model_available():
+            st.error("⚠️ No trained classification model available. Please train a model first.")
+            st.info("The classification model needs to be trained on your workout history before visualization can be displayed.")
             return
 
-        # Prepare features for K-means on ALL data
-        X_all = non_outliers_all[['avg_pace', 'distance_mi']].values
+        trained_model = model_manager.get_current_model()
 
-        # Determine optimal number of clusters based on unique activity types
-        unique_types = non_outliers_all['predicted_activity_type'].nunique()
-        n_clusters = min(unique_types, 3)
+        # Extract cluster centers from trained model and convert to original scale
+        # The model stores centers in scaled space (StandardScaler normalized)
+        # We inverse transform to get centers in actual units (min/mi, miles)
+        cluster_centers_scaled = trained_model.kmeans.cluster_centers_
+        cluster_centers_original = trained_model.scaler.inverse_transform(cluster_centers_scaled)
 
-        # Fit K-means on ALL data to get true cluster centers
-        kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-        cluster_labels_all = kmeans.fit_predict(X_all)
-        cluster_centers = kmeans.cluster_centers_
+        # Get the activity type mapping from the trained model
+        # This tells us which cluster represents runs, walks, and mixed activities
+        cluster_to_activity_map = trained_model.cluster_to_activity_map
 
-        # Assign cluster labels to the dataframe for mapping
-        non_outliers_all['cluster_label'] = cluster_labels_all
-
-        # Map cluster labels to activity types based on most common type in each cluster
-        cluster_to_type = {}
-        for i in range(n_clusters):
-            cluster_workouts = non_outliers_all[non_outliers_all['cluster_label'] == i]
-            if len(cluster_workouts) > 0:
-                most_common_type = cluster_workouts['predicted_activity_type'].mode()[0]
-                cluster_to_type[i] = most_common_type
-            else:
-                cluster_to_type[i] = f'Cluster {i}'
-
-        # Color mapping
+        # Color mapping for visualization
         color_map = {
             'real_run': '#1976d2',  # Blue
             'pup_walk': '#388e3c',  # Green
@@ -825,33 +814,66 @@ def render_kmeans_scatter_plot(brief, time_period):
             'outlier': '#d32f2f'    # Red
         }
 
-        # Calculate optimal axis ranges for maximum cluster separation
-        pace_min = all_classified_df['avg_pace'].quantile(0.05)
-        pace_max = all_classified_df['avg_pace'].quantile(0.95)
+        # Extract cluster centers for Run and Walk activity types from trained model
+        # These represent the model's learned "prototypical" run and walk workouts
+        # NOTE: cluster_to_activity_map keys may be strings (JSON serialization converts int→str)
+        run_center_pace = 0
+        run_center_dist = 0
+        walk_center_pace = 0
+        walk_center_dist = 0
+
+        # Iterate through model's cluster mapping to find Run and Walk centers
+        for cluster_id_key, activity_type in cluster_to_activity_map.items():
+            # Handle both int and string cluster IDs (JSON serialization issue)
+            cluster_idx = int(cluster_id_key) if isinstance(cluster_id_key, str) else cluster_id_key
+
+            # Extract center coordinates (pace, distance) from inverse-transformed centers
+            center_pace = cluster_centers_original[cluster_idx][0]  # avg_pace in min/mi
+            center_dist = cluster_centers_original[cluster_idx][1]  # distance_mi
+
+            # Assign to appropriate activity type
+            if activity_type == 'real_run':
+                run_center_pace = center_pace
+                run_center_dist = center_dist
+            elif activity_type == 'pup_walk':
+                walk_center_pace = center_pace
+                walk_center_dist = center_dist
+
+        # Calculate optimal axis ranges ensuring cluster centers are included
+        pace_values = [all_classified_df['avg_pace'].quantile(0.05),
+                       all_classified_df['avg_pace'].quantile(0.95),
+                       run_center_pace, walk_center_pace]
+        pace_min = min([p for p in pace_values if p > 0])
+        pace_max = max(pace_values)
         pace_padding = (pace_max - pace_min) * 0.15
 
-        dist_min = max(0, all_classified_df['distance_mi'].quantile(0.05) - 0.5)
-        dist_max = all_classified_df['distance_mi'].quantile(0.95)
+        dist_values = [all_classified_df['distance_mi'].quantile(0.05),
+                       all_classified_df['distance_mi'].quantile(0.95),
+                       run_center_dist, walk_center_dist]
+        dist_min = max(0, min([d for d in dist_values if d > 0]) - 0.5)
+        dist_max = max(dist_values)
         dist_padding = (dist_max - dist_min) * 0.15
 
         # Create figure with clean white background
         fig = go.Figure()
 
         # Add scatter points - single trace per activity type with opacity for period distinction
+        # Visual encoding:
+        # - Color: Activity type (blue=run, green=walk, orange=mixed, red=outlier)
+        # - Opacity: Temporal period (1.0=filtered/current, 0.3=historical)
+        # - This creates "filled vs open" appearance for user's requested visualization
         for activity_type in sorted(all_classified_df['predicted_activity_type'].unique()):
             type_df = all_classified_df[all_classified_df['predicted_activity_type'] == activity_type].copy()
 
-            # Determine marker style
-            if activity_type == 'outlier':
-                marker_symbol = 'x'
-                marker_size = 10
-            else:
-                marker_symbol = 'circle'
-                marker_size = 9
+            # All activity types use circle markers for consistency
+            # Outliers distinguished by color (red) rather than symbol shape
+            marker_symbol = 'circle'
+            marker_size = 8 if activity_type == 'outlier' else 9
 
             base_color = color_map.get(activity_type, '#999999')
 
             # Create opacity array: solid for current period, faded for historical
+            # Solid (1.0) = "filled circles", Faded (0.3) = "open circles" appearance
             opacity_values = type_df['in_current_period'].map({True: 1.0, False: 0.3}).tolist()
 
             # Prepare hover text
@@ -886,47 +908,57 @@ def render_kmeans_scatter_plot(brief, time_period):
                 showlegend=True
             ))
 
-        # Add cluster centers for the 2 PRIMARY activity types only (Runs and Walks)
-        # This shows the main K-means separation between running and walking activities
-        primary_types = ['real_run', 'pup_walk']
+        # Add cluster centers from the trained model for Run and Walk activity types
+        # These stars show where the ML model's "prototypical" run and walk workouts are located
+        # This validates that predictions align with the trained model's decision boundaries
+        # Pedagogical purpose: Users can see if their filtered workouts cluster around the expected centers
+        cluster_centers_data = [
+            ('real_run', run_center_pace, run_center_dist, "Learned Run Center"),
+            ('pup_walk', walk_center_pace, walk_center_dist, "Learned Walk Center")
+        ]
 
-        for activity_type in primary_types:
-            type_data = all_classified_df[all_classified_df['predicted_activity_type'] == activity_type]
-
-            if not type_data.empty:
-                avg_pace = type_data['avg_pace'].mean()
-                avg_distance = type_data['distance_mi'].mean()
+        for activity_type, avg_pace, avg_distance, display_name in cluster_centers_data:
+            if avg_pace > 0 and avg_distance > 0:  # Only add if valid data exists
                 cluster_color = color_map.get(activity_type, '#999999')
 
-                # Use simple naming without emoji redundancy
-                display_name = "Run Center" if activity_type == 'real_run' else "Walk Center"
+                # Make stars more prominent - larger with white halo
+                # Use different text positions to avoid dot collision
+                text_position = 'bottom center' if activity_type == 'pup_walk' else 'top center'
+                star_size = 35 if activity_type == 'pup_walk' else 32  # Walk star slightly larger (denser region)
+                label_text = display_name.replace(' Center', '')
 
+                # Add star marker with dark gray text label (no shadow)
                 fig.add_trace(go.Scatter(
                     x=[avg_pace],  # avg_pace (X-axis)
                     y=[avg_distance],  # distance_mi (Y-axis)
                     mode='markers+text',
-                    name=f'⭐ {display_name}',
+                    name=display_name,
                     marker=dict(
                         symbol='star',
-                        size=28,
+                        size=star_size,
                         color=cluster_color,
-                        line=dict(width=3, color='gold')
+                        line=dict(width=4, color='white')  # Thicker white outline for visibility
                     ),
-                    text=[display_name.replace(' Center', '')],
-                    textposition='top center',
-                    textfont=dict(size=12, color=cluster_color, family='Arial Black'),
+                    text=[label_text],
+                    textposition=text_position,
+                    textfont=dict(
+                        size=14,
+                        color='#333333',  # Dark gray for better readability
+                        family='Arial Black'
+                    ),
                     hovertemplate=f'<b>{display_name}</b><br>Pace: {avg_pace:.1f} min/mi<br>Distance: {avg_distance:.2f} mi<extra></extra>',
                     showlegend=True
                 ))
 
-        # Update layout with clean white background and optimal scaling
+        # Update layout with single unified beige background color
         fig.update_layout(
-            plot_bgcolor='#ffffff',  # Clean white background
-            paper_bgcolor='#ffffff',
+            plot_bgcolor='rgba(222, 218, 208, 1.0)',  # Lighter beige for both areas
+            paper_bgcolor='rgba(222, 218, 208, 1.0)',
             xaxis=dict(
                 title='<b>Average Pace (min/mile)</b>',
-                titlefont=dict(size=14),
-                gridcolor='#e0e0e0',
+                titlefont=dict(size=14, color='#000000'),  # Dark text for contrast
+                tickfont=dict(color='#000000'),
+                gridcolor='#d0d0d0',
                 showgrid=True,
                 zeroline=False,
                 range=[pace_min - pace_padding, pace_max + pace_padding],
@@ -934,48 +966,87 @@ def render_kmeans_scatter_plot(brief, time_period):
             ),
             yaxis=dict(
                 title='<b>Distance (miles)</b>',
-                titlefont=dict(size=14),
-                gridcolor='#e0e0e0',
+                titlefont=dict(size=14, color='#000000'),  # Dark text for contrast
+                tickfont=dict(color='#000000'),
+                gridcolor='#d0d0d0',
                 showgrid=True,
                 zeroline=False,
                 range=[dist_min, dist_max + dist_padding],
                 autorange=False  # Use explicit range for optimal separation
             ),
             legend=dict(
-                orientation='h',
-                yanchor='bottom',
-                y=-0.25,
-                xanchor='center',
-                x=0.5,
-                bgcolor='rgba(255,255,255,0.95)',
+                title=dict(text='<b>Activity Legend:</b>', font=dict(size=12, color='#000000')),
+                orientation='v',  # Vertical legend
+                yanchor='top',
+                y=0.98,
+                xanchor='right',
+                x=0.98,
+                bgcolor='rgba(255, 255, 255, 0.95)',
                 bordercolor='#cccccc',
                 borderwidth=1,
-                font=dict(size=11)
+                font=dict(size=11, color='#000000')
             ),
             hovermode='closest',
             height=550,
-            margin=dict(l=70, r=30, t=50, b=100),
-            font=dict(size=12)
+            margin=dict(l=70, r=30, t=50, b=80),
+            font=dict(size=12, color='#000000')
         )
 
         st.plotly_chart(fig, use_container_width=True)
 
-        # Explanation text with legend note
+        # Comprehensive explanation section replacing the table
+        st.markdown("#### 📖 How to Read This Chart")
+
         st.markdown("""
-        #### 📖 How to Read This Chart
+        This visualization shows the **trained machine learning model's cluster centers** and how your workouts are classified.
+        The stars represent the model's learned "prototypical" workouts that define the boundaries between activity types.
+        """)
 
-        **K-means Clustering Visualization** - This shows how the AI separates your workouts into groups based on pace and distance patterns.
+        # Create two equal columns for cluster centers and visual encoding
+        col1, col2 = st.columns(2)
 
-        - **Axes**: Pace (X) vs Distance (Y) - the two dimensions K-means uses for clustering
-        - **Opacity**: Solid markers = current period, Faded markers = historical data
-        - **Stars (⭐)**: Cluster centers calculated from ALL workouts - the AI groups workouts near each star
-        - **Colors** indicate workout type assigned by K-means:
-          - 🔵 **Blue**: Runs (faster pace, moderate distance)
-          - 🟢 **Green**: Walks (slower pace, varied distance)
-          - 🟠 **Orange**: Mixed activities (between runs and walks)
-          - ❌ **Red X**: Outliers (unusual workouts that don't fit patterns)
+        with col1:
+            st.markdown(f"""
+            ##### 🎯 Cluster Centers (from Trained Model)
+            - **⭐ Run Center**: {run_center_pace:.1f} min/mi pace, {run_center_dist:.2f} miles distance
+            - **⭐ Walk Center**: {walk_center_pace:.1f} min/mi pace, {walk_center_dist:.2f} miles distance
 
-        💡 **Key Insight**: K-means clustering uses both pace AND distance together to classify workouts. The chart is scaled to maximize visual separation between clusters, making it easy to see how your workouts naturally group into distinct activity types.
+            These centers come from the ML model trained on your complete workout history, not calculated from filtered data shown here.
+            """)
+
+        with col2:
+            st.markdown("""
+            ##### 🔍 Visual Encoding Strategy
+            **Color** = Activity Classification (what the model predicts):
+            - 🔵 **Blue dots** = Real Runs (faster pace, focused running)
+            - 🟢 **Green dots** = Pup Walks (leisurely pace, dog-walking)
+            - 🟠 **Orange dots** = Mixed Activity (variable pace, run/walk combo)
+            - 🔴 **Red dots** = Outliers (unusual patterns outside normal ranges)
+
+            **Opacity** = Temporal Period (when it happened):
+            - **Solid/filled circles** = Current filtered period (e.g., last 30 days)
+            - **Faded/open circles** = Historical workouts (complete training dataset)
+
+            This encoding lets you see if your recent workouts align with the model's learned patterns.
+            """)
+
+        st.markdown("""
+        ##### 🤖 Why We Use Trained Model Clusters (Technical + Simple)
+
+        **The Technical Explanation:**
+        The model uses K-means clustering with StandardScaler feature normalization. During training, workout features (pace, distance, duration) are scaled to mean=0 and std=1, then clustered. The cluster centers are stored in this "scaled space" and inverse-transformed back to original units (min/mi, miles) for visualization. This ensures what you see matches *exactly* how the model makes classification decisions.
+
+        **The Simple Analogy:**
+        Think of it like a recipe: the model "learns" what a typical run and walk look like from all your historical data. When you do a new workout, it measures how similar it is to those learned patterns. The stars show where those pattern centers are located. If your new workout lands near the Run star, it gets classified as a run.
+
+        ##### ✨ Pedagogical Purpose
+        This chart validates that the model's predictions make sense. You should see:
+        - Recent runs (solid blue) clustering around the blue Run star
+        - Recent walks (solid green) clustering around the green Walk star
+        - Clear visual separation between the two activity types
+        - Historical data (faded) showing the full training distribution
+
+        If your filtered workouts don't align with the expected centers, it may indicate a shift in your workout patterns or edge cases the model hasn't seen before.
         """)
 
     except Exception as e:
