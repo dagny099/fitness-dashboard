@@ -52,9 +52,10 @@ choco_effect = st.Page("views/choco_effect.py", title="The Choco Effect", icon="
 if st.session_state.logged_in:
     pg = st.navigation(
         {
-            "Calendar": [dashboard_monthly, calendar],
+            "AI Intelligence": [intelligence],
+            "Calendar": [dashboard_monthly],
             "Reports": [choco_effect],
-            "Tools": [trends, query_db, intelligence, history, model_management],
+            "Tools": [trends, query_db, history, model_management],
             "Account": [logout_page],
         }
     )

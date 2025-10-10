@@ -1,5 +1,6 @@
 from utils.session_manager import SessionManager
 from utils.utilities import calculate_workout_statistics, get_db_connection
+from utils.data_filters import filter_workouts_by_date
 from services.database_service import DatabaseService
 from config.database import DatabaseConfig
 from config.app import STYLE_CONFIG
@@ -104,22 +105,51 @@ def load_data():
     else:
         tmpMsg.info("Execute a query to see results here.")
 
-    # **** RETURN HERE TO RECATEGORIZE DYAMICALLY
-    df["color"] = df["distance_mi"].apply(assign_color)
+    # Apply ML classification to workouts (adds predicted_activity_type column)
+    from ml.model_manager import model_manager
+    df = model_manager.classify_workouts(df)
+
+    # Assign colors based on activity type (ML or fallback to original)
+    df["color"] = df.apply(assign_color_by_activity_type, axis=1)
     df["start"] = df["workout_date"].apply(lambda x: x.isoformat())
     df["end"] = df["start"]
-    df["title"] = df["link"]      
+    df["title"] = df["link"]
     df['workout_date'] = pd.to_datetime(df['workout_date'])
     return df
 
-# REPLACE THIS WITH A REAL CATEGOROZATION ALGO
-def assign_color(criteria):
-    if criteria > 5:
-        return "#1f77b4"  # Blue
-    elif (criteria >= 2) & (criteria < 5):
-        return "#ff7f0e"  # Orange
-    else:
-        return "#888888"  # Default gray
+# Activity type color mapping
+ACTIVITY_TYPE_COLORS = {
+    'real_run': '#1f77b4',      # Blue - Running
+    'pup_walk': '#ff7f0e',      # Orange - Dog walking
+    'mixed': '#2ca02c',         # Green - Mixed activities
+    'outlier': '#d62728',       # Red - Anomalies
+    'Run': '#1f77b4',           # Fallback for original activity_type (MapMyRun data)
+    'Walk': '#ff7f0e',          # Fallback for original activity_type
+    'Bike': '#9467bd',          # Purple for biking
+    'default': '#888888'        # Gray - Unclassified
+}
+
+def assign_color_by_activity_type(row):
+    """
+    Assign color based on activity type with intelligent fallback.
+
+    Priority:
+    1. predicted_activity_type (ML classification)
+    2. activity_type (original MapMyRun data)
+    3. default gray
+    """
+    # Try ML classification first
+    if 'predicted_activity_type' in row.index and pd.notna(row['predicted_activity_type']):
+        activity_type = row['predicted_activity_type']
+        return ACTIVITY_TYPE_COLORS.get(activity_type, ACTIVITY_TYPE_COLORS['default'])
+
+    # Fallback to original activity type
+    if 'activity_type' in row.index and pd.notna(row['activity_type']):
+        activity_type = row['activity_type']
+        return ACTIVITY_TYPE_COLORS.get(activity_type, ACTIVITY_TYPE_COLORS['default'])
+
+    # Default gray for unclassified
+    return ACTIVITY_TYPE_COLORS['default']
 
 # SHOW NICE METRICS CARDS
 def display_workout_statistics(df_sub):
@@ -213,10 +243,18 @@ def create_calendar_events(df):
         try:
             # Format the date correctly
             start_date = row['workout_date'].isoformat()
-            
-            # Create informative title
-            title = f"{row['distance_mi']:.1f}mi {row['activity_type']}"
-            
+
+            # Create informative title with activity type
+            # Use predicted_activity_type if available, fallback to activity_type
+            if 'predicted_activity_type' in row.index and pd.notna(row['predicted_activity_type']):
+                activity_label = row['predicted_activity_type'].replace('_', ' ').title()
+            elif 'activity_type' in row.index and pd.notna(row['activity_type']):
+                activity_label = row['activity_type']
+            else:
+                activity_label = 'Workout'
+
+            title = f"{row['distance_mi']:.1f}mi {activity_label}"
+
             events.append({
                 "title": title,
                 "start": start_date,
@@ -318,12 +356,17 @@ with c1:
     st.markdown(f"### 📅 Showing calendar for **{selected_month_top} {selected_year_top}**")
 
 # ---------------------
-# STEP 3: Filter by selected month
+# STEP 3: Filter by selected month using data_filters utility
 # ---------------------
-st.session_state.filtered_data = st.session_state.full_data[
-    (st.session_state.full_data['workout_date'] >= datetime.combine(month_start, datetime.min.time())) & 
-    (st.session_state.full_data['workout_date'] < datetime.combine(month_end, datetime.max.time()))
-]
+# Convert date objects to datetime for compatibility
+month_start_dt = datetime.combine(month_start, datetime.min.time())
+month_end_dt = datetime.combine(month_end, datetime.max.time())
+
+st.session_state.filtered_data, filter_metadata = filter_workouts_by_date(
+    st.session_state.full_data,
+    start_date=month_start_dt,
+    end_date=month_end_dt + timedelta(seconds=1)  # Include last moment of month
+)
 
 # ---------------------
 # STEP 4: Format calendar events
@@ -350,29 +393,39 @@ with st.expander(f"METRICS for **{selected_month_top} {selected_year_top}**", ex
 
 stats = calculate_workout_statistics(st.session_state.filtered_data)
 
-# Create tabs
+# ---------------------
+# CALENDAR VIEW (no tabs)
+# ---------------------
+st.markdown("---")
+
+calendar_result = calendar(
+    events=events,
+    options=calendar_options,
+    custom_css= """
+        .fc .fc-daygrid-event {
+            background-color: #1f77b4;
+            color: white;
+            border: none;
+        }
+    """,
+    key=f"calendar_{month_start.isoformat()}"  # 👈 dynamic key triggers re-render
+)
+
+# ---------------------
+# DETAILED STATS TAB (keeping for now per user request)
+# ---------------------
+st.markdown("---")
+st.markdown("### 📊 Detailed Weekly Breakdown")
+
+# Create single tab for detailed stats
 dashboard_tab, details_tab = st.tabs([
-    "MONTHLY VIEW", 
+    "MONTHLY VIEW",
     "DETAILED STATS"
 ])
 
-# Tab 1: Current Query and Response
+# Tab 1: Placeholder (calendar moved above)
 with dashboard_tab:
-
-    # SHOW CALENDAR
-    
-    calendar_result = calendar(
-        events=events,
-        options=calendar_options,
-        custom_css= """
-            .fc .fc-daygrid-event {
-                background-color: #1f77b4;
-                color: white;
-                border: none;
-            }
-        """,
-        key=f"calendar_{month_start.isoformat()}"  # 👈 dynamic key triggers re-render
-    )
+    st.info("📅 Calendar view has been moved to the main page above.")
 
 
 # Tab 2: DETAILED STATS
