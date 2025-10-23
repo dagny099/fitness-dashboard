@@ -44,7 +44,7 @@ Get up and running in minutes:
 
 ```bash
 # Clone the repository
-git clone https://github.com/dagny/fitness-dashboard.git
+git clone https://github.com/dagny099/fitness-dashboard.git
 cd fitness-dashboard
 
 # Install dependencies with Poetry
@@ -61,7 +61,7 @@ Visit `http://localhost:8501` to access your dashboard.
 
 ## Project Repository
 
-Visit the project repository on [GitHub](https://github.com/dagny/fitness-dashboard) for the latest code, releases, and contribution guidelines.
+Visit the project repository on [GitHub](https://github.com/dagny099/fitness-dashboard) for the latest code, releases, and contribution guidelines.
 
 ## Architecture Highlights
 
@@ -90,7 +90,7 @@ Currently optimized for **MapMyRun** data import, with plans to support addition
 ## Community & Support
 
 - **Documentation**: Comprehensive guides for users and developers
-- **Issues**: Report bugs or request features on [GitHub](https://github.com/dagny/fitness-dashboard/issues)
+- **Issues**: Report bugs or request features on [GitHub](https://github.com/dagny099/fitness-dashboard/issues)
 - **Contact**: Questions? Reach out to [barbs@balex.com](mailto:barbs@balex.com)
 
 ---

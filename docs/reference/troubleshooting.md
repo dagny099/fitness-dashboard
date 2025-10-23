@@ -174,10 +174,12 @@ Before diving into specific issues, run through this basic checklist:
     MYSQL_HOST=localhost
     MYSQL_PORT=3306
     EOF
-    
+
     # Load environment variables
     source .env
     ```
+
+    - On Linux or Windows, set `FITNESS_DASHBOARD_ENV=development` to make the app use the local credentials above. Otherwise supply the `RDS_*` variables for your production database.
 
 ### RDS Connection Issues (Production)
 
@@ -258,11 +260,11 @@ Before diving into specific issues, run through this basic checklist:
     mysql -u fitness_user -p sweat -e "SELECT COUNT(*) FROM workout_summary;"
     
     # Check for data import issues
-    python src/update_db.py
+    python scripts/update_db.py
     ```
     
     **Solutions**:
-    - Import sample data: `python src/update_db.py`
+    - Import sample data: `python scripts/update_db.py`
     - Verify CSV file path in `pyproject.toml`
     - Check database connection in Streamlit
 
@@ -695,7 +697,7 @@ free -h >> debug_info.txt
 
 ### Support Resources
 
-- **GitHub Issues**: [Report bugs and request features](https://github.com/dagny/fitness-dashboard/issues)
+- **GitHub Issues**: [Report bugs and request features](https://github.com/dagny099/fitness-dashboard/issues)
 - **Email Support**: [barbs@balex.com](mailto:barbs@balex.com)
 - **Documentation**: Check other sections of this documentation
 - **Community**: Share solutions and get help from other users

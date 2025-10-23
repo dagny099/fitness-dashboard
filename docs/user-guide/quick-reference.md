@@ -10,11 +10,14 @@ Essential commands, tasks, and troubleshooting for daily use of your Fitness Das
 python scripts/init.py
 
 # 2. Import your data
-python src/update_db.py
+python scripts/update_db.py
 
 # 3. Start dashboard
 streamlit run src/streamlit_app.py
 ```
+
+!!! note "Linux or Windows"
+    Run `export FITNESS_DASHBOARD_ENV=development` before these commands to keep the app on your local MySQL instance. Otherwise configure the `RDS_*` variables for remote databases.
 
 ### First Steps
 1. **Visit**: http://localhost:8501
@@ -26,7 +29,7 @@ streamlit run src/streamlit_app.py
 ### Data Management
 | Task | How To |
 |------|--------|
-| **Import new workouts** | Replace CSV file → Run `python src/update_db.py` |
+| **Import new workouts** | Replace CSV file → Run `python scripts/update_db.py` |
 | **Fix wrong categories** | Model Management page → Find workout → Correct → Retrain |
 | **Check data quality** | Custom Queries → Look for outliers (pace >60 or <4 min/mile) |
 | **Export results** | Copy query results → Paste into spreadsheet |
@@ -43,7 +46,7 @@ streamlit run src/streamlit_app.py
 ### Troubleshooting
 | Problem | Quick Fix |
 |---------|-----------|
-| **No data showing** | Check if you ran `python src/update_db.py` |
+| **No data showing** | Check if you ran `python scripts/update_db.py` |
 | **Classifications wrong** | Model Management → Correct examples → Retrain |
 | **Dashboard won't start** | Check MySQL is running → Verify `poetry install` worked |
 | **Import errors** | Check CSV file path → Look for missing columns |
@@ -137,14 +140,14 @@ head src/user2632022_workout_history.csv    # Check format
 ### Data Issues
 1. **Run data quality SQL** (see above)
 2. **Fix obvious errors** in your CSV file
-3. **Re-import**: `python src/update_db.py`
+3. **Re-import**: `python scripts/update_db.py`
 4. **Refresh dashboard** to see changes
 
 ## 📝 Regular Maintenance
 
 ### Weekly
 - [ ] Export new data from fitness app
-- [ ] Run `python src/update_db.py`
+- [ ] Run `python scripts/update_db.py`
 - [ ] Check Model Management accuracy
 
 ### Monthly
@@ -165,7 +168,7 @@ head src/user2632022_workout_history.csv    # Check format
 - [Troubleshooting](../reference/troubleshooting.md) - Detailed problem-solving
 
 **Still Stuck?**
-- Submit issue on [GitHub](https://github.com/dagny/fitness-dashboard/issues)
+- Submit issue on [GitHub](https://github.com/dagny099/fitness-dashboard/issues)
 - Include error messages and what you were trying to do
 - Mention your operating system and Python version
 
