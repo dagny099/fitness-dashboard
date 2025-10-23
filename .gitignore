@@ -28,6 +28,9 @@ sessions.db
 # Dependencies (keep poetry.lock for reproducible builds)
 # poetry.lock
 
+# Dont need to sync this
+dependency_mapper_outputs
+
 # MkDocs build output
 site/
 .mkdocs_build/
