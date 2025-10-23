@@ -2,7 +2,52 @@
 
 This guide shows you how to accomplish typical tasks with your Fitness Dashboard. Each section includes step-by-step instructions for the most common things users want to do.
 
+!!! info "How to use this guide"
+    * **Scan the visuals first** for a quick mental model of the experience.
+    * **Jump to the playbook** that matches what you are trying to do right now.
+    * **Follow the numbered steps** and the linked resources for deeper explanations.
+
+## Visual journey at a glance
+
+```mermaid
+journey
+    title Fitness Dashboard Daily Flow
+
+    section Prepare
+      Import workouts: 5: You
+      Refresh dashboard: 4: You
+
+    section Explore
+      Review focus area: 5: You, AI
+      Scan trending metrics: 4: You, AI
+      Inspect standout workouts: 3: You
+
+    section Act
+      Correct classifications: 4: You
+      Retrain model: 3: You, AI
+      Share/export insights: 2: You
+
+    section Improve
+      Set next check-in: 3: You
+      Log feedback for future analysis: 2: You, AI
+```
+
+## Dashboard landmarks
+
+<figure>
+  <img src="../assets/screenshots/intelligence-dashboard.png" alt="Annotated dashboard screenshot" />
+  <figcaption><strong>Figure 1.</strong> Intelligence Dashboard hotspots: (1) Summary cards for consistency, frequency, and performance insights, (2) Trending metrics timeline, (3) Focus Area recommendations, (4) Quick links to data tools.</figcaption>
+</figure>
+
 ## Getting Started Tasks
+
+Use these playbooks the first time you open the dashboard or whenever you import a fresh batch of workouts.
+
+| Scenario | Visual cue | Outcome |
+| --- | --- | --- |
+| **View Your Workout Summary** | Focus Area, Trending, and Consistency cards in Figure&nbsp;1 | Quick snapshot of how you are doing right now |
+| **Import New Workout Data** | Upload confirmation in terminal + refreshed charts | Latest workouts visible in dashboards and queries |
+| **Fix Incorrect Workout Classifications** | Classification Review panel on Model Management page | Cleaner dataset and smarter future suggestions |
 
 ### View Your Workout Summary
 
@@ -14,6 +59,9 @@ This guide shows you how to accomplish typical tasks with your Fitness Dashboard
 3. Check the "Focus Area" card for personalized suggestions
 4. Review the "Trending" card to see if your performance is improving
 
+??? tip "Prefer a visual walkthrough?"
+    Revisit the **Dashboard Overview** for annotated screenshots of every card and data panel.
+
 ### Import New Workout Data
 
 **What you want**: Add recent workouts from your fitness app.
@@ -21,8 +69,11 @@ This guide shows you how to accomplish typical tasks with your Fitness Dashboard
 **How to do it**:
 1. Export your data from your fitness app (MapMyRun, etc.) as CSV
 2. Replace the file `src/user2632022_workout_history.csv` with your new data
-3. Run `python src/update_db.py` in your terminal
+3. Run `python scripts/update_db.py` in your terminal
 4. Refresh the dashboard to see updated analysis
+
+??? info "Keep an eye on automation"
+    The import command also updates machine-learning features. If you change the CSV manually, run `python scripts/update_db.py` again so the model retrains with the corrections.
 
 ### Fix Incorrect Workout Classifications
 
@@ -36,6 +87,11 @@ This guide shows you how to accomplish typical tasks with your Fitness Dashboard
 5. Click "Retrain Model" to improve future classifications
 
 ## Analysis Tasks
+
+!!! abstract "Questions this section answers"
+    * *Am I improving month over month?*
+    * *Which workouts stand out the most?*
+    * *What patterns should I act on next?*
 
 ### Compare Different Time Periods
 
@@ -63,6 +119,15 @@ This guide shows you how to accomplish typical tasks with your Fitness Dashboard
    ```
 4. Click "Run Query" to see results
 
+??? example "See it in action"
+    ```mermaid
+    flowchart LR
+        Data[Workout data] --> Trends[Trends page]
+        Trends -->|Change date range| Comparison{Compare periods}
+        Comparison -->|Spot improvement| Action[Adjust training plan]
+        Comparison -->|Find dips| Investigation[Review workout notes]
+    ```
+
 ### Analyze Workout Patterns
 
 **What you want**: Understand when you exercise most, which activities you prefer, etc.
@@ -75,6 +140,11 @@ This guide shows you how to accomplish typical tasks with your Fitness Dashboard
 5. Use filters to focus on specific workout types
 
 ## Data Management Tasks
+
+!!! question "When should I clean data?"
+    * Before major race blocks or training cycles
+    * After large CSV imports from a new source
+    * Whenever you notice obviously incorrect trends
 
 ### Clean Up Bad Data
 
@@ -114,13 +184,17 @@ This guide shows you how to accomplish typical tasks with your Fitness Dashboard
 
 ## Troubleshooting Tasks
 
+![Algorithm transparency panel](../assets/screenshots/algorithm-transparency.png){ width="720" }
+
+<small>Figure 2. The Algorithm Transparency panel shows which classifiers are active and highlights low-confidence predictions that may need your intervention.</small>
+
 ### Dashboard Shows No Data
 
 **What you want**: Fix an empty or blank dashboard.
 
 **How to do it**:
 1. Check if you've imported any workout data
-2. Run `python src/update_db.py` to ensure data is imported
+2. Run `python scripts/update_db.py` to ensure data is imported
 3. Verify the CSV file is in the correct location and format
 4. Check the terminal for any error messages during import
 5. Try the demo mode first to ensure the dashboard works
@@ -150,6 +224,9 @@ This guide shows you how to accomplish typical tasks with your Fitness Dashboard
 
 ## Advanced Tasks
 
+??? tip "Reuse favorite analyses"
+    Save complex queries in a shared doc or use the Custom Queries page bookmarks so teammates can revisit them without rewriting SQL.
+
 ### Create Custom Analysis
 
 **What you want**: Answer specific questions about your fitness data.
@@ -177,6 +254,6 @@ This guide shows you how to accomplish typical tasks with your Fitness Dashboard
 If you're stuck on a task:
 - Check the **[Troubleshooting Guide](../reference/troubleshooting.md)**
 - Look at the **[Dashboard Overview](dashboard-overview.md)** for interface explanations
-- Submit questions on **[GitHub Issues](https://github.com/dagny/fitness-dashboard/issues)**
+- Submit questions on **[GitHub Issues](https://github.com/dagny099/fitness-dashboard/issues)**
 
 Remember: The dashboard is designed to help you understand your fitness patterns. Focus on insights that help you make better decisions about your health and exercise routine.

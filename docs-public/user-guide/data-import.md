@@ -68,8 +68,11 @@ Execute the data import process:
 
 ```bash
 cd /path/to/fitness-dashboard
-python src/update_db.py
+python scripts/update_db.py
 ```
+
+!!! note "Linux or Windows"
+    Export `FITNESS_DASHBOARD_ENV=development` before running imports to keep the connection pointed at your local MySQL instance. Otherwise set the `RDS_*` credentials for your remote database.
 
 The script will:
 
@@ -281,7 +284,7 @@ Set up automated data imports:
 
 # Run import
 cd /path/to/fitness-dashboard
-python src/update_db.py
+python scripts/update_db.py
 
 # Log results
 echo "Import completed: $(date)" >> import.log

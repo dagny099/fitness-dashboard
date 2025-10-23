@@ -46,7 +46,7 @@ Get your fitness dashboard running in minutes:
 
 ```bash
 # Clone the repository
-git clone https://github.com/dagny/fitness-dashboard.git
+git clone https://github.com/dagny099/fitness-dashboard.git
 cd fitness-dashboard
 
 # Install dependencies with Poetry
@@ -127,6 +127,6 @@ Ready to analyze your workout data? Here's what to do next:
 ## Support
 
 - **Questions**: Check the [troubleshooting guide](reference/troubleshooting.md) or browse existing documentation
-- **Bug reports**: Submit issues on [GitHub](https://github.com/dagny/fitness-dashboard/issues)
+- **Bug reports**: Submit issues on [GitHub](https://github.com/dagny099/fitness-dashboard/issues)
 - **Feature requests**: Use the GitHub issues page to suggest improvements
 - **Contact**: For other questions, reach out to [barbs@balex.com](mailto:barbs@balex.com)
