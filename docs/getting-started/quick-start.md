@@ -40,10 +40,13 @@ This will create the database and tables needed to store your workout data.
 3. **Import it**:
 
 ```bash
-python src/update_db.py
+python scripts/update_db.py
 ```
 
 This will analyze your workouts and categorize them automatically.
+
+!!! tip "Linux or Windows"
+    Set `FITNESS_DASHBOARD_ENV=development` before running the script so the app uses your local MySQL credentials. Otherwise, provide the `RDS_*` environment variables for a remote database connection.
 
 ### Option B: Try the Demo
 
@@ -96,7 +99,7 @@ Now that you have the dashboard running:
 - Verify all dependencies are installed with `poetry install`
 
 ### **No data showing**
-- Import your workout data with `python src/update_db.py`
+- Import your workout data with `python scripts/update_db.py`
 - Check that your CSV file is in the right location (`src/user2632022_workout_history.csv`)
 - Try the demo mode first to make sure everything works
 
@@ -109,6 +112,6 @@ Now that you have the dashboard running:
 
 - **Check the [User Guide](../user-guide/dashboard-overview.md)** for detailed explanations
 - **Review [Common Tasks](../user-guide/user-journeys.md)** for typical workflows
-- **Submit issues** on [GitHub](https://github.com/dagny/fitness-dashboard/issues) if you find bugs
+- **Submit issues** on [GitHub](https://github.com/dagny099/fitness-dashboard/issues) if you find bugs
 
 Congratulations! You now have your personal fitness analytics dashboard running. Enjoy exploring your workout data!

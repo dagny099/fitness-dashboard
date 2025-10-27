@@ -3,8 +3,8 @@ site_description: A comprehensive guide to understanding and using the Fitness D
 site_author: Barbara Hidalgo
 site_url: https://workouts.barbhs.com
 
-repo_name: dagny/fitness-dashboard
-repo_url: https://github.com/dagny/fitness-dashboard
+repo_name: dagny099/fitness-dashboard
+repo_url: https://github.com/dagny099/fitness-dashboard
 edit_uri: edit/main/docs/
 
 theme:
@@ -122,7 +122,7 @@ nav:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/dagny/fitness-dashboard
+      link: https://github.com/dagny099/fitness-dashboard
     - icon: fontawesome/solid/globe
       link: https://workouts.barbhs.com
 

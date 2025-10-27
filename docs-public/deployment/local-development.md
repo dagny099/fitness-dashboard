@@ -19,7 +19,7 @@ Follow these steps to get your development environment running:
 
 ```bash
 # Clone the repository
-git clone https://github.com/dagny/fitness-dashboard.git
+git clone https://github.com/dagny099/fitness-dashboard.git
 cd fitness-dashboard
 
 # Install dependencies with Poetry
@@ -138,11 +138,14 @@ FLUSH PRIVILEGES;
 python scripts/init.py
 
 # Import sample data
-python src/update_db.py
+python scripts/update_db.py
 
 # Reset database (if needed)
 mysql -u fitness_user -p sweat < scripts/reset_db.sql
 ```
+
+!!! important "Set the environment"
+    On Linux or Windows, export `FITNESS_DASHBOARD_ENV=development` before running local scripts so the app connects with the credentials defined here. Otherwise it will expect `RDS_*` variables for a remote database.
 
 #### Database Tools
 

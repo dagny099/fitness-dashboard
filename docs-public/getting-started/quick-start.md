@@ -40,8 +40,11 @@ If you have fitness data from MapMyRun:
 3. Update the database:
 
 ```bash
-python src/update_db.py
+python scripts/update_db.py
 ```
+
+!!! tip "Linux or Windows"
+    Set `FITNESS_DASHBOARD_ENV=development` before running the script so the app uses your local MySQL credentials. Otherwise, provide the `RDS_*` environment variables for a remote database connection.
 
 ## Step 3: Launch the Dashboard
 

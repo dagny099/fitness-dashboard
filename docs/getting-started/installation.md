@@ -42,7 +42,7 @@ Choose the installation method that best suits your workflow:
     ### Step 2: Clone and Setup
     
     ```bash
-    git clone https://github.com/dagny/fitness-dashboard.git
+    git clone https://github.com/dagny099/fitness-dashboard.git
     cd fitness-dashboard
     
     # Install dependencies
@@ -59,7 +59,7 @@ Choose the installation method that best suits your workflow:
     ### Step 1: Clone Repository
     
     ```bash
-    git clone https://github.com/dagny/fitness-dashboard.git
+    git clone https://github.com/dagny099/fitness-dashboard.git
     cd fitness-dashboard
     ```
     
@@ -100,7 +100,7 @@ Choose the installation method that best suits your workflow:
     ### Step 3: Project Setup
     
     ```bash
-    git clone https://github.com/dagny/fitness-dashboard.git
+    git clone https://github.com/dagny099/fitness-dashboard.git
     cd fitness-dashboard
     
     poetry config virtualenvs.in-project true

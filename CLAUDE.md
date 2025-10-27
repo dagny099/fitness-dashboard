@@ -274,7 +274,7 @@ else:
 ```bash
 # Add test data to database
 python scripts/init.py
-python src/update_db.py
+python scripts/update_db.py
 
 # Test with development mode
 STREAMLIT_DEV_MODE=true streamlit run src/streamlit_app.py --server.port 8501 --server.headless true
@@ -467,7 +467,7 @@ STREAMLIT_DEV_MODE=true streamlit run src/streamlit_app.py
 # Standard import workflow:
 1. Export CSV from MapMyRun
 2. Replace: src/user2632022_workout_history.csv
-3. Run: python src/update_db.py
+3. Run: python scripts/update_db.py
 4. Verify: Check classification results in dashboard
 ```
 

@@ -130,7 +130,7 @@ sudo -u fitness-app bash
 
 # Clone repository
 cd /home/fitness-app
-git clone https://github.com/dagny/fitness-dashboard.git
+git clone https://github.com/dagny099/fitness-dashboard.git
 cd fitness-dashboard
 
 # Install dependencies (production only)

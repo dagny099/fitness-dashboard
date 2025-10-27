@@ -82,6 +82,9 @@ MYSQL_PORT=3306
 MYSQL_DATABASE=sweat
 ```
 
+!!! note "Environment detection"
+    By default the app treats macOS as "development" and other platforms as "production". On Linux or Windows, set `FITNESS_DASHBOARD_ENV=development` to use the local credentials above, or configure the `RDS_*` variables for your remote database.
+
 ### Initialize Database Schema
 
 Run the initialization script to create tables:
@@ -214,7 +217,7 @@ input_filename = "your_workout_history.csv"
 4. Run migration:
 
 ```bash
-python src/update_db.py
+python scripts/update_db.py
 ```
 
 ### Custom Data Sources

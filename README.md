@@ -52,7 +52,7 @@ graph TB
 ### Setup (5 minutes)
 ```bash
 # 1. Clone and install
-git clone https://github.com/dagny/fitness-dashboard.git
+git clone https://github.com/dagny099/fitness-dashboard.git
 cd fitness-dashboard
 poetry install
 
@@ -61,13 +61,18 @@ python scripts/init.py
 
 # 3. Import your data (optional - works with demo data too)
 # Replace src/user2632022_workout_history.csv with your CSV export
-python src/update_db.py
+python scripts/update_db.py
+
+# 3b. (Linux/Windows) Force local credentials
+export FITNESS_DASHBOARD_ENV=development
 
 # 4. Start dashboard
 streamlit run src/streamlit_app.py
 ```
 
 Visit `http://localhost:8501` to see your dashboard!
+
+> **Heads up:** The app auto-detects macOS and uses your local `.env` database settings. On Linux or Windows, set `FITNESS_DASHBOARD_ENV=development` (as in step 3b) or provide `RDS_*` credentials so the app knows how to connect.
 
 ## Key Features
 
@@ -143,7 +148,7 @@ See the dashboard in action: [workouts.barbhs.com](https://workouts.barbhs.com)
 ## Support
 
 - **Questions**: Check the [troubleshooting guide](docs/reference/troubleshooting.md) first
-- **Issues**: Submit problems on [GitHub Issues](https://github.com/dagny/fitness-dashboard/issues)
+- **Issues**: Submit problems on [GitHub Issues](https://github.com/dagny099/fitness-dashboard/issues)
 - **Feature requests**: Use GitHub Issues to suggest improvements
 
 ## Contributing

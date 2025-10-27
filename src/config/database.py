@@ -41,6 +41,12 @@ class DatabaseConfig:
     @staticmethod
     def _determine_environment() -> str:
         """Determine if running in development or production."""
+        override = os.environ.get("FITNESS_DASHBOARD_ENV")
+        if override:
+            override = override.strip().lower()
+            if override in {"development", "production"}:
+                return override
+
         return "development" if platform.system() == "Darwin" else "production"
     
     def to_dict(self, include_password: bool = True) -> Dict[str, str]:
