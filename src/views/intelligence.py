@@ -277,7 +277,7 @@ def render_data_visibility_expander(brief, time_period):
 
             if 'duration_sec' in display_df.columns:
                 display_df['Duration'] = display_df['duration_sec'].apply(
-                    lambda x: f"{int(x//3600)}h {int((x%3600)//60)}m" if pd.notna(x) else "N/A"
+                    lambda x: f"{int(x//3600)}h {int((x%3600)//60)}m" if pd.notna(x) else "-"
                 )
 
             # Round numeric columns
@@ -574,33 +574,33 @@ def render_concrete_metrics_cards(brief, time_period):
             help="Breakdown of workout types"
         )
 
-def render_key_insights_above_fold(brief):
-    """Render key insights above the fold in 2x2 grid - these are the main actionable insights"""
-    insights = brief.get('key_insights', [])
-    if insights:
-        st.subheader("🔍 Key Patterns")
+# def render_key_insights_above_fold(brief):
+#     """Render key insights above the fold in 2x2 grid - these are the main actionable insights"""
+#     insights = brief.get('key_insights', [])
+#     if insights:
+#         st.subheader("🔍 Key Patterns")
 
-        # Organize insights into 2x2 grid
-        # Pad insights to ensure we have at least 4
-        while len(insights) < 4:
-            insights.append("No additional patterns detected")
+#         # Organize insights into 2x2 grid
+#         # Pad insights to ensure we have at least 4
+#         while len(insights) < 4:
+#             insights.append("No additional patterns detected")
 
-        # First row
-        col1, col2 = st.columns(2)
-        with col1:
-            st.info(insights[0])
-        with col2:
-            if len(insights) > 1:
-                st.info(insights[1])
+#         # First row
+#         col1, col2 = st.columns(2)
+#         with col1:
+#             st.info(insights[0])
+#         with col2:
+#             if len(insights) > 1:
+#                 st.info(insights[1])
 
-        # Second row
-        col3, col4 = st.columns(2)
-        with col3:
-            if len(insights) > 2:
-                st.info(insights[2])
-        with col4:
-            if len(insights) > 3:
-                st.info(insights[3])
+#         # Second row
+#         col3, col4 = st.columns(2)
+#         with col3:
+#             if len(insights) > 2:
+#                 st.info(insights[2])
+#         with col4:
+#             if len(insights) > 3:
+#                 st.info(insights[3])
 
 def render_intelligence_brief_cards(brief, time_period='30d'):
     """Render visual-first intelligence brief cards with 4 categories"""
@@ -619,13 +619,12 @@ def render_intelligence_brief_cards(brief, time_period='30d'):
 
     # New analytical sections with insights and visualizations
     render_performance_analysis_section(brief, time_period)
+    st.markdown("---")
 
     render_personalized_goals_section(brief, time_period)
-
     st.markdown("---")
 
     render_consistency_analysis_section(brief, time_period)
-
     st.markdown("---")
 
     render_performance_trends_section(brief, time_period)
@@ -1031,13 +1030,13 @@ def render_kmeans_scatter_plot(brief, time_period):
             """)
 
         st.markdown("""
-        ##### 🤖 Why We Use Trained Model Clusters (Technical + Simple)
-
-        **The Technical Explanation:**
-        The model uses K-means clustering with StandardScaler feature normalization. During training, workout features (pace, distance, duration) are scaled to mean=0 and std=1, then clustered. The cluster centers are stored in this "scaled space" and inverse-transformed back to original units (min/mi, miles) for visualization. This ensures what you see matches *exactly* how the model makes classification decisions.
+        ##### 🤖 Why Show Trained Model Clusters?
 
         **The Simple Analogy:**
         Think of it like a recipe: the model "learns" what a typical run and walk look like from all your historical data. When you do a new workout, it measures how similar it is to those learned patterns. The stars show where those pattern centers are located. If your new workout lands near the Run star, it gets classified as a run.
+
+        **The Technical Explanation:**
+        The model uses K-means clustering with StandardScaler feature normalization. During training, workout features (pace, distance, duration) are scaled to mean=0 and std=1, then clustered. The cluster centers are stored in this "scaled space" and inverse-transformed back to original units (min/mi, miles) for visualization. This ensures what you see matches *exactly* how the model makes classification decisions.
 
         ##### ✨ Pedagogical Purpose
         This chart validates that the model's predictions make sense. You should see:
@@ -1046,7 +1045,7 @@ def render_kmeans_scatter_plot(brief, time_period):
         - Clear visual separation between the two activity types
         - Historical data (faded) showing the full training distribution
 
-        If your filtered workouts don't align with the expected centers, it may indicate a shift in your workout patterns or edge cases the model hasn't seen before.
+        If filtered workouts don't align with the expected centers, it may indicate a shift in workout patterns or edge cases the model hasn't seen before.
         """)
 
     except Exception as e:
@@ -1083,10 +1082,51 @@ def render_personalized_goals_section(brief, time_period):
         tracker = GoalTracker(classified_df)
 
         # Goal setting sliders in columns
-        st.markdown("**Set Your Goals**")
-        col1, col2, col3 = st.columns(3)
+        # st.markdown("**Set Your Goals**")
+        # col1, col2, col3 = st.columns(3)
 
-        with col1:
+        # with col1:
+        #     pace_goal = st.slider(
+        #         "🏃 Run Pace Goal (min/mi)",
+        #         min_value=6.0,
+        #         max_value=12.0,
+        #         value=9.5,
+        #         step=0.1,
+        #         help="Target average pace for runs (lower is faster)",
+        #         key="pace_goal_slider"
+        #     )
+
+        # with col2:
+        #     frequency_goal = st.slider(
+        #         "📅 Run Frequency Goal (days)",
+        #         min_value=1,
+        #         max_value=14,
+        #         value=7,
+        #         step=1,
+        #         help="Target: run at least once every X days",
+        #         key="frequency_goal_slider"
+        #     )
+
+        # with col3:
+        #     distance_goal = st.slider(
+        #         "🚶 Walk Distance Goal (mi)",
+        #         min_value=0.5,
+        #         max_value=5.0,
+        #         value=2.0,
+        #         step=0.1,
+        #         help="Target minimum distance per walk",
+        #         key="distance_goal_slider"
+        #     )
+
+        
+        st.markdown("<p style='text-align: center; font-color: #eeeeee;'>Set custom goals and evaluate whether they were achieved</p>", unsafe_allow_html=True)
+
+        # Calculate goal achievements - RUNS adjacent, then WALK
+        col_pace, col_freq, col_walk = st.columns(3)
+
+        # RUN PACE GOAL (with blue styling)
+        with col_pace:
+            st.markdown('<h4 style="color: #1976d2;">🏃 Run Pace</h4>', unsafe_allow_html=True)
             pace_goal = st.slider(
                 "🏃 Run Pace Goal (min/mi)",
                 min_value=6.0,
@@ -1096,37 +1136,6 @@ def render_personalized_goals_section(brief, time_period):
                 help="Target average pace for runs (lower is faster)",
                 key="pace_goal_slider"
             )
-
-        with col2:
-            distance_goal = st.slider(
-                "🚶 Walk Distance Goal (mi)",
-                min_value=0.5,
-                max_value=5.0,
-                value=2.0,
-                step=0.1,
-                help="Target minimum distance per walk",
-                key="distance_goal_slider"
-            )
-
-        with col3:
-            frequency_goal = st.slider(
-                "📅 Run Frequency Goal (days)",
-                min_value=1,
-                max_value=14,
-                value=7,
-                step=1,
-                help="Target: run at least once every X days",
-                key="frequency_goal_slider"
-            )
-
-        st.markdown("---")
-        st.markdown("**Goal Achievement**")
-
-        # Calculate goal achievements - RUNS adjacent, then WALK
-        col_pace, col_freq, col_walk = st.columns(3)
-
-        # RUN PACE GOAL (with blue styling)
-        with col_pace:
             pace_result = tracker.count_runs_below_pace(pace_goal, start_date, end_date)
             runs_met = pace_result['runs_below_target']
             total_runs = pace_result['total_runs']
@@ -1134,7 +1143,6 @@ def render_personalized_goals_section(brief, time_period):
             best_pace = pace_result['best_pace']
 
             with st.container():
-                st.markdown('<h4 style="color: #1976d2;">🏃 Run Pace</h4>', unsafe_allow_html=True)
                 st.metric(
                     "Runs Meeting Goal",
                     f"{runs_met}/{total_runs}",
@@ -1152,6 +1160,16 @@ def render_personalized_goals_section(brief, time_period):
 
         # RUN FREQUENCY GOAL (with blue styling)
         with col_freq:
+            st.markdown('<h4 style="color: #1976d2;">🏃 Run Frequency</h4>', unsafe_allow_html=True)
+            frequency_goal = st.slider(
+                "📅 Run Frequency Goal (days)",
+                min_value=1,
+                max_value=14,
+                value=7,
+                step=1,
+                help="Target: run at least once every X days",
+                key="frequency_goal_slider"
+            )
             avg_gap = tracker.calculate_avg_days_between_runs(start_date, end_date)
             days_since = tracker.calculate_days_since_last_run()
 
@@ -1164,7 +1182,6 @@ def render_personalized_goals_section(brief, time_period):
                 freq_pct = 0.0
 
             with st.container():
-                st.markdown('<h4 style="color: #1976d2;">🏃 Run Frequency</h4>', unsafe_allow_html=True)
 
                 if avg_gap > 0:
                     st.metric(
@@ -1175,7 +1192,7 @@ def render_personalized_goals_section(brief, time_period):
                         help=f"Target: run at least once every {frequency_goal} days"
                     )
                 else:
-                    st.metric("Avg Days Between", "N/A",
+                    st.metric("Avg Days Between", "-",
                              help="Need at least 2 runs to calculate")
 
                 if days_since >= 0:
@@ -1190,6 +1207,16 @@ def render_personalized_goals_section(brief, time_period):
 
         # WALK DISTANCE GOAL (with green styling)
         with col_walk:
+            st.markdown('<h4 style="color: #388e3c;">🚶 Walk Distance</h4>', unsafe_allow_html=True)
+            distance_goal = st.slider(
+                "🚶 Walk Distance Goal (mi)",
+                min_value=0.5,
+                max_value=5.0,
+                value=2.0,
+                step=0.1,
+                help="Target minimum distance per walk",
+                key="distance_goal_slider"
+            )
             walk_result = tracker.calculate_walk_goal_adherence(distance_goal, start_date, end_date)
             days_met = walk_result['days_met_goal']
             total_walk_days = walk_result['total_days_with_walks']
@@ -1197,7 +1224,6 @@ def render_personalized_goals_section(brief, time_period):
             avg_dist = walk_result['avg_distance']
 
             with st.container():
-                st.markdown('<h4 style="color: #388e3c;">🚶 Walk Distance</h4>', unsafe_allow_html=True)
                 st.metric(
                     "Days Meeting Goal",
                     f"{days_met}/{total_walk_days}",
@@ -1278,7 +1304,7 @@ def render_performance_analysis_section(brief, time_period):
                 run_distance = runs_df['distance_mi'].sum() if 'distance_mi' in runs_df.columns else 0
                 run_avg_distance = runs_df['distance_mi'].mean() if 'distance_mi' in runs_df.columns else 0
                 run_avg_pace = runs_df['avg_pace'].mean() if 'avg_pace' in runs_df.columns else 0
-                run_pace_range = f"{runs_df['avg_pace'].min():.1f}-{runs_df['avg_pace'].max():.1f}" if 'avg_pace' in runs_df.columns and len(runs_df) > 1 else "N/A"
+                run_pace_range = f"{runs_df['avg_pace'].min():.1f}-{runs_df['avg_pace'].max():.1f}" if 'avg_pace' in runs_df.columns and len(runs_df) > 1 else "-"
                 run_total_duration = runs_df['duration_sec'].sum() / 3600 if 'duration_sec' in runs_df.columns else 0
                 run_avg_duration = runs_df['duration_sec'].mean() / 60 if 'duration_sec' in runs_df.columns else 0
                 run_total_calories = runs_df['kcal_burned'].sum() if 'kcal_burned' in runs_df.columns else 0
@@ -1328,7 +1354,7 @@ def render_performance_analysis_section(brief, time_period):
                         st.metric("Total Calories", f"{run_total_calories:,.0f}",
                                  delta=f"Avg: {run_avg_calories:.0f}")
 
-                    st.divider()
+                    # st.divider()
             else:
                 st.info("🏃 No runs in this period")
 
@@ -1340,7 +1366,7 @@ def render_performance_analysis_section(brief, time_period):
                 walk_distance = walks_df['distance_mi'].sum() if 'distance_mi' in walks_df.columns else 0
                 walk_avg_distance = walks_df['distance_mi'].mean() if 'distance_mi' in walks_df.columns else 0
                 walk_avg_pace = walks_df['avg_pace'].mean() if 'avg_pace' in walks_df.columns else 0
-                walk_pace_range = f"{walks_df['avg_pace'].min():.1f}-{walks_df['avg_pace'].max():.1f}" if 'avg_pace' in walks_df.columns and len(walks_df) > 1 else "N/A"
+                walk_pace_range = f"{walks_df['avg_pace'].min():.1f}-{walks_df['avg_pace'].max():.1f}" if 'avg_pace' in walks_df.columns and len(walks_df) > 1 else "-"
                 walk_total_duration = walks_df['duration_sec'].sum() / 3600 if 'duration_sec' in walks_df.columns else 0
                 walk_avg_duration = walks_df['duration_sec'].mean() / 60 if 'duration_sec' in walks_df.columns else 0
                 walk_total_calories = walks_df['kcal_burned'].sum() if 'kcal_burned' in walks_df.columns else 0
@@ -1390,7 +1416,7 @@ def render_performance_analysis_section(brief, time_period):
                         st.metric("Total Calories", f"{walk_total_calories:,.0f}",
                                  delta=f"Avg: {walk_avg_calories:.0f}")
 
-                    st.divider()
+                    # st.divider()
             else:
                 st.info("🚶 No walks in this period")
 
@@ -1551,14 +1577,14 @@ def render_consistency_analysis_section(brief, time_period):
             prev_runs_df = pd.DataFrame()
             prev_walks_df = pd.DataFrame()
 
-        # Two-column layout: Frequency & Patterns (left) | Streaks & Gaps (right)
-        col_frequency, col_streaks = st.columns(2)
+        # Consistency Anal
+        # col_frequency, col_streaks = st.columns(2)
 
-        with col_frequency:
+        with st.container():
             # Container with background for better visibility
             st.markdown("""
             <div style="background: rgba(25, 118, 210, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #1976d2; margin-bottom: 15px;">
-                <h4 style="margin: 0; color: #90caf9;">📊 Frequency & Patterns</h4>
+                <h5 style="margin: 0; color: #90caf9;">📊 Frequency & Patterns</h4>
             </div>
             """, unsafe_allow_html=True)
 
@@ -1573,78 +1599,38 @@ def render_consistency_analysis_section(brief, time_period):
             prev_run_freq = (prev_run_count / days_lookback) * 7 if days_lookback > 0 else 0
             prev_walk_freq = (prev_walk_count / days_lookback) * 7 if days_lookback > 0 else 0
 
-            # Run frequency in styled container
-            st.markdown("""
-            <div style="background: rgba(25, 118, 210, 0.08); padding: 10px; border-radius: 6px; margin: 10px 0;">
-                <p style="margin: 0; color: #90caf9; font-weight: 600;">🏃 Run Frequency</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-            run_freq_delta = run_freq - prev_run_freq if prev_run_freq > 0 else 0
-            st.metric("Runs per Week", f"{run_freq:.1f}",
-                     delta=f"{run_freq_delta:+.1f} vs prev" if prev_run_count > 0 else None,
-                     help=f"{run_count} runs in last {days_lookback} days")
-
-            # Walk frequency in styled container
-            st.markdown("""
-            <div style="background: rgba(56, 142, 60, 0.08); padding: 10px; border-radius: 6px; margin: 10px 0;">
-                <p style="margin: 0; color: #81c784; font-weight: 600;">🚶 Walk Frequency</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-            walk_freq_delta = walk_freq - prev_walk_freq if prev_walk_freq > 0 else 0
-            st.metric("Walks per Week", f"{walk_freq:.1f}",
-                     delta=f"{walk_freq_delta:+.1f} vs prev" if prev_walk_count > 0 else None,
-                     help=f"{walk_count} walks in last {days_lookback} days")
-
-            # Day-of-week heatmap with better styling
-            st.markdown("""
-            <div style="background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 6px; margin: 15px 0;">
-                <p style="margin: 0 0 10px 0; color: #e0e0e0; font-weight: 600;">📅 Day-of-Week Distribution</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-            period_df['day_of_week'] = period_df['workout_date'].dt.day_name()
-            day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-            day_counts = period_df['day_of_week'].value_counts().reindex(day_order, fill_value=0)
-
-            # Find peak workout days with better styling
-            if day_counts.max() > 0:
-                peak_days = day_counts[day_counts == day_counts.max()].index.tolist()
-                peak_days_str = ", ".join(peak_days)
-                st.markdown(f"""
-                <div style="background: rgba(255, 152, 0, 0.15); padding: 10px; border-radius: 6px; border-left: 3px solid #ff9800;">
-                    <p style="margin: 0; color: #ffb74d;">🔥 Peak: <strong>{peak_days_str}</strong> ({int(day_counts.max())} workouts)</p>
+            c1Left, c1Right = st.columns(2)
+            with c1Left:
+                # Run frequency in styled container
+                st.markdown("""
+                <div style="background: rgba(25, 118, 210, 0.08); padding: 10px; border-radius: 6px; margin: 10px 0;">
+                    <p style="margin: 0; color: #90caf9; font-weight: 600;">🏃 Run Frequency</p>
                 </div>
                 """, unsafe_allow_html=True)
 
-            # Enhanced visual heatmap
-            heatmap_html = []
-            for day in day_order:
-                count = day_counts.get(day, 0)
-                if count == 0:
-                    color = "#424242"
-                    emoji = "⚪"
-                elif count <= 2:
-                    color = "#fdd835"
-                    emoji = "🟡"
-                elif count <= 4:
-                    color = "#ff9800"
-                    emoji = "🟠"
-                else:
-                    color = "#e53935"
-                    emoji = "🔴"
+                run_freq_delta = run_freq - prev_run_freq if prev_run_freq > 0 else 0
+                st.metric("Runs per Week", f"{run_freq:.1f}",
+                        delta=f"{run_freq_delta:+.1f} vs prev" if prev_run_count > 0 else None,
+                        help=f"{run_count} runs in last {days_lookback} days")
 
-                heatmap_html.append(f'<span style="display: inline-block; margin: 2px 4px; padding: 4px 8px; background: {color}20; border-radius: 4px; color: {color}; font-weight: 500;">{day[:3]}: {emoji}</span>')
+            # Walk frequency in styled container
+            with c1Right:
+                st.markdown("""
+                <div style="background: rgba(56, 142, 60, 0.08); padding: 10px; border-radius: 6px; margin: 10px 0;">
+                    <p style="margin: 0; color: #81c784; font-weight: 600;">🚶 Walk Frequency</p>
+                </div>
+                """, unsafe_allow_html=True)
 
-            st.markdown(f'<div style="margin: 10px 0;">{"".join(heatmap_html)}</div>', unsafe_allow_html=True)
-            st.caption("⚪ None | 🟡 1-2 | 🟠 3-4 | 🔴 5+")
+                walk_freq_delta = walk_freq - prev_walk_freq if prev_walk_freq > 0 else 0
+                st.metric("Walks per Week", f"{walk_freq:.1f}",
+                        delta=f"{walk_freq_delta:+.1f} vs prev" if prev_walk_count > 0 else None,
+                        help=f"{walk_count} walks in last {days_lookback} days")
 
-        with col_streaks:
+        with st.container():
             # Container with background for better visibility
             st.markdown("""
             <div style="background: rgba(229, 57, 53, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #e53935; margin-bottom: 15px;">
-                <h4 style="margin: 0; color: #ef5350;">🔥 Streaks & Gaps</h4>
+                <h5 style="margin: 0; color: #ef5350;">🔥 Streaks & Gaps</h4>
             </div>
             """, unsafe_allow_html=True)
 
@@ -2095,31 +2081,32 @@ def main():
     # Render header with total dataset stats
     render_fitness_dashboard_header(total_workouts, earliest_date, latest_date)
 
-    # Load initial intelligence data (using default 30d period)
-    brief, summary = load_intelligence_data('30d')
+    # Get the current selected period from session state (widget will initialize it)
+    # Default to 30d if not yet initialized (first run)
+    current_period = st.session_state.get('intelligence_period', '30d')
+
+    # Load intelligence data for the current period
+    brief, summary = load_intelligence_data(current_period)
 
     if not brief:
         st.error("Failed to load intelligence data. Please check your database connection.")
         return
 
     # Combined time period selector and filter info (single row)
+    # This will now have the correct brief data matching the selected period
     selected_period, period_options = render_time_period_selector_and_filter_info(brief)
-
-    # Reload intelligence data if period changed
-    if selected_period != '30d':
-        brief, summary = load_intelligence_data(selected_period)
 
     # Concrete metrics cards - above the fold
     render_concrete_metrics_cards(brief, selected_period)
 
     # Show data visibility expander between Period Summary and Key Patterns
     render_data_visibility_expander(brief, selected_period)
-
-    # Key insights - above the fold
-    render_key_insights_above_fold(brief)
-
     st.markdown("---")
 
+    # Key insights - above the fold
+    # render_key_insights_above_fold(brief)
+
+    
     # Intelligence brief cards (algorithmic analysis)
     render_intelligence_brief_cards(brief, selected_period)
 
